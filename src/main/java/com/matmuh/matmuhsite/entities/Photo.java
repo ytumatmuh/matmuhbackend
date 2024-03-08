@@ -1,14 +1,14 @@
 package com.matmuh.matmuhsite.entities;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
+import jakarta.persistence.*;
+import lombok.*;
 
-@RequiredArgsConstructor
 @Data
+@Entity
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+@Table(name = "photos")
 public class Photo{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
