@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @Entity
 @AllArgsConstructor
@@ -30,5 +32,14 @@ public class Lecture {
     @Column(name = "count")
     private int count;
 
-    @Column()
+    @Column(name = "credit")
+    private int credit;
+
+    @Column(name = "syllabus_link")
+    private String syllabusLink;
+
+    @Column(name = "notes_link")
+    private String notesLink;
+
+
 }
