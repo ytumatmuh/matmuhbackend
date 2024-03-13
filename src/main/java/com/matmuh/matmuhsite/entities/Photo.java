@@ -14,6 +14,7 @@ public class Photo{
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private int id;
+
     @Column(name = "photo_url")
     private String photoUrl;
 }

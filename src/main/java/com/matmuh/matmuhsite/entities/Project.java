@@ -24,6 +24,7 @@ public class Project {
 
     @Column(name = "context")
     private String context;
+
     @Column(name = "date")
     private Date date;
 }
