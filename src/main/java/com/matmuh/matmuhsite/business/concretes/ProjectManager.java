@@ -11,6 +11,7 @@ import com.matmuh.matmuhsite.core.utilities.results.SuccessResult;
 import com.matmuh.matmuhsite.dataAccess.abstracts.ProjectDao;
 import com.matmuh.matmuhsite.entities.Project;
 import com.matmuh.matmuhsite.entities.Research;
+import com.matmuh.matmuhsite.entities.dtos.RequestPhotoDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -30,6 +31,17 @@ public class ProjectManager implements ProjectService {
         projectDao.save(project);
         return new SuccessResult(ProjectMessages.projectAddSuccess);
     }
+
+    @Override
+    public Result addProject(RequestPhotoDto requestPhotoDto) {
+        return null;
+    }
+
+    @Override
+    public Result updateProject(RequestPhotoDto requestPhotoDto) {
+        return null;
+    }
+
     @Override
     public DataResult<List<Project>> getProjects() {
         var result = projectDao.findAll();

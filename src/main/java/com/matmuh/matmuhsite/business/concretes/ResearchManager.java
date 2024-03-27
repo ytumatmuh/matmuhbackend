@@ -8,6 +8,7 @@ import com.matmuh.matmuhsite.core.utilities.results.SuccessDataResult;
 import com.matmuh.matmuhsite.core.utilities.results.SuccessResult;
 import com.matmuh.matmuhsite.dataAccess.abstracts.ResearchDao;
 import com.matmuh.matmuhsite.entities.Research;
+import com.matmuh.matmuhsite.entities.dtos.RequestResearchDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +28,16 @@ public class ResearchManager implements ResearchService {
     public Result addResearch(Research research) {
         researchDao.save(research);
         return new SuccessResult(ResearchMessages.researchAddSuccess);
+    }
+
+    @Override
+    public Result addResearch(RequestResearchDto requestResearchDto) {
+        return null;
+    }
+
+    @Override
+    public Result updateResearch(RequestResearchDto requestResearchDto) {
+        return null;
     }
 
     @Override

@@ -29,6 +29,11 @@ public class EventManager implements EventService {
     }
 
     @Override
+    public Result updateEvent(RequestEventDto requestEventDto) {
+        return null;
+    }
+
+    @Override
     public DataResult<List<Event>> getEvents() {
         var result = eventDao.findAll();
         return new SuccessDataResult<List<Event>>(result, EventMessages.getEventsSuccess);

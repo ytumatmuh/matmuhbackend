@@ -3,11 +3,14 @@ package com.matmuh.matmuhsite.business.abstracts;
 import com.matmuh.matmuhsite.core.utilities.results.DataResult;
 import com.matmuh.matmuhsite.core.utilities.results.Result;
 import com.matmuh.matmuhsite.entities.Announcement;
+import com.matmuh.matmuhsite.entities.dtos.RequestAnnouncementDto;
 
 import java.util.List;
 
 public interface AnnouncementService {
-    Result addAnnouncement(Announcement announcement);
+    Result addAnnouncement(RequestAnnouncementDto announcementDto);
+
+    Result updateAnnouncement(RequestAnnouncementDto requestAnnouncementDto);
 
     DataResult<List<Announcement>> getAnnouncements();
 

@@ -8,6 +8,7 @@ import com.matmuh.matmuhsite.core.utilities.results.SuccessDataResult;
 import com.matmuh.matmuhsite.core.utilities.results.SuccessResult;
 import com.matmuh.matmuhsite.dataAccess.abstracts.LectureDao;
 import com.matmuh.matmuhsite.entities.Lecture;
+import com.matmuh.matmuhsite.entities.dtos.RequestLectureDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +28,16 @@ public class LectureManager implements LectureService {
         lectureDao.save(lecture);
 
         return new SuccessResult(LectureMessages.lectureAddSuccess);
+    }
+
+    @Override
+    public Result addLecture(RequestLectureDto requestLectureDto) {
+        return null;
+    }
+
+    @Override
+    public Result updateLecture(RequestLectureDto requestLectureDto) {
+        return null;
     }
 
     @Override
