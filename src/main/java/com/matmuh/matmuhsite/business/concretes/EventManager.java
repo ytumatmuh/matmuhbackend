@@ -7,6 +7,7 @@ import com.matmuh.matmuhsite.core.utilities.results.*;
 import com.matmuh.matmuhsite.dataAccess.abstracts.EventDao;
 import com.matmuh.matmuhsite.entities.Event;
 import com.matmuh.matmuhsite.entities.Photo;
+import com.matmuh.matmuhsite.entities.dtos.RequestEventDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -23,7 +24,8 @@ public class EventManager implements EventService {
     }
 
     @Override
-    public Result addEvent(Event event) {
+    public Result addEvent(RequestEventDto requestEventDto) {
+
         eventDao.save(event);
         return new SuccessResult(EventMessages.eventAddSuccess);
     }
