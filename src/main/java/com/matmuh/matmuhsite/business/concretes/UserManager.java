@@ -12,12 +12,13 @@ import java.util.List;
 @Service
 public class UserManager implements UserService {
 
+        //YAZILACAK
 
 
 
     @Override
     public Result addUser(User user) {
-
+        return null;
     }
 
     @Override
@@ -37,6 +38,11 @@ public class UserManager implements UserService {
 
     @Override
     public UserDetails loadUserByUsername(String username) {
+        return null;
+    }
+
+    @Override
+    public Result deleteUser(int id) {
         return null;
     }
 }
