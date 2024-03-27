@@ -4,13 +4,14 @@ import com.matmuh.matmuhsite.core.utilities.results.DataResult;
 import com.matmuh.matmuhsite.core.utilities.results.Result;
 import com.matmuh.matmuhsite.entities.Project;
 import com.matmuh.matmuhsite.entities.dtos.RequestPhotoDto;
+import com.matmuh.matmuhsite.entities.dtos.RequestProjectDto;
 
 import java.util.List;
 
 public interface ProjectService {
-    Result addProject(RequestPhotoDto requestPhotoDto);
+    Result addProject(RequestProjectDto requestProjectDto);
 
-    Result updateProject(RequestPhotoDto requestPhotoDto);
+    Result updateProject(RequestProjectDto requestProjectDto);
 
     DataResult <List<Project>> getProjects();
 

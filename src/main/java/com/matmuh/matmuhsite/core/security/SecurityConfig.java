@@ -38,6 +38,11 @@ public class SecurityConfig {
                 .authorizeHttpRequests(x ->
                         x
                                 .requestMatchers("/api/**").permitAll()
+                                .requestMatchers("/api/projects/getAll").permitAll()
+                                .requestMatchers("/api/projects/getById").permitAll()
+                                .requestMatchers("/api/projects/update").hasAnyRole("ADMIN")
+                                .requestMatchers("/api/projects/add").hasAnyRole("ADMIN")
+                                .requestMatchers("/api/projects/delete").hasAnyRole("ADMIN")
 
                                 .anyRequest().authenticated()
                 )

@@ -44,6 +44,7 @@ public class AuthManager implements AuthService {
 
     @Override
     public Result register(RequestRegisterDto requestRegisterDto) {
+
         if(requestRegisterDto.getFirstName() == null){
             return new ErrorDataResult<>(AuthMessages.firstNameCannotBeNull);
         }

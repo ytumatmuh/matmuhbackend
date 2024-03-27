@@ -16,26 +16,20 @@ public class AnnouncementController {
 
     @Autowired
     private AnnouncementService announcementService;
-
     @PostMapping("/add")
     public Result addAnnouncement(@RequestBody RequestAnnouncementDto announcementDto) {
 
         return announcementService.addAnnouncement(announcementDto);
     }
-
     @GetMapping("/getAll")
     public Result getAnnouncements(){
 
         return announcementService.getAnnouncements();
     }
-
     @GetMapping("/getById")
     public DataResult<Announcement> getAnnouncementById(@RequestParam int id){
         return announcementService.getAnnouncementById(id);
 
     }
-
-
-
-
+    
 }
