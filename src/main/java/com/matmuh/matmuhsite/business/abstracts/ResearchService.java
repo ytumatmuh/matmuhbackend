@@ -17,5 +17,7 @@ public interface ResearchService {
 
     DataResult<Research> getResearchById(int id);
 
+    Result deleteResearch(int id);
+
 
 }

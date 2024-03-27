@@ -13,6 +13,7 @@ import java.util.Date;
 @Builder
 public class RequestEventDto {
 
+    private int id;
     private String name;
     private Date date;
     private String context;

@@ -15,5 +15,7 @@ public interface PhotoService {
 
     DataResult<Photo> getPhotoById(int id);
 
+    Result deletePhoto(int id);
+
 
 }

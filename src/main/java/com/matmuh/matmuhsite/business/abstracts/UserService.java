@@ -20,5 +20,7 @@ public interface UserService extends UserDetailsService {
 
     UserDetails loadUserByUsername(String username);
 
+    Result deleteUser(int id);
+
 
 }

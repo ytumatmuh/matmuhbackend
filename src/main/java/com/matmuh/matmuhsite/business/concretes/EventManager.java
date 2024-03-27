@@ -25,6 +25,23 @@ public class EventManager implements EventService {
 
     @Override
     public Result addEvent(RequestEventDto requestEventDto) {
+        if (requestEventDto.getName() == null){
+            return new ErrorResult(EventMessages.nameCanotBeNull);
+        }
+
+        if(requestEventDto.getContext() == null){
+            return new ErrorResult(EventMessages.contentCanotBeNull);
+        }
+
+        if(requestEventDto.getDate() == null){
+            return new ErrorResult(PhotoMessages.photoCanotBeNull);
+        }
+
+        var event = Event.builder()
+                .name(requestEventDto.getName())
+                .context(requestEventDto.getContext())
+                .date(requestEventDto.getDate())
+                .build();
 
         eventDao.save(event);
         return new SuccessResult(EventMessages.eventAddSuccess);
@@ -32,18 +49,58 @@ public class EventManager implements EventService {
 
     @Override
     public Result updateEvent(RequestEventDto requestEventDto) {
-        return null;
+
+        var event = getEventById(requestEventDto.getId()).getData();
+
+        if (event == null) {
+            return new ErrorResult(EventMessages.eventNotFound);
+        }
+
+        if (requestEventDto.getName() == null) {
+            return new ErrorResult(EventMessages.nameCanotBeNull);
+        }
+
+        if (requestEventDto.getContext() == null) {
+            return new ErrorResult(EventMessages.contentCanotBeNull);
+        }
+
+        if (requestEventDto.getDate() == null) {
+            return new ErrorResult(PhotoMessages.photoCanotBeNull);
+        }
+
+        event.setContext(requestEventDto.getContext().isEmpty() ? event.getContext() : requestEventDto.getContext());
+        event.setName(requestEventDto.getName().isEmpty() ? event.getName() : requestEventDto.getName());
+        event.setDate(requestEventDto.getDate() == null ? event.getDate() : requestEventDto.getDate());
+
+
+        eventDao.save(event);
+        return new SuccessResult(EventMessages.eventAddSuccess);
     }
 
-    @Override
+        @Override
     public DataResult<List<Event>> getEvents() {
         var result = eventDao.findAll();
+
+        if (result.isEmpty())
+            return new ErrorDataResult<>(EventMessages.eventNotFound);
+
         return new SuccessDataResult<List<Event>>(result, EventMessages.getEventsSuccess);
     }
 
     @Override
-    public DataResult<Event> getEventById(int id) {
+    public DataResult<Event> getEventById(int id){
         var result = eventDao.findById(id);
+        if(result == null){
+            return new ErrorDataResult<>(EventMessages.eventNotFound);
+        }
+
         return new SuccessDataResult<Event>(result, EventMessages.getEventSuccess);
     }
+
+    @Override
+    public Result deleteEvent(int id) {
+        return null;
+    }
+
+
 }

@@ -15,6 +15,7 @@ import java.util.List;
 @Service
 public class AnnouncementManager implements AnnouncementService {
 
+
     private final AnnouncementDao announcementDao;
 
     @Autowired
@@ -44,15 +45,24 @@ public class AnnouncementManager implements AnnouncementService {
     }
 
     @Override
-    public Result updateAnnouncement() {
-        return null;
+    public Result updateAnnouncement(RequestAnnouncementDto requestAnnouncementDto) {
+        if(requestAnnouncementDto.getName() == null){
+            return new ErrorResult(AnnouncementMessages.nameCanotBeNull);
+        }
+
+        if(requestAnnouncementDto.getContent() == null){
+            return new ErrorResult(AnnouncementMessages.contentCanotBeNull);
+        }
+
+
+        return new SuccessResult(AnnouncementMessages.announcementUpdateSuccess);
     }
 
     @Override
     public DataResult<List<Announcement>> getAnnouncements() {
         var result = announcementDao.findAll();
 
-        if (result == null){
+        if (result.isEmpty()){
             return new ErrorDataResult<>(AnnouncementMessages.annoucementsNotFound);
         }
 
@@ -64,5 +74,10 @@ public class AnnouncementManager implements AnnouncementService {
         var result = announcementDao.findById(id);
 
         return new SuccessDataResult<Announcement>(result, AnnouncementMessages.getAnnouncementByIdSuccess);
+    }
+
+    @Override
+    public Result deleteAnnouncement(int id) {
+        return null;
     }
 }

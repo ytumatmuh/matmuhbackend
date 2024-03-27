@@ -15,4 +15,8 @@ public interface ProjectService {
     DataResult <List<Project>> getProjects();
 
     DataResult<Project> getProjectById(int id);
+
+    Result deleteProject(int id);
+
+
 }

@@ -17,6 +17,7 @@ import java.util.List;
 @Service
 public class ResearchManager implements ResearchService {
 
+
     private final ResearchDao researchDao;
 
     @Autowired
@@ -24,11 +25,7 @@ public class ResearchManager implements ResearchService {
         this.researchDao = researchDao;
     }
 
-    @Override
-    public Result addResearch(Research research) {
-        researchDao.save(research);
-        return new SuccessResult(ResearchMessages.researchAddSuccess);
-    }
+
 
     @Override
     public Result addResearch(RequestResearchDto requestResearchDto) {
@@ -53,4 +50,10 @@ public class ResearchManager implements ResearchService {
 
         return new SuccessDataResult<Research>(result, ResearchMessages.getResearchSuccess);
     }
+
+    @Override
+    public Result deleteResearch(int id) {
+        return null;
+    }
+
 }

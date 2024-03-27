@@ -2,10 +2,7 @@ package com.matmuh.matmuhsite.business.concretes;
 
 import com.matmuh.matmuhsite.business.abstracts.PhotoService;
 import com.matmuh.matmuhsite.business.constants.PhotoMessages;
-import com.matmuh.matmuhsite.core.utilities.results.DataResult;
-import com.matmuh.matmuhsite.core.utilities.results.Result;
-import com.matmuh.matmuhsite.core.utilities.results.SuccessDataResult;
-import com.matmuh.matmuhsite.core.utilities.results.SuccessResult;
+import com.matmuh.matmuhsite.core.utilities.results.*;
 import com.matmuh.matmuhsite.dataAccess.abstracts.PhotoDao;
 import com.matmuh.matmuhsite.entities.Photo;
 import com.matmuh.matmuhsite.entities.dtos.RequestPhotoDto;
@@ -25,19 +22,28 @@ public class PhotoManager implements PhotoService {
     }
 
     @Override
-    public Result addPhoto(Photo photo) {
+    public Result addPhoto(RequestPhotoDto requestPhotoDto) {
+
+        if(requestPhotoDto.getPhotoUrl() == null){
+            return new SuccessResult(PhotoMessages.photoUrlCanotBeNull);
+        }
+
+        Photo photo = Photo.builder()
+                .photoUrl(requestPhotoDto.getPhotoUrl())
+                .build();
+
         photoDao.save(photo);
         return new SuccessResult(PhotoMessages.photoAddSuccess);
     }
 
-    @Override
-    public Result addPhoto(RequestPhotoDto requestPhotoDto) {
-        return null;
-    }
 
     @Override
     public DataResult<List<Photo>> getPhotos() {
         var result = photoDao.findAll();
+
+        if(result.isEmpty()){
+            return new ErrorDataResult<>(PhotoMessages.getPhotosEmpty);
+        }
 
         return new SuccessDataResult<List<Photo>>(result, PhotoMessages.getPhotosSuccess);
     }
@@ -46,6 +52,16 @@ public class PhotoManager implements PhotoService {
     public DataResult<Photo> getPhotoById(int id) {
         var result = photoDao.findById(id);
 
+        if(result == null){
+            return new ErrorDataResult<>(PhotoMessages.getPhotosEmpty);
+        }
+
         return new SuccessDataResult<Photo>(result, PhotoMessages.getPhotoSuccess);
     }
+
+    @Override
+    public Result deletePhoto(int id) {
+        return null;
+    }
+
 }

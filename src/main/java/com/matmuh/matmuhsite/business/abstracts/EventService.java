@@ -17,4 +17,8 @@ public interface EventService {
 
     DataResult<Event> getEventById(int id);
 
+    Result deleteEvent(int id);
+
+
+
 }

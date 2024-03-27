@@ -17,4 +17,12 @@ public interface LectureService {
 
     DataResult<Lecture> getLectureById(int id);
 
+    DataResult<List<Lecture>> getLecturesByTerm(int term);
+
+    DataResult<Lecture> getLectureByLectureCode(String lectureCode);
+
+    Result deleteLecture(int id);
+
+
+
 }

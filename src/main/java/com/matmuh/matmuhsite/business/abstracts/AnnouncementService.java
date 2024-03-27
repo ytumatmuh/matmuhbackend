@@ -16,5 +16,7 @@ public interface AnnouncementService {
 
     DataResult<Announcement> getAnnouncementById(int id);
 
+    Result deleteAnnouncement(int id);
+
 
 }
