@@ -1,10 +1,6 @@
 package com.matmuh.matmuhsite.business.constants;
 
-import com.matmuh.matmuhsite.entities.Photo;
-
-import java.util.List;
-
-public class PhotoMessages {
+public class ImageMessages {
     public static String photoAddSuccess = "Fotoğraf başarıyla eklendi!";
     public static String getPhotosSuccess = "Fotoğraflar başarıyla getirildi!";
     public static String getPhotoSuccess = "Fotoğraf başarıyla getirildi!";

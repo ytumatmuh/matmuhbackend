@@ -2,11 +2,10 @@ package com.matmuh.matmuhsite.business.concretes;
 
 import com.matmuh.matmuhsite.business.abstracts.EventService;
 import com.matmuh.matmuhsite.business.constants.EventMessages;
-import com.matmuh.matmuhsite.business.constants.PhotoMessages;
+import com.matmuh.matmuhsite.business.constants.ImageMessages;
 import com.matmuh.matmuhsite.core.utilities.results.*;
 import com.matmuh.matmuhsite.dataAccess.abstracts.EventDao;
 import com.matmuh.matmuhsite.entities.Event;
-import com.matmuh.matmuhsite.entities.Photo;
 import com.matmuh.matmuhsite.entities.dtos.RequestEventDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -34,7 +33,7 @@ public class EventManager implements EventService {
         }
 
         if(requestEventDto.getDate() == null){
-            return new ErrorResult(PhotoMessages.photoCanotBeNull);
+            return new ErrorResult(ImageMessages.photoCanotBeNull);
         }
 
         var event = Event.builder()
@@ -65,7 +64,7 @@ public class EventManager implements EventService {
         }
 
         if (requestEventDto.getDate() == null) {
-            return new ErrorResult(PhotoMessages.photoCanotBeNull);
+            return new ErrorResult(ImageMessages.photoCanotBeNull);
         }
 
         event.setContext(requestEventDto.getContext().isEmpty() ? event.getContext() : requestEventDto.getContext());

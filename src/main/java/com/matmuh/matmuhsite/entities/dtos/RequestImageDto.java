@@ -9,6 +9,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 @Builder
-public class RequestPhotoDto {
+public class RequestImageDto {
     private String photoUrl;
 }
