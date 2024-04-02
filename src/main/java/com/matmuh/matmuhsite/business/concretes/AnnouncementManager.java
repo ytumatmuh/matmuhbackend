@@ -46,6 +46,13 @@ public class AnnouncementManager implements AnnouncementService {
 
     @Override
     public Result updateAnnouncement(RequestAnnouncementDto requestAnnouncementDto) {
+
+        var announcement = announcementDao.findById(requestAnnouncementDto.getId());
+
+        if (announcement == null){
+            return new ErrorResult(AnnouncementMessages.announcementNotFound);
+        }
+
         if(requestAnnouncementDto.getName() == null){
             return new ErrorResult(AnnouncementMessages.nameCanotBeNull);
         }
@@ -54,6 +61,10 @@ public class AnnouncementManager implements AnnouncementService {
             return new ErrorResult(AnnouncementMessages.contentCanotBeNull);
         }
 
+        announcement.setName(requestAnnouncementDto.getName().isEmpty() ? announcement.getName() : requestAnnouncementDto.getName());
+        announcement.setContent(requestAnnouncementDto.getContent().isEmpty() ? announcement.getContent() : requestAnnouncementDto.getContent());
+
+        announcementDao.save(announcement);
 
         return new SuccessResult(AnnouncementMessages.announcementUpdateSuccess);
     }
@@ -73,11 +84,22 @@ public class AnnouncementManager implements AnnouncementService {
     public DataResult<Announcement> getAnnouncementById(int id) {
         var result = announcementDao.findById(id);
 
+        if(result == null){
+            return new ErrorDataResult<>(AnnouncementMessages.announcementNotFound);
+        }
+
         return new SuccessDataResult<Announcement>(result, AnnouncementMessages.getAnnouncementByIdSuccess);
     }
 
     @Override
     public Result deleteAnnouncement(int id) {
-        return null;
+        var result = this.announcementDao.findById(id);
+
+        if (result == null){
+            return new ErrorResult(AnnouncementMessages.announcementNotFound);
+        }
+
+        this.announcementDao.delete(result);
+        return new SuccessResult(AnnouncementMessages.announcementDeleteSuccess);
     }
 }

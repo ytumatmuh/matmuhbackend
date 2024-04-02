@@ -27,6 +27,7 @@ public class LectureManager implements LectureService {
 
     @Override
     public Result addLecture(RequestLectureDto requestLectureDto) {
+
         if(requestLectureDto.getName() == null){
             return new SuccessResult(LectureMessages.nameCanotBeNull);
         }
@@ -151,6 +152,13 @@ public class LectureManager implements LectureService {
 
     @Override
     public Result deleteLecture(int id) {
-        return null;
+        var result = lectureDao.findById(id);
+
+        if(result == null){
+            return new SuccessResult(LectureMessages.lectureNotFound);
+        }
+
+        this.lectureDao.deleteById(id);
+        return new SuccessResult(LectureMessages.lectureDeleteSuccess);
     }
 }

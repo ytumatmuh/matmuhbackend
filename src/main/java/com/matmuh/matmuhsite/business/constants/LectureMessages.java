@@ -12,4 +12,5 @@ public class LectureMessages {
     public static String lectureNotFound = "Ders bulunamadı!";
     public static String lectureUpdateSuccess = "Ders başarıyla güncellendi!";
     public static String getLectureByLectureCodeSuccess = "Ders başarıyla getirildi!";
+    public static String lectureDeleteSuccess = "Ders başarıyla silindi!";
 }

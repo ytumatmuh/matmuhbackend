@@ -8,4 +8,5 @@ public class EventMessages {
     public static String contentCanotBeNull = "Event içeriği boş olamaz!";
     public static String nameCanotBeNull = "Event adı boş olamaz!";
     public static String eventNotFound = "Event bulunamadı!";
+    public static String eventDeleteSuccess = "Event başarıyla silindi!";
 }

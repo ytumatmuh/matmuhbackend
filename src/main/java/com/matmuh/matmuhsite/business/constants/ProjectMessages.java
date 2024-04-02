@@ -2,6 +2,8 @@ package com.matmuh.matmuhsite.business.constants;
 
 import com.matmuh.matmuhsite.entities.Project;
 
+import java.util.List;
+
 public class ProjectMessages {
     public static String projectAddSuccess = "Proje başarıyla eklendi!";
     public static String getProjectsSuccess = "Projeler başarıyla getirildi!";
@@ -12,4 +14,6 @@ public class ProjectMessages {
     public static String contextCanotBeNull = "Proje içeriği boş olamaz!";
     public static String getProjectError = "Proje getirilirken hata oluştu!";
     public static String deleteProjectsuccess = "Proje başarıyla silindi!";
+    public static String projectNotFound = "Proje bulunamadı!";
+    public static String PorjectsNotFound = "Projeler bulunamadı!";
 }

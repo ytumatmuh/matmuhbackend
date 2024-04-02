@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @Data
 @Builder
 public class RequestLectureDto {
+    private int id;
     private String name;
     private String lectureCode;
     private int term;

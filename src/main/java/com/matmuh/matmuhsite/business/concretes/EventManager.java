@@ -49,7 +49,8 @@ public class EventManager implements EventService {
     @Override
     public Result updateEvent(RequestEventDto requestEventDto) {
 
-        var event = getEventById(requestEventDto.getId()).getData();
+        //var event = getEventById(requestEventDto.getId()).getData();
+        var event = eventDao.findById(requestEventDto.getId());
 
         if (event == null) {
             return new ErrorResult(EventMessages.eventNotFound);
@@ -69,7 +70,6 @@ public class EventManager implements EventService {
 
         event.setContext(requestEventDto.getContext().isEmpty() ? event.getContext() : requestEventDto.getContext());
         event.setName(requestEventDto.getName().isEmpty() ? event.getName() : requestEventDto.getName());
-        event.setDate(requestEventDto.getDate() == null ? event.getDate() : requestEventDto.getDate());
 
 
         eventDao.save(event);
@@ -98,8 +98,14 @@ public class EventManager implements EventService {
 
     @Override
     public Result deleteEvent(int id) {
-        return null;
+        var result = eventDao.findById(id);
+
+        if (result == null){
+            return new ErrorResult(EventMessages.eventNotFound);
+        }
+
+        this.eventDao.delete(result);
+        return new SuccessResult(EventMessages.eventDeleteSuccess);
+
     }
-
-
 }

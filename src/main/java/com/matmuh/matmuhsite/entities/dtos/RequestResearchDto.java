@@ -10,7 +10,9 @@ import lombok.NoArgsConstructor;
 @Data
 @Builder
 public class RequestResearchDto {
+    private int id;
     private String title;
     private String description;
     private String context;
+
 }

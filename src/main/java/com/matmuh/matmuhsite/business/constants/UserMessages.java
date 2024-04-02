@@ -11,6 +11,8 @@ public class UserMessages {
     public static String emailCannotBeNull = "Email boş olamaz";
     public static String userAddSuccess = "Kullanıcı eklendi";
     public static String usersNotFound = "Kullanıcılar bulunamadı";
-
+    public static String userNotFound = "Kullanıcı bulunamadı";
     public static String usersListed = "Kullanıcılar listelendi";
+    public static String userListed = "Kullanıcı listelendi";
+    public static String userDeleteSuccess = "Kullanıcı silindi";
 }

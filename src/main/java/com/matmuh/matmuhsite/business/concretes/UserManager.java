@@ -50,12 +50,22 @@ public class UserManager implements UserService {
 
     @Override
     public DataResult<User> getUserById(int id) {
-        return null;
+        var user = userDao.findById(id);
+
+        if(user == null){
+            return new ErrorDataResult<>(UserMessages.userNotFound);
+        }
+        return new SuccessDataResult<User>(user, UserMessages.userListed);
     }
 
     @Override
     public DataResult<User> getByUsername(String username) {
-        return null;
+        var user = userDao.findByUsername(username);
+
+        if(user == null){
+            return new ErrorDataResult<>(UserMessages.userNotFound);
+        }
+        return new SuccessDataResult<User>(user, UserMessages.userListed);
     }
 
     @Override
@@ -65,6 +75,13 @@ public class UserManager implements UserService {
 
     @Override
     public Result deleteUser(int id) {
-        return null;
+        var user = userDao.findById(id);
+
+        if (user == null){
+            return new ErrorResult(UserMessages.userNotFound);
+        }
+
+        userDao.delete(user);
+        return new SuccessResult(UserMessages.userDeleteSuccess);
     }
 }

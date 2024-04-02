@@ -12,4 +12,6 @@ public class AnnouncementMessages {
     public static String contentCanotBeNull = "Duyuru içeriği boş olamaz!";
     public static String annoucementsNotFound = "Duyurular bulunamadı!";
     public static String announcementUpdateSuccess = "Duyuru başarıyla güncellendi!";
+    public static String announcementNotFound = "Duyuru bulunamadı!";
+    public static String announcementDeleteSuccess =  "Duyuru başarıyla silindi!";
 }

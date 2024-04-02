@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class RequestAnnouncementDto {
 
+    private int id;
     private String name;
 
     private String content;

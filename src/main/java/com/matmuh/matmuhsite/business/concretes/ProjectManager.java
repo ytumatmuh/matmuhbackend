@@ -52,26 +52,52 @@ public class ProjectManager implements ProjectService {
     @Override
     public Result updateProject(RequestProjectDto requestProjectDto) {
 
-            var result = getProjectById(requestProjectDto.getId());
+//            var result = getProjectById(requestProjectDto.getId());
+//
+//            if (!result.isSuccess()){
+//                return result;
+//            }
+//
+//            var projectToUpdate = result.getData();
+//
+//            projectToUpdate.setContext(requestProjectDto.getContext()==null?projectToUpdate.getContext():requestProjectDto.getContext());
+//            projectToUpdate.setDate(requestProjectDto.getDate()==null?projectToUpdate.getDate():requestProjectDto.getDate());
+//            projectToUpdate.setDescription(requestProjectDto.getDescription()==null?projectToUpdate.getDescription():requestProjectDto.getDescription());
+//            projectToUpdate.setName(requestProjectDto.getName()==null?projectToUpdate.getName():requestProjectDto.getName());
 
-            if (!result.isSuccess()){
-                return result;
+//            projectDao.save(projectToUpdate);
+
+            var project = projectDao.findById(requestProjectDto.getId());
+
+            if (project == null){
+                return new ErrorResult(ProjectMessages.projectNotFound);
+            }
+            if (requestProjectDto.getName() == null){
+                return new ErrorResult(ProjectMessages.nameCanotBeNull);
+            }
+            if (requestProjectDto.getDescription() == null){
+                return new ErrorResult(ProjectMessages.descriptionCanotBeNull);
+            }
+            if (requestProjectDto.getContext() == null){
+                return new ErrorResult(ProjectMessages.contextCanotBeNull);
             }
 
-            var projectToUpdate = result.getData();
+            project.setName(requestProjectDto.getName().isEmpty() ? project.getName() : requestProjectDto.getName());
+            project.setDescription(requestProjectDto.getDescription().isEmpty() ? project.getDescription() : requestProjectDto.getDescription());
+            project.setContext(requestProjectDto.getContext().isEmpty() ? project.getContext() : requestProjectDto.getContext());
 
-            projectToUpdate.setContext(requestProjectDto.getContext()==null?projectToUpdate.getContext():requestProjectDto.getContext());
-            projectToUpdate.setDate(requestProjectDto.getDate()==null?projectToUpdate.getDate():requestProjectDto.getDate());
-            projectToUpdate.setDescription(requestProjectDto.getDescription()==null?projectToUpdate.getDescription():requestProjectDto.getDescription());
-            projectToUpdate.setName(requestProjectDto.getName()==null?projectToUpdate.getName():requestProjectDto.getName());
-            
-            projectDao.save(projectToUpdate);
+            projectDao.save(project);
+
             return new SuccessResult(ProjectMessages.projectAddSuccess);
     }
 
     @Override
     public DataResult<List<Project>> getProjects() {
         var result = projectDao.findAll();
+
+        if (result.isEmpty()){
+            return new ErrorDataResult<>(ProjectMessages.PorjectsNotFound);
+        }
 
         return new SuccessDataResult<List<Project>>(result, ProjectMessages.getProjectsSuccess);
     }
@@ -81,7 +107,7 @@ public class ProjectManager implements ProjectService {
         var result = projectDao.findById(id);
 
         if(result == null){
-            return new ErrorDataResult<>(ProjectMessages.getProjectError);
+            return new ErrorDataResult<>(ProjectMessages.projectNotFound);
         }
 
         return new SuccessDataResult<Project>(result, ProjectMessages.getProjectSuccess);
@@ -90,13 +116,18 @@ public class ProjectManager implements ProjectService {
     @Override
     public Result deleteProject(int id) {
 
-        var result = getProjectById(id);
+//        var result = getProjectById(id);
+//
+//        if (!result.isSuccess()){
+//            return result;
+//        }
 
-        if (!result.isSuccess()){
-            return result;
+        var result = projectDao.findById(id);
+
+        if (result == null){
+            return new ErrorResult(ProjectMessages.projectNotFound);
         }
-
-        projectDao.delete(result.getData());
+        projectDao.delete(result);
         return new SuccessResult(ProjectMessages.deleteProjectsuccess);
 
     }

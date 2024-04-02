@@ -7,4 +7,5 @@ public class ImageMessages {
     public static String photoCanotBeNull = "Fotoğraf boş olamaz!";
     public static String photoUrlCanotBeNull = "Fotoğraf url'si boş olamaz!";
     public static String getPhotosEmpty = "Fotoğraf bulunamadı!";
+    public static String photoDeleteSuccess = "Fotoğraf başarıyla silindi!";
 }

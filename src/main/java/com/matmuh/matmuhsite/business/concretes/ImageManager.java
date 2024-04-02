@@ -65,7 +65,15 @@ public class ImageManager implements ImageService {
 
     @Override
     public Result deleteImage(int id) {
-        return null;
+        var result = this.imageDao.findById(id);
+
+        if(result == null){
+            return new ErrorResult(ImageMessages.getPhotosEmpty);
+        }
+
+        this.imageDao.delete(result);
+        return new SuccessResult(ImageMessages.photoDeleteSuccess);
+
     }
 
 }
