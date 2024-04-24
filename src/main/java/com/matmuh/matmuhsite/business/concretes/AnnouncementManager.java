@@ -33,6 +33,7 @@ public class AnnouncementManager implements AnnouncementService {
             return new ErrorResult(AnnouncementMessages.contentCanotBeNull);
         }
 
+
         var announcementToSave = Announcement.builder()
                 .name(announcementDto.getName())
                 .content(announcementDto.getContent())
@@ -73,7 +74,7 @@ public class AnnouncementManager implements AnnouncementService {
     public DataResult<List<Announcement>> getAnnouncements() {
         var result = announcementDao.findAll();
 
-        if (result.isEmpty()){
+        if (result == null){
             return new ErrorDataResult<>(AnnouncementMessages.annoucementsNotFound);
         }
 

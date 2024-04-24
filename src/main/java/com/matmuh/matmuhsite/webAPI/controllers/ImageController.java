@@ -1,9 +1,7 @@
 package com.matmuh.matmuhsite.webAPI.controllers;
 
 import com.matmuh.matmuhsite.business.abstracts.ImageService;
-import com.matmuh.matmuhsite.core.utilities.results.DataResult;
 import com.matmuh.matmuhsite.core.utilities.results.Result;
-import com.matmuh.matmuhsite.entities.Image;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;

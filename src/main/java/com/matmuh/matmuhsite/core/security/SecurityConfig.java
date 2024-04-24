@@ -4,6 +4,7 @@ import com.matmuh.matmuhsite.business.abstracts.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -37,13 +38,14 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(x ->
                         x
-                                .requestMatchers("/api/**").permitAll()
 
-                                .requestMatchers("/api/projects/getAll").permitAll()
-                                .requestMatchers("/api/projects/getById").permitAll()
-                                .requestMatchers("/api/projects/update").hasAnyRole("ADMIN")
+                                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                                .requestMatchers("/api/auth/**").permitAll()
+
+
+
                                 .requestMatchers("/api/projects/add").hasAnyRole("ADMIN")
-                                .requestMatchers("/api/projects/delete").hasAnyRole("ADMIN")
 
                                 .anyRequest().authenticated()
                 )

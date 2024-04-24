@@ -6,6 +6,7 @@ import com.matmuh.matmuhsite.core.utilities.results.Result;
 import com.matmuh.matmuhsite.entities.Announcement;
 import com.matmuh.matmuhsite.entities.dtos.RequestAnnouncementDto;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,6 +17,7 @@ public class AnnouncementController {
 
     @Autowired
     private AnnouncementService announcementService;
+
     @PostMapping("/add")
     public Result addAnnouncement(@RequestBody RequestAnnouncementDto announcementDto) {
 
@@ -27,7 +29,7 @@ public class AnnouncementController {
         return announcementService.getAnnouncements();
     }
     @GetMapping("/getById")
-    public DataResult<Announcement> getAnnouncementById(@RequestParam int id){
+    public DataResult<Announcement> getAnnouncementById(@RequestParam @Validated int id){
         return announcementService.getAnnouncementById(id);
 
     }

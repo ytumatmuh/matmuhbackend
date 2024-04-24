@@ -7,6 +7,7 @@ import com.matmuh.matmuhsite.dataAccess.abstracts.UserDao;
 import com.matmuh.matmuhsite.entities.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,7 +15,9 @@ import java.util.List;
 @Service
 public class UserManager implements UserService {
 
-    //YAZILACAK yazıyom zaaa
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Autowired
     private UserDao userDao;
@@ -34,6 +37,8 @@ public class UserManager implements UserService {
             return new ErrorResult(UserMessages.emailCannotBeNull);
         }
 
+
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         userDao.save(user);
         return new SuccessResult(UserMessages.userAddSuccess);
     }
@@ -70,7 +75,8 @@ public class UserManager implements UserService {
 
     @Override
     public UserDetails loadUserByUsername(String username) {
-        return null;
+        var user = getByUsername(username).getData();
+        return user;
     }
 
     @Override
