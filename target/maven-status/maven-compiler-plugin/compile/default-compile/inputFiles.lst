@@ -23,6 +23,7 @@
 /Users/yusssss/Desktop/projects/backend/matmuhbackend/src/main/java/com/matmuh/matmuhsite/entities/dtos/RequestProjectDto.java
 /Users/yusssss/Desktop/projects/backend/matmuhbackend/src/main/java/com/matmuh/matmuhsite/entities/Role.java
 /Users/yusssss/Desktop/projects/backend/matmuhbackend/src/main/java/com/matmuh/matmuhsite/core/utilities/results/DataResult.java
+/Users/yusssss/Desktop/projects/backend/matmuhbackend/src/main/java/com/matmuh/matmuhsite/core/config/CorsConfig.java
 /Users/yusssss/Desktop/projects/backend/matmuhbackend/src/main/java/com/matmuh/matmuhsite/core/security/JwtService.java
 /Users/yusssss/Desktop/projects/backend/matmuhbackend/src/main/java/com/matmuh/matmuhsite/webAPI/controllers/ResearchController.java
 /Users/yusssss/Desktop/projects/backend/matmuhbackend/src/main/java/com/matmuh/matmuhsite/core/security/SecurityConfig.java
