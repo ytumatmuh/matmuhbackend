@@ -4,6 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -12,9 +15,12 @@ import lombok.NoArgsConstructor;
 public class RequestAnnouncementDto {
 
     private int id;
-    private String name;
+
+    private String title;
 
     private String content;
+
+    private List<String> links;
 
 
 }

@@ -1,5 +1,6 @@
 package com.matmuh.matmuhsite.core.security;
 
+
 import com.matmuh.matmuhsite.business.abstracts.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -41,13 +42,9 @@ public class SecurityConfig {
 
                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                                .requestMatchers("/api/auth/**").permitAll()
+                                .requestMatchers("/api/**").permitAll()
 
-
-
-                                .requestMatchers("/api/projects/add").hasAnyRole("ADMIN")
-
-                                .anyRequest().authenticated()
+                                .anyRequest().permitAll()
                 )
                 .sessionManagement(x -> x.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())

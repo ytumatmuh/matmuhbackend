@@ -13,6 +13,5 @@ public class RequestResearchDto {
     private int id;
     private String title;
     private String description;
-    private String context;
 
 }

@@ -1,29 +1,36 @@
 package com.matmuh.matmuhsite.business.concretes;
 
+import com.matmuh.matmuhsite.business.abstracts.ImageService;
 import com.matmuh.matmuhsite.business.abstracts.ProjectService;
 import com.matmuh.matmuhsite.business.constants.ProjectMessages;
 import com.matmuh.matmuhsite.core.utilities.results.*;
 import com.matmuh.matmuhsite.dataAccess.abstracts.ProjectDao;
+import com.matmuh.matmuhsite.entities.Image;
 import com.matmuh.matmuhsite.entities.Project;
 import com.matmuh.matmuhsite.entities.dtos.RequestProjectDto;
+import com.matmuh.matmuhsite.entities.dtos.ResponseProjectDto;
+import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
+@AllArgsConstructor
 public class ProjectManager implements ProjectService {
 
 
     private final ProjectDao projectDao;
 
-    @Autowired
-    public ProjectManager(ProjectDao projectDao){
-        this.projectDao = projectDao;
-    }
+    private final ImageService imageService;
 
     @Override
-    public Result addProject(RequestProjectDto requestProjectDto) {
+    public Result addProject(RequestProjectDto requestProjectDto, MultipartFile image) {
 
         if (requestProjectDto.getName() == null){
             return new ErrorResult(ProjectMessages.nameCanotBeNull);
@@ -34,15 +41,23 @@ public class ProjectManager implements ProjectService {
         if (requestProjectDto.getDate() == null){
             return new ErrorResult(ProjectMessages.dateCanotBeNull);
         }
-        if (requestProjectDto.getContext() == null){
-            return new ErrorResult(ProjectMessages.contextCanotBeNull);
+
+        Image projectImage = null;
+
+        if(image != null){
+            var imageResult = imageService.addImage(image);
+            if (!imageResult.isSuccess()){
+                return new ErrorResult(imageResult.getMessage());
+            }
+
+            projectImage = imageResult.getData();
         }
 
         var projectToSave = Project.builder()
                 .name(requestProjectDto.getName())
                 .description(requestProjectDto.getDescription())
                 .date(requestProjectDto.getDate())
-                .context(requestProjectDto.getContext())
+                .image(projectImage)
                 .build();
 
         projectDao.save(projectToSave);
@@ -78,13 +93,11 @@ public class ProjectManager implements ProjectService {
             if (requestProjectDto.getDescription() == null){
                 return new ErrorResult(ProjectMessages.descriptionCanotBeNull);
             }
-            if (requestProjectDto.getContext() == null){
-                return new ErrorResult(ProjectMessages.contextCanotBeNull);
-            }
+
 
             project.setName(requestProjectDto.getName().isEmpty() ? project.getName() : requestProjectDto.getName());
             project.setDescription(requestProjectDto.getDescription().isEmpty() ? project.getDescription() : requestProjectDto.getDescription());
-            project.setContext(requestProjectDto.getContext().isEmpty() ? project.getContext() : requestProjectDto.getContext());
+            //project.setContext(requestProjectDto.getContext().isEmpty() ? project.getContext() : requestProjectDto.getContext());
 
             projectDao.save(project);
 
@@ -92,14 +105,31 @@ public class ProjectManager implements ProjectService {
     }
 
     @Override
-    public DataResult<List<Project>> getProjects() {
-        var result = projectDao.findAll();
+    public DataResult<List<ResponseProjectDto>> getProjects(Optional<Integer> numberOfProjects) {
 
-        if (result.isEmpty()){
+        List<Project> result = new ArrayList<>();
+        if(numberOfProjects.isPresent()) {
+            result = projectDao.findAll(PageRequest.of(0, numberOfProjects.get())).toList();
+        }
+        else {
+
+            result = projectDao.findAll();
+        }
+
+        if (result == null){
             return new ErrorDataResult<>(ProjectMessages.PorjectsNotFound);
         }
 
-        return new SuccessDataResult<List<Project>>(result, ProjectMessages.getProjectsSuccess);
+        var projectResult = result.stream().map(project -> ResponseProjectDto.builder()
+                .id(project.getId())
+                .name(project.getName())
+                .description(project.getDescription())
+                .date(project.getDate())
+                .imageUrl(project.getImage()==null? null : "http://localhost:8080/api/images/getImageByUrl/"+project.getImage().getImageUrl())
+                .build())
+                .toList();
+
+        return new SuccessDataResult<List<ResponseProjectDto>>(projectResult, ProjectMessages.getProjectsSuccess);
     }
 
     @Override

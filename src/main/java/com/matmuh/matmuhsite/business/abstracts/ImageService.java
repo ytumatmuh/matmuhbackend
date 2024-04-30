@@ -10,13 +10,15 @@ import java.util.List;
 
 public interface ImageService {
 
-    Result addImage(MultipartFile file);
+    DataResult<Image> addImage(MultipartFile file);
 
     DataResult<List<Image>> getImages();
 
     DataResult<Image> getImageById(int id);
 
     Result deleteImage(int id);
+
+    DataResult<Image> getImageByImageUrl(String url);
 
 
 }

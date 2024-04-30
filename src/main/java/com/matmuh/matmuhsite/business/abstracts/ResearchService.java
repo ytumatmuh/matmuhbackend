@@ -6,6 +6,7 @@ import com.matmuh.matmuhsite.entities.Research;
 import com.matmuh.matmuhsite.entities.dtos.RequestResearchDto;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ResearchService {
 
@@ -13,7 +14,7 @@ public interface ResearchService {
 
     Result updateResearch(RequestResearchDto requestResearchDto);
 
-    DataResult<List<Research>> getResearchs();
+    DataResult<List<Research>> getResearches(Optional<Integer> numberOfResearchs);
 
     DataResult<Research> getResearchById(int id);
 

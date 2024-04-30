@@ -21,6 +21,4 @@ public class Research {
     @Column(name = "description")
     private String description;
 
-    @Column(name = "context")
-    private String context;
 }

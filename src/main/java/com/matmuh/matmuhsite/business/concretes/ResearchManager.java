@@ -7,9 +7,12 @@ import com.matmuh.matmuhsite.dataAccess.abstracts.ResearchDao;
 import com.matmuh.matmuhsite.entities.Research;
 import com.matmuh.matmuhsite.entities.dtos.RequestResearchDto;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public record ResearchManager (ResearchDao researchDao) implements ResearchService  {
@@ -25,14 +28,11 @@ public record ResearchManager (ResearchDao researchDao) implements ResearchServi
         return new ErrorResult(ResearchMessages.descriptionCanotBeNull);
         }
 
-        if (requestResearchDto.getContext() == null) {
-            return new ErrorResult(ResearchMessages.contextCanotBeNull);
-        }
 
         Research research = Research.builder()
                 .title(requestResearchDto.getTitle())
                 .description(requestResearchDto.getDescription())
-                .context(requestResearchDto.getContext())
+                //.context(requestResearchDto.getContext())
                 .build();
         this.researchDao.save(research);
         return new SuccessResult(ResearchMessages.researchAddSuccess);
@@ -45,7 +45,7 @@ public record ResearchManager (ResearchDao researchDao) implements ResearchServi
         var result = researchDao.findById(requestResearchDto.getId());
 
 
-        result.setContext(requestResearchDto.getContext()==null?result.getContext():requestResearchDto.getContext());
+        //result.setContext(requestResearchDto.getContext()==null?result.getContext():requestResearchDto.getContext());
         result.setDescription(requestResearchDto.getDescription()==null?result.getDescription():requestResearchDto.getDescription());
         result.setTitle(requestResearchDto.getTitle()==null?result.getTitle():requestResearchDto.getTitle());
 
@@ -54,8 +54,18 @@ public record ResearchManager (ResearchDao researchDao) implements ResearchServi
     }
 
     @Override
-    public DataResult<List<Research>> getResearchs() {
-        var result = researchDao.findAll();
+    public DataResult<List<Research>> getResearches(Optional<Integer> numberOfResearches) {
+        List<Research> result = new ArrayList<>();
+
+        if (numberOfResearches.isPresent()) {
+            result = researchDao.findAll(PageRequest.of(0, numberOfResearches.get())).toList();
+        } else {
+            result = researchDao.findAll();
+        }
+
+        if(result == null){
+            return new ErrorDataResult<>(ResearchMessages.researchNotFound);
+        }
 
         return new SuccessDataResult<List<Research>>(result, ResearchMessages.getResearchsSuccess);
     }

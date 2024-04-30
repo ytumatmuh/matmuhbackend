@@ -41,4 +41,7 @@ public class Lecture {
 
     @Column(name = "notes_link")
     private String notesLink;
+
+    @Column(name = "lecture_term")
+    private String lectureTerm;
 }

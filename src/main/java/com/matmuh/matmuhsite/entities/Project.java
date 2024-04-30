@@ -22,9 +22,10 @@ public class Project {
     @Column(name = "description")
     private String description;
 
-    @Column(name = "context")
-    private String context;
-
     @Column(name = "date")
     private Date date;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    private Image image;
 }
+

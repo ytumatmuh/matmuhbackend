@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.security.SecureRandom;
+import java.util.Base64;
 import java.util.List;
 
 @Service
@@ -26,19 +28,27 @@ public class ImageManager implements ImageService {
     }
 
     @Override
-    public Result addImage(MultipartFile file) {
+    public DataResult<Image> addImage(MultipartFile file) {
         try {
             Image image = Image.builder()
                     .imageType(file.getContentType())
                     .imageName(file.getName())
                     .imageData(file.getBytes())
+                    .imageUrl(generateUrl())
                     .build();
 
             imageDao.save(image);
+            return new SuccessDataResult<>(image,ImageMessages.photoAddSuccess);
         } catch (IOException e) {
-            return new ErrorResult();
+            return new ErrorDataResult<>();
         }
-        return null;
+    }
+
+    private String generateUrl() {
+        SecureRandom secureRandom = new SecureRandom();
+        byte[] randomBytes = new byte[32];
+        secureRandom.nextBytes(randomBytes);
+        return Base64.getUrlEncoder().encodeToString(randomBytes);
     }
 
 
@@ -74,6 +84,16 @@ public class ImageManager implements ImageService {
         this.imageDao.delete(result);
         return new SuccessResult(ImageMessages.photoDeleteSuccess);
 
+    }
+
+    public DataResult<Image> getImageByImageUrl(String url){
+        var result = imageDao.findByImageUrl(url);
+
+        if(result == null){
+            return new ErrorDataResult<>(ImageMessages.getPhotosEmpty);
+        }
+
+        return new SuccessDataResult<Image>(result, ImageMessages.getPhotoSuccess);
     }
 
 }
