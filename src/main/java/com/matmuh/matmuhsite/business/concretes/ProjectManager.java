@@ -12,6 +12,7 @@ import com.matmuh.matmuhsite.entities.dtos.ResponseProjectDto;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,13 +22,16 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-@AllArgsConstructor
 public class ProjectManager implements ProjectService {
 
+    @Autowired
+    private ProjectDao projectDao;
 
-    private final ProjectDao projectDao;
+    @Autowired
+    private ImageService imageService;
 
-    private final ImageService imageService;
+    @Value("${api.url}")
+    private String API_URL;
 
     @Override
     public Result addProject(RequestProjectDto requestProjectDto, MultipartFile image) {
@@ -125,7 +129,7 @@ public class ProjectManager implements ProjectService {
                 .name(project.getName())
                 .description(project.getDescription())
                 .date(project.getDate())
-                .imageUrl(project.getImage()==null? null : "http://localhost:8080/api/images/getImageByUrl/"+project.getImage().getImageUrl())
+                .imageUrl(project.getImage()==null? null : API_URL+"/api/images/getImageByUrl/"+project.getImage().getImageUrl())
                 .build())
                 .toList();
 
