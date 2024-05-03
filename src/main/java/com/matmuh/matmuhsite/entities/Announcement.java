@@ -27,7 +27,7 @@ public class Announcement {
     @Column(name = "publish_date")
     private Date publishDate;
 
-    @Column(name = "content")
+    @Column(name = "content", length = 8192)
     private String content;
 
     @OneToOne(cascade = CascadeType.ALL)
