@@ -19,7 +19,7 @@ public class Project {
     @Column(name = "name")
     private String name;
 
-    @Column(name = "description")
+    @Column(name = "description", length = 8192)
     private String description;
 
     @Column(name = "date")

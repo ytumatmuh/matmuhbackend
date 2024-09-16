@@ -1,12 +1,14 @@
 package com.matmuh.matmuhsite.business.concretes;
 
 import com.matmuh.matmuhsite.business.abstracts.ImageService;
+import com.matmuh.matmuhsite.business.abstracts.UserService;
 import com.matmuh.matmuhsite.business.constants.ImageMessages;
 import com.matmuh.matmuhsite.core.utilities.results.*;
 import com.matmuh.matmuhsite.dataAccess.abstracts.ImageDao;
 import com.matmuh.matmuhsite.entities.Image;
 import com.matmuh.matmuhsite.entities.dtos.RequestImageDto;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -22,33 +24,46 @@ public class ImageManager implements ImageService {
 
     private final ImageDao imageDao;
 
-    @Autowired
-    public ImageManager(ImageDao imageDao) {
+    private final UserService userService;
+
+    @Value("${api.url}")
+    private String API_URL;
+
+    @Value("${image.get.url}")
+    private String IMAGE_GET_URL;
+
+    public ImageManager(ImageDao imageDao, UserService userService) {
         this.imageDao = imageDao;
+        this.userService = userService;
     }
 
     @Override
-    public DataResult<Image> addImage(MultipartFile file) {
+    public DataResult<Image> addImage(MultipartFile image) {
+
+
+        var userResult = userService.getAuthenticatedUser();
+        if (!userResult.isSuccess()){
+            return new ErrorDataResult<>(null, userResult.getMessage());
+        }
+
+
         try {
-            Image image = Image.builder()
-                    .imageType(file.getContentType())
-                    .imageName(file.getName())
-                    .imageData(file.getBytes())
-                    .imageUrl(generateUrl())
+            Image imageToSave = Image.builder()
+                    .type(image.getContentType())
+                    .name(image.getOriginalFilename())
+                    .data(image.getBytes())
+                    .url(generateUrl())
+                    .createdBy(userResult.getData())
                     .build();
 
-            imageDao.save(image);
-            return new SuccessDataResult<>(image,ImageMessages.photoAddSuccess);
-        } catch (IOException e) {
-            return new ErrorDataResult<>();
-        }
-    }
+            imageDao.save(imageToSave);
 
-    private String generateUrl() {
-        SecureRandom secureRandom = new SecureRandom();
-        byte[] randomBytes = new byte[32];
-        secureRandom.nextBytes(randomBytes);
-        return Base64.getUrlEncoder().encodeToString(randomBytes);
+            //image.setImageUrl(API_URL+IMAGE_GET_URL+image.getImageUrl());
+
+            return new SuccessDataResult<>(imageToSave,ImageMessages.photoAddSuccess);
+        } catch (IOException e) {
+            return new ErrorDataResult<>(e.getMessage());
+        }
     }
 
 
@@ -60,6 +75,8 @@ public class ImageManager implements ImageService {
             return new ErrorDataResult<>(ImageMessages.getPhotosEmpty);
         }
 
+        result.forEach(image -> image.setUrl(API_URL+IMAGE_GET_URL+image.getUrl()));
+
         return new SuccessDataResult<List<Image>>(result, ImageMessages.getPhotosSuccess);
     }
 
@@ -67,33 +84,44 @@ public class ImageManager implements ImageService {
     public DataResult<Image> getImageById(int id) {
         var result = imageDao.findById(id);
 
-        if(result == null){
+        if(!result.isPresent()){
             return new ErrorDataResult<>(ImageMessages.getPhotosEmpty);
         }
-        return new SuccessDataResult<Image>(result, ImageMessages.getPhotoSuccess);
+
+        result.get().setUrl(API_URL+IMAGE_GET_URL+result.get().getUrl());
+        return new SuccessDataResult<Image>(result.get(), ImageMessages.getPhotoSuccess);
     }
 
     @Override
     public Result deleteImage(int id) {
         var result = this.imageDao.findById(id);
 
-        if(result == null){
+        if(!result.isPresent()){
             return new ErrorResult(ImageMessages.getPhotosEmpty);
         }
 
-        this.imageDao.delete(result);
+        this.imageDao.delete(result.get());
         return new SuccessResult(ImageMessages.photoDeleteSuccess);
 
     }
 
     public DataResult<Image> getImageByImageUrl(String url){
-        var result = imageDao.findByImageUrl(url);
+        var result = imageDao.findByUrl(url);
 
-        if(result == null){
+        if(!result.isPresent()){
             return new ErrorDataResult<>(ImageMessages.getPhotosEmpty);
         }
 
-        return new SuccessDataResult<Image>(result, ImageMessages.getPhotoSuccess);
+        result.get().setUrl(API_URL+IMAGE_GET_URL+result.get().getUrl());
+
+        return new SuccessDataResult<Image>(result.get(), ImageMessages.getPhotoSuccess);
+    }
+
+    private String generateUrl() {
+        SecureRandom secureRandom = new SecureRandom();
+        byte[] randomBytes = new byte[64];
+        secureRandom.nextBytes(randomBytes);
+        return Base64.getUrlEncoder().encodeToString(randomBytes);
     }
 
 }

@@ -19,7 +19,7 @@ public class AuthController {
     @Autowired
     private JwtService jwtService;
 
-    @GetMapping("/login")
+    @PostMapping("/login")
     public DataResult<String> login(@RequestBody RequestLoginDto requestLoginDto) {
         return authService.login(requestLoginDto);
     }

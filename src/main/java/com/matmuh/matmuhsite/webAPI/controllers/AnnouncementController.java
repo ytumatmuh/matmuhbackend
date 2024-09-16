@@ -5,6 +5,7 @@ import com.matmuh.matmuhsite.core.utilities.results.DataResult;
 import com.matmuh.matmuhsite.core.utilities.results.Result;
 import com.matmuh.matmuhsite.entities.Announcement;
 import com.matmuh.matmuhsite.entities.dtos.RequestAnnouncementDto;
+import com.matmuh.matmuhsite.entities.dtos.ResponseAnnouncementDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -23,15 +24,15 @@ public class AnnouncementController {
     @PostMapping("/addAnnouncement")
     public Result addAnnouncement(
             @RequestPart("data") RequestAnnouncementDto announcementDto,
-            @RequestPart("image") MultipartFile image) {
-        return announcementService.addAnnouncement(announcementDto, image);
+            @RequestPart("coverImage") MultipartFile coverImage) {
+        return announcementService.addAnnouncement(announcementDto, coverImage);
     }
     @GetMapping(value = {"/getAnnouncements/{numberOfAnnouncements}", "/getAnnouncements"})
     public Result getAnnouncements(@PathVariable Optional<Integer> numberOfAnnouncements){
         return announcementService.getAnnouncements(numberOfAnnouncements);
     }
-    @GetMapping("/getById")
-    public DataResult<Announcement> getAnnouncementById(@RequestParam @Validated int id){
+    @GetMapping("/getAnnouncementById/{id}")
+    public DataResult<ResponseAnnouncementDto> getAnnouncementById(@PathVariable int id){
         return announcementService.getAnnouncementById(id);
 
     }

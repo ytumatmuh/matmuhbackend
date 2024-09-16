@@ -18,7 +18,7 @@ public class Research {
     @Column(name = "title")
     private String title;
 
-    @Column(name = "description")
+    @Column(name = "description", length = 8192)
     private String description;
 
 }

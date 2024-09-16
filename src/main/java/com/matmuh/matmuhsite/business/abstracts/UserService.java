@@ -22,5 +22,7 @@ public interface UserService extends UserDetailsService {
 
     Result deleteUser(int id);
 
+    DataResult<User> getAuthenticatedUser();
+
 
 }

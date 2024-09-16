@@ -1,5 +1,6 @@
 package com.matmuh.matmuhsite.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -7,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.List;
 import java.util.Set;
 
 @Data
@@ -34,6 +36,7 @@ public class User implements UserDetails {
     @Column(name = "email")
     private String email;
 
+    @JsonIgnore
     @Column(name = "password")
     private String password;
 
@@ -43,24 +46,13 @@ public class User implements UserDetails {
     @Enumerated(EnumType.STRING)
     private Set<Role> authorities;
 
+    @JsonIgnore
+    @OneToMany(mappedBy = "createdBy")
+    private List<File> createdFiles;
 
-    @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
+    @JsonIgnore
+    @OneToMany(mappedBy = "createdBy")
+    private List<Image> createdImages;
 
-    @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
 
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return true;
-    }
 }

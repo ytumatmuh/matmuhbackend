@@ -13,9 +13,9 @@ public class ResponseImageDto {
 
     private int id;
 
-    private int imageName;
+    private int name;
 
-    private String imageType;
+    private String type;
 
-    private String imageUrl;
+    private String url;
 }

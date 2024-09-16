@@ -20,7 +20,5 @@ public class RequestAnnouncementDto {
 
     private String content;
 
-    private List<String> links;
-
 
 }

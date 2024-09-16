@@ -15,4 +15,5 @@ public class UserMessages {
     public static String usersListed = "Kullanıcılar listelendi";
     public static String userListed = "Kullanıcı listelendi";
     public static String userDeleteSuccess = "Kullanıcı silindi";
+    public static String userIsNotAuthenticatedPleaseLogin = "Kullanıcı kimliği doğrulanamadı. Lütfen giriş yapınız";
 }

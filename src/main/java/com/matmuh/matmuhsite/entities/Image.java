@@ -17,15 +17,19 @@ public class Image{
     private int id;
 
     @Lob
-    @Column(name = "image_data")
-    private byte[] imageData;
+    @Column(name = "data")
+    private byte[] data;
 
-    @Column(name = "image_name")
-    private String imageName;
+    @Column(name = "name")
+    private String name;
 
-    @Column(name = "image_type")
-    private String imageType;
+    @Column(name = "type")
+    private String type;
 
-    @Column(name = "image_url")
-    private String imageUrl;
+    @Column(name = "url")
+    private String url;
+
+    @ManyToOne
+    @JoinColumn(name = "created_by")
+    private User createdBy;
 }

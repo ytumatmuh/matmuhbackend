@@ -5,14 +5,10 @@ import com.matmuh.matmuhsite.business.abstracts.ImageService;
 import com.matmuh.matmuhsite.business.constants.AnnouncementMessages;
 import com.matmuh.matmuhsite.core.utilities.results.*;
 import com.matmuh.matmuhsite.dataAccess.abstracts.AnnouncementDao;
-import com.matmuh.matmuhsite.dataAccess.abstracts.AnnouncementLinkDao;
 import com.matmuh.matmuhsite.entities.Announcement;
-import com.matmuh.matmuhsite.entities.AnnouncementLink;
 import com.matmuh.matmuhsite.entities.Image;
 import com.matmuh.matmuhsite.entities.dtos.RequestAnnouncementDto;
 import com.matmuh.matmuhsite.entities.dtos.ResponseAnnouncementDto;
-import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
@@ -33,15 +29,16 @@ public class AnnouncementManager implements AnnouncementService {
     @Autowired
     private ImageService imageService;
 
-    @Autowired
-    private AnnouncementLinkDao announcementLinkDao;
 
     @Value("${api.url}")
     private String API_URL;
 
+    @Value("${image.get.url}")
+    private String IMAGE_GET_URL;
+
 
     @Override
-    public Result addAnnouncement(RequestAnnouncementDto announcementDto, MultipartFile image) {
+    public Result addAnnouncement(RequestAnnouncementDto announcementDto, MultipartFile coverImage) {
         if (announcementDto.getTitle() == null){
             return new ErrorResult(AnnouncementMessages.nameCanotBeNull);
         }
@@ -52,8 +49,8 @@ public class AnnouncementManager implements AnnouncementService {
 
          Image announcementImage = null;
 
-        if(image != null){
-            var imageResult = imageService.addImage(image);
+        if(coverImage != null){
+            var imageResult = imageService.addImage(coverImage);
             if (!imageResult.isSuccess()){
                 return new ErrorResult(imageResult.getMessage());
             }
@@ -66,17 +63,10 @@ public class AnnouncementManager implements AnnouncementService {
                 .title(announcementDto.getTitle())
                 .content(announcementDto.getContent())
                 .publishDate(new Date())
-                .image(announcementImage)
+                .coverImage(announcementImage)
                 .build();
 
-        var announcementLinksToSave = announcementDto.getLinks().stream().map(link -> AnnouncementLink.builder()
-                        .link(link)
-                        .announcement(announcementToSave)
-                        .build())
-                .toList();
-
         announcementDao.save(announcementToSave);
-        announcementLinkDao.saveAll(announcementLinksToSave);
         return new SuccessResult(AnnouncementMessages.announcementAddSuccess);
     }
 
@@ -123,22 +113,29 @@ public class AnnouncementManager implements AnnouncementService {
                 .title(announcement.getTitle())
                 .content(announcement.getContent())
                 .publishDate(announcement.getPublishDate())
-                .imageUrl(announcement.getImage()==null? null : API_URL+"/api/images/getImageByUrl/"+announcement.getImage().getImageUrl())
-                .links(announcement.getLinks())
+                .coverImageUrl(announcement.getCoverImage()==null? null : API_URL+IMAGE_GET_URL+announcement.getCoverImage().getUrl())
                 .build()).toList();
 
         return new SuccessDataResult<List<ResponseAnnouncementDto>>(announcementResult, AnnouncementMessages.getAnnouncementsSuccess);
     }
 
     @Override
-    public DataResult<Announcement> getAnnouncementById(int id) {
+    public DataResult<ResponseAnnouncementDto> getAnnouncementById(int id) {
         var result = announcementDao.findById(id);
 
         if(result == null){
             return new ErrorDataResult<>(AnnouncementMessages.announcementNotFound);
         }
 
-        return new SuccessDataResult<Announcement>(result, AnnouncementMessages.getAnnouncementByIdSuccess);
+        var announcementToReturn = ResponseAnnouncementDto.builder()
+                .id(result.getId())
+                .title(result.getTitle())
+                .content(result.getContent())
+                .publishDate(result.getPublishDate())
+                .coverImageUrl(result.getCoverImage()==null? null : API_URL+IMAGE_GET_URL+result.getCoverImage().getUrl())
+                .build();
+
+        return new SuccessDataResult<ResponseAnnouncementDto>(announcementToReturn, AnnouncementMessages.getAnnouncementByIdSuccess);
     }
 
     @Override

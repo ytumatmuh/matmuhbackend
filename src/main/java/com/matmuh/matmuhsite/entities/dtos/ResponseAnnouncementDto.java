@@ -1,7 +1,5 @@
 package com.matmuh.matmuhsite.entities.dtos;
 
-import com.matmuh.matmuhsite.entities.AnnouncementLink;
-import com.matmuh.matmuhsite.entities.Image;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -24,8 +22,7 @@ public class ResponseAnnouncementDto {
 
     private String content;
 
-    private String imageUrl;
+    private String coverImageUrl;
 
-    private List<AnnouncementLink> links;
 
 }

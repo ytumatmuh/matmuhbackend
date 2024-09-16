@@ -6,10 +6,12 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Repository
 public interface ImageDao extends JpaRepository<Image, Integer> {
-    Image findById(int id);
+    Optional<Image> findById(int id);
 
     @Transactional
-    Image findByImageUrl(String imageUrl);
+    Optional<Image> findByUrl(String url);
 }

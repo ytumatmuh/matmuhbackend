@@ -17,7 +17,7 @@ public interface AnnouncementService {
 
     DataResult<List<ResponseAnnouncementDto>> getAnnouncements(Optional<Integer> numberOfAnnouncements);
 
-    DataResult<Announcement> getAnnouncementById(int id);
+    DataResult<ResponseAnnouncementDto> getAnnouncementById(int id);
 
     Result deleteAnnouncement(int id);
 

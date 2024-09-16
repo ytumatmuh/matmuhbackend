@@ -31,9 +31,6 @@ public class Announcement {
     private String content;
 
     @OneToOne(cascade = CascadeType.ALL)
-    private Image image;
-
-    @OneToMany(mappedBy = "announcement", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    private List<AnnouncementLink> links;
+    private Image coverImage;
 
 }

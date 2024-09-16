@@ -129,7 +129,7 @@ public class ProjectManager implements ProjectService {
                 .name(project.getName())
                 .description(project.getDescription())
                 .date(project.getDate())
-                .imageUrl(project.getImage()==null? null : API_URL+"/api/images/getImageByUrl/"+project.getImage().getImageUrl())
+                .imageUrl(project.getImage()==null? null : API_URL+"/api/images/getImageByUrl/"+project.getImage().getUrl())
                 .build())
                 .toList();
 
