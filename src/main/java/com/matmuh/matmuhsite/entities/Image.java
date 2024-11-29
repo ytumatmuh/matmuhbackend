@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.Type;
 
+import java.util.UUID;
+
 @Data
 @Entity
 @AllArgsConstructor
@@ -12,9 +14,9 @@ import org.hibernate.annotations.Type;
 @Table(name = "images")
 public class Image{
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id")
-    private int id;
+    private UUID id;
 
     @Lob
     @Column(name = "data")

@@ -3,6 +3,8 @@ package com.matmuh.matmuhsite.entities;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.UUID;
+
 @Data
 @Entity
 @AllArgsConstructor
@@ -10,10 +12,12 @@ import lombok.*;
 @Builder
 @Table(name = "researches")
 public class Research {
+
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id")
-    private int id;
+    private UUID id;
 
     @Column(name = "title")
     private String title;
