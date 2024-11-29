@@ -1,22 +1,24 @@
 package com.matmuh.matmuhsite.core.utilities.results;
 
-public class DataResult<T> extends Result{
+import org.springframework.http.HttpStatus;
 
-    private T data;
+public class DataResult<T> extends Result {
+	
+	private T data;
+	
+	public T getData() {
+		return data;
+	}
 
-    public T getData() {
-        return data;
-    }
-
-    public DataResult(T data, boolean success, String message) {
-        super(success, message);
-        this.data = data;
-
-    }
-
-    public DataResult(T data, boolean success) {
-        super(success);
-        this.data = data;
-    }
+	public DataResult(T data, boolean success, String message, HttpStatus httpStatus) {
+		super(success, message, httpStatus);
+		this.data = data;
+		
+	}
+	
+	public DataResult(T data, boolean success, HttpStatus httpStatus) {
+		super(success, httpStatus);
+		this.data = data;
+	}
 
 }
