@@ -6,28 +6,25 @@ import com.matmuh.matmuhsite.business.constants.AnnouncementMessages;
 import com.matmuh.matmuhsite.core.utilities.results.*;
 import com.matmuh.matmuhsite.dataAccess.abstracts.AnnouncementDao;
 import com.matmuh.matmuhsite.entities.Announcement;
+import com.matmuh.matmuhsite.entities.File;
 import com.matmuh.matmuhsite.entities.Image;
 import com.matmuh.matmuhsite.entities.dtos.RequestAnnouncementDto;
 import com.matmuh.matmuhsite.entities.dtos.ResponseAnnouncementDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class AnnouncementManager implements AnnouncementService {
 
-    @Autowired
-    private AnnouncementDao announcementDao;
+    private final AnnouncementDao announcementDao;
 
-    @Autowired
-    private ImageService imageService;
+    private final ImageService imageService;
 
 
     @Value("${api.url}")
@@ -37,66 +34,48 @@ public class AnnouncementManager implements AnnouncementService {
     private String IMAGE_GET_URL;
 
 
+    public AnnouncementManager(AnnouncementDao announcementDao, ImageService imageService) {
+        this.announcementDao = announcementDao;
+        this.imageService = imageService;
+    }
+
     @Override
-    public Result addAnnouncement(RequestAnnouncementDto announcementDto, MultipartFile coverImage) {
-        if (announcementDto.getTitle() == null){
-            return new ErrorResult(AnnouncementMessages.nameCanotBeNull);
+    public Result addAnnouncement(Announcement announcement, Optional<MultipartFile> coverImage) {
+        if (announcement.getTitle() == null){
+            return new ErrorResult(AnnouncementMessages.nameCanotBeNull, HttpStatus.BAD_REQUEST);
         }
 
-        if(announcementDto.getContent() == null){
-            return new ErrorResult(AnnouncementMessages.contentCanotBeNull);
+        if(announcement.getContent() == null){
+            return new ErrorResult(AnnouncementMessages.contentCanotBeNull, HttpStatus.BAD_REQUEST);
         }
 
          Image announcementImage = null;
 
-        if(coverImage != null){
-            var imageResult = imageService.addImage(coverImage);
+        if(coverImage.isPresent()){
+            var imageResult = imageService.addImage(coverImage.get());
             if (!imageResult.isSuccess()){
-                return new ErrorResult(imageResult.getMessage());
+                return imageResult;
             }
 
             announcementImage = imageResult.getData();
         }
+        announcement.setCoverImage(announcementImage);
 
 
-        var announcementToSave = Announcement.builder()
-                .title(announcementDto.getTitle())
-                .content(announcementDto.getContent())
-                .publishDate(new Date())
-                .coverImage(announcementImage)
-                .build();
-
-        announcementDao.save(announcementToSave);
-        return new SuccessResult(AnnouncementMessages.announcementAddSuccess);
+        announcementDao.save(announcement);
+        return new SuccessResult(AnnouncementMessages.announcementAddSuccess, HttpStatus.CREATED);
     }
 
     @Override
-    public Result updateAnnouncement(RequestAnnouncementDto requestAnnouncementDto) {
-
-        var announcement = announcementDao.findById(requestAnnouncementDto.getId());
-
-        if (announcement == null){
-            return new ErrorResult(AnnouncementMessages.announcementNotFound);
-        }
-
-        if(requestAnnouncementDto.getTitle() == null){
-            return new ErrorResult(AnnouncementMessages.nameCanotBeNull);
-        }
-
-        if(requestAnnouncementDto.getContent() == null){
-            return new ErrorResult(AnnouncementMessages.contentCanotBeNull);
-        }
-
-        announcement.setTitle(requestAnnouncementDto.getTitle().isEmpty() ? announcement.getTitle() : requestAnnouncementDto.getTitle());
-        announcement.setContent(requestAnnouncementDto.getContent().isEmpty() ? announcement.getContent() : requestAnnouncementDto.getContent());
+    public Result updateAnnouncement(Announcement announcement) {
 
         announcementDao.save(announcement);
 
-        return new SuccessResult(AnnouncementMessages.announcementUpdateSuccess);
+        return new SuccessResult(AnnouncementMessages.announcementUpdateSuccess, HttpStatus.OK);
     }
 
     @Override
-    public DataResult<List<ResponseAnnouncementDto>> getAnnouncements(Optional<Integer> numberOfAnnouncements) {
+    public DataResult<List<Announcement>> getAnnouncements(Optional<Integer> numberOfAnnouncements) {
             List<Announcement> result = new ArrayList<>();
         if (numberOfAnnouncements.isPresent()){
             result = announcementDao.findAll(PageRequest.of(0, numberOfAnnouncements.get())).toList();
@@ -105,48 +84,34 @@ public class AnnouncementManager implements AnnouncementService {
         }
 
         if (result == null){
-            return new ErrorDataResult<>(AnnouncementMessages.annoucementsNotFound);
+            return new ErrorDataResult<>(AnnouncementMessages.annoucementsNotFound, HttpStatus.NOT_FOUND);
         }
 
-        var announcementResult = result.stream().map(announcement -> ResponseAnnouncementDto.builder()
-                .id(announcement.getId())
-                .title(announcement.getTitle())
-                .content(announcement.getContent())
-                .publishDate(announcement.getPublishDate())
-                .coverImageUrl(announcement.getCoverImage()==null? null : API_URL+IMAGE_GET_URL+announcement.getCoverImage().getUrl())
-                .build()).toList();
 
-        return new SuccessDataResult<List<ResponseAnnouncementDto>>(announcementResult, AnnouncementMessages.getAnnouncementsSuccess);
+
+        return new SuccessDataResult<List<Announcement>>(result, AnnouncementMessages.getAnnouncementsSuccess, HttpStatus.OK);
     }
 
     @Override
-    public DataResult<ResponseAnnouncementDto> getAnnouncementById(int id) {
+    public DataResult<Announcement> getAnnouncementById(UUID id) {
         var result = announcementDao.findById(id);
 
-        if(result == null){
-            return new ErrorDataResult<>(AnnouncementMessages.announcementNotFound);
+        if(result.isEmpty()){
+            return new ErrorDataResult<>(AnnouncementMessages.announcementNotFound, HttpStatus.NOT_FOUND);
         }
 
-        var announcementToReturn = ResponseAnnouncementDto.builder()
-                .id(result.getId())
-                .title(result.getTitle())
-                .content(result.getContent())
-                .publishDate(result.getPublishDate())
-                .coverImageUrl(result.getCoverImage()==null? null : API_URL+IMAGE_GET_URL+result.getCoverImage().getUrl())
-                .build();
-
-        return new SuccessDataResult<ResponseAnnouncementDto>(announcementToReturn, AnnouncementMessages.getAnnouncementByIdSuccess);
+        return new SuccessDataResult<Announcement>(result.get(), AnnouncementMessages.getAnnouncementByIdSuccess, HttpStatus.OK);
     }
 
     @Override
-    public Result deleteAnnouncement(int id) {
+    public Result deleteAnnouncement(UUID id) {
         var result = this.announcementDao.findById(id);
 
-        if (result == null){
-            return new ErrorResult(AnnouncementMessages.announcementNotFound);
+        if (result.isEmpty()){
+            return new ErrorResult(AnnouncementMessages.announcementNotFound, HttpStatus.NOT_FOUND);
         }
 
-        this.announcementDao.delete(result);
-        return new SuccessResult(AnnouncementMessages.announcementDeleteSuccess);
+        this.announcementDao.delete(result.get());
+        return new SuccessResult(AnnouncementMessages.announcementDeleteSuccess, HttpStatus.OK);
     }
 }

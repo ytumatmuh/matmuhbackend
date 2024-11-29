@@ -7,18 +7,19 @@ import com.matmuh.matmuhsite.entities.dtos.RequestResearchDto;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 public interface ResearchService {
 
-    Result addResearch(RequestResearchDto requestResearchDto);
+    Result addResearch(Research research);
 
-    Result updateResearch(RequestResearchDto requestResearchDto);
+    Result updateResearch(Research research);
 
     DataResult<List<Research>> getResearches(Optional<Integer> numberOfResearchs);
 
-    DataResult<Research> getResearchById(int id);
+    DataResult<Research> getResearchById(UUID id);
 
-    Result deleteResearch(int id);
+    Result deleteResearch(UUID id);
 
 
 }

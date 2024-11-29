@@ -1,6 +1,5 @@
 package com.matmuh.matmuhsite.business.constants;
 
-import com.matmuh.matmuhsite.entities.File;
 
 public class FileMessages {
     public static String pdfAddSuccess = "File başarıyla eklendi!";

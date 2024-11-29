@@ -9,6 +9,7 @@ import com.matmuh.matmuhsite.entities.Image;
 import com.matmuh.matmuhsite.entities.dtos.RequestImageDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class ImageManager implements ImageService {
@@ -38,14 +40,12 @@ public class ImageManager implements ImageService {
     }
 
     @Override
-    public DataResult<Image> addImage(MultipartFile image) {
-
+    public DataResult<?> addImage(MultipartFile image) {
 
         var userResult = userService.getAuthenticatedUser();
         if (!userResult.isSuccess()){
-            return new ErrorDataResult<>(null, userResult.getMessage());
+            return userResult;
         }
-
 
         try {
             Image imageToSave = Image.builder()
@@ -60,9 +60,9 @@ public class ImageManager implements ImageService {
 
             //image.setImageUrl(API_URL+IMAGE_GET_URL+image.getImageUrl());
 
-            return new SuccessDataResult<>(imageToSave,ImageMessages.photoAddSuccess);
+            return new SuccessDataResult<>(imageToSave,ImageMessages.photoAddSuccess, HttpStatus.CREATED);
         } catch (IOException e) {
-            return new ErrorDataResult<>(e.getMessage());
+            return new ErrorDataResult<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -72,36 +72,36 @@ public class ImageManager implements ImageService {
         var result = imageDao.findAll();
 
         if(result.isEmpty()){
-            return new ErrorDataResult<>(ImageMessages.getPhotosEmpty);
+            return new ErrorDataResult<>(ImageMessages.getPhotosEmpty, HttpStatus.NOT_FOUND);
         }
 
         result.forEach(image -> image.setUrl(API_URL+IMAGE_GET_URL+image.getUrl()));
 
-        return new SuccessDataResult<List<Image>>(result, ImageMessages.getPhotosSuccess);
+        return new SuccessDataResult<List<Image>>(result, ImageMessages.getPhotosSuccess, HttpStatus.OK);
     }
 
     @Override
-    public DataResult<Image> getImageById(int id) {
+    public DataResult<Image> getImageById(UUID id) {
         var result = imageDao.findById(id);
 
         if(!result.isPresent()){
-            return new ErrorDataResult<>(ImageMessages.getPhotosEmpty);
+            return new ErrorDataResult<>(ImageMessages.getPhotosEmpty, HttpStatus.NOT_FOUND);
         }
 
         result.get().setUrl(API_URL+IMAGE_GET_URL+result.get().getUrl());
-        return new SuccessDataResult<Image>(result.get(), ImageMessages.getPhotoSuccess);
+        return new SuccessDataResult<Image>(result.get(), ImageMessages.getPhotoSuccess, HttpStatus.OK);
     }
 
     @Override
-    public Result deleteImage(int id) {
+    public Result deleteImage(UUID id) {
         var result = this.imageDao.findById(id);
 
         if(!result.isPresent()){
-            return new ErrorResult(ImageMessages.getPhotosEmpty);
+            return new ErrorResult(ImageMessages.getPhotosEmpty, HttpStatus.NOT_FOUND);
         }
 
         this.imageDao.delete(result.get());
-        return new SuccessResult(ImageMessages.photoDeleteSuccess);
+        return new SuccessResult(ImageMessages.photoDeleteSuccess, HttpStatus.OK);
 
     }
 
@@ -109,17 +109,17 @@ public class ImageManager implements ImageService {
         var result = imageDao.findByUrl(url);
 
         if(!result.isPresent()){
-            return new ErrorDataResult<>(ImageMessages.getPhotosEmpty);
+            return new ErrorDataResult<>(ImageMessages.getPhotosEmpty, HttpStatus.NOT_FOUND);
         }
 
         result.get().setUrl(API_URL+IMAGE_GET_URL+result.get().getUrl());
 
-        return new SuccessDataResult<Image>(result.get(), ImageMessages.getPhotoSuccess);
+        return new SuccessDataResult<Image>(result.get(), ImageMessages.getPhotoSuccess, HttpStatus.OK);
     }
 
     private String generateUrl() {
         SecureRandom secureRandom = new SecureRandom();
-        byte[] randomBytes = new byte[64];
+        byte[] randomBytes = new byte[128];
         secureRandom.nextBytes(randomBytes);
         return Base64.getUrlEncoder().encodeToString(randomBytes);
     }

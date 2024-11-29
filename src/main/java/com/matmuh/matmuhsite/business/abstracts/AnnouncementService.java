@@ -9,17 +9,18 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 public interface AnnouncementService {
-    Result addAnnouncement(RequestAnnouncementDto announcementDto, MultipartFile image);
+    Result addAnnouncement(Announcement announcement, Optional<MultipartFile> image);
 
-    Result updateAnnouncement(RequestAnnouncementDto requestAnnouncementDto);
+    Result updateAnnouncement(Announcement announcement);
 
-    DataResult<List<ResponseAnnouncementDto>> getAnnouncements(Optional<Integer> numberOfAnnouncements);
+    DataResult<List<Announcement>> getAnnouncements(Optional<Integer> numberOfAnnouncements);
 
-    DataResult<ResponseAnnouncementDto> getAnnouncementById(int id);
+    DataResult<Announcement> getAnnouncementById(UUID id);
 
-    Result deleteAnnouncement(int id);
+    Result deleteAnnouncement(UUID id);
 
 
 }

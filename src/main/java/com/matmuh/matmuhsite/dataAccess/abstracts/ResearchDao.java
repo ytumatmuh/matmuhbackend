@@ -7,12 +7,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.UUID;
 
 @Repository
-public interface ResearchDao extends JpaRepository<Research, Integer> {
-    Research findById(int id);
+public interface ResearchDao extends JpaRepository<Research, UUID> {
 
-    List<Research> findAll();
 
     Page<Research> findAll(Pageable pageable);
 }

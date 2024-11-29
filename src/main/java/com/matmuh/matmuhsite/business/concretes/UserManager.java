@@ -6,6 +6,7 @@ import com.matmuh.matmuhsite.core.utilities.results.*;
 import com.matmuh.matmuhsite.dataAccess.abstracts.UserDao;
 import com.matmuh.matmuhsite.entities.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -13,36 +14,33 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class UserManager implements UserService {
 
+    private final UserDao userDao;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
 
-    @Autowired
-    private UserDao userDao;
+    public UserManager(UserDao userDao) {
+        this.userDao = userDao;
+    }
+
 
     @Override
     public Result addUser(User user) {
-        if (user.getFirstName() == null){
-            return new ErrorResult(UserMessages.firstNameCannotBeNull);
-        }
-        if (user.getLastName() == null){
-            return new ErrorResult(UserMessages.lastNameCannotBeNull);
-        }
-        if (user.getUsername() == null){
-            return new ErrorResult(UserMessages.usernameCannotBeNull);
-        }
-        if (user.getEmail() == null){
-            return new ErrorResult(UserMessages.emailCannotBeNull);
-        }
-
-
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
         userDao.save(user);
-        return new SuccessResult(UserMessages.userAddSuccess);
+        return new SuccessResult(UserMessages.userAddSuccess, HttpStatus.CREATED);
+    }
+
+    @Override
+    public DataResult<User> getUserByEmail(String email) {
+        var user = userDao.findByEmail(email);
+
+        if(user.isEmpty()){
+            return new ErrorDataResult<>(UserMessages.userNotFound, HttpStatus.NOT_FOUND);
+        }
+        return new SuccessDataResult<User>(user.get(), UserMessages.userListed, HttpStatus.OK);
     }
 
     @Override
@@ -50,56 +48,55 @@ public class UserManager implements UserService {
         var users = userDao.findAll();
 
         if (users.isEmpty()){
-            return new ErrorDataResult<>(UserMessages.usersNotFound);
+            return new ErrorDataResult<>(UserMessages.usersNotFound, HttpStatus.NOT_FOUND);
         }
-        return new SuccessDataResult<List<User>>(users, UserMessages.usersListed);
+        return new SuccessDataResult<List<User>>(users, UserMessages.usersListed, HttpStatus.OK);
     }
 
     @Override
-    public DataResult<User> getUserById(int id) {
+    public DataResult<User> getUserById(UUID id) {
         var user = userDao.findById(id);
 
-        if(user == null){
-            return new ErrorDataResult<>(UserMessages.userNotFound);
+        if(user.isEmpty()){
+            return new ErrorDataResult<>(UserMessages.userNotFound, HttpStatus.NOT_FOUND);
         }
-        return new SuccessDataResult<User>(user, UserMessages.userListed);
+        return new SuccessDataResult<User>(user.get(), UserMessages.userListed, HttpStatus.OK);
     }
 
     @Override
-    public DataResult<User> getByUsername(String username) {
+    public DataResult<User> getUserByUsername(String username) {
         var user = userDao.findByUsername(username);
 
-        if(user == null){
-            return new ErrorDataResult<>(UserMessages.userNotFound);
+        if(user.isEmpty()){
+            return new ErrorDataResult<>(UserMessages.userNotFound, HttpStatus.NOT_FOUND);
         }
-        return new SuccessDataResult<User>(user, UserMessages.userListed);
+        return new SuccessDataResult<User>(user.get(), UserMessages.userListed, HttpStatus.OK);
     }
 
     @Override
     public UserDetails loadUserByUsername(String username) {
-        var user = getByUsername(username).getData();
-        return user;
+        return getUserByUsername(username).getData();
     }
 
     @Override
-    public Result deleteUser(int id) {
+    public Result deleteUser(UUID id) {
         var user = userDao.findById(id);
 
-        if (user == null){
-            return new ErrorResult(UserMessages.userNotFound);
+        if (user.isEmpty()){
+            return new ErrorResult(UserMessages.userNotFound, HttpStatus.NOT_FOUND);
         }
 
-        userDao.delete(user);
-        return new SuccessResult(UserMessages.userDeleteSuccess);
+        userDao.delete(user.get());
+        return new SuccessResult(UserMessages.userDeleteSuccess, HttpStatus.OK);
     }
 
     @Override
     public DataResult<User> getAuthenticatedUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication.getPrincipal() == "anonymousUser"){
-            return new ErrorDataResult<>(UserMessages.userIsNotAuthenticatedPleaseLogin);
+            return new ErrorDataResult<>(UserMessages.userIsNotAuthenticatedPleaseLogin, HttpStatus.UNAUTHORIZED);
         }
-        return getByUsername(authentication.getName());
+        return getUserByUsername(authentication.getName());
 
     }
 }

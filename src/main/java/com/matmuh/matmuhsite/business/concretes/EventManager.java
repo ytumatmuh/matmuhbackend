@@ -8,72 +8,50 @@ import com.matmuh.matmuhsite.dataAccess.abstracts.EventDao;
 import com.matmuh.matmuhsite.entities.Event;
 import com.matmuh.matmuhsite.entities.dtos.RequestEventDto;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class EventManager implements EventService {
 
     private final EventDao eventDao;
 
-    @Autowired
+
     public EventManager(EventDao eventDao) {
         this.eventDao = eventDao;
     }
 
     @Override
-    public Result addEvent(RequestEventDto requestEventDto) {
-        if (requestEventDto.getName() == null){
-            return new ErrorResult(EventMessages.nameCanotBeNull);
+    public Result addEvent(Event event) {
+        if (event.getName().isEmpty()){
+            return new ErrorResult(EventMessages.nameCanotBeNull, HttpStatus.BAD_REQUEST);
         }
 
-        if(requestEventDto.getContext() == null){
-            return new ErrorResult(EventMessages.contentCanotBeNull);
+        if(event.getContext().isEmpty()){
+            return new ErrorResult(EventMessages.contentCanotBeNull, HttpStatus.BAD_REQUEST);
         }
 
-        if(requestEventDto.getDate() == null){
-            return new ErrorResult(ImageMessages.photoCanotBeNull);
+        if(event.getDate() == null){
+            return new ErrorResult(ImageMessages.photoCanotBeNull, HttpStatus.BAD_REQUEST);
         }
-
-        var event = Event.builder()
-                .name(requestEventDto.getName())
-                .context(requestEventDto.getContext())
-                .date(requestEventDto.getDate())
-                .build();
 
         eventDao.save(event);
-        return new SuccessResult(EventMessages.eventAddSuccess);
+        return new SuccessResult(EventMessages.eventAddSuccess, HttpStatus.CREATED);
     }
 
     @Override
-    public Result updateEvent(RequestEventDto requestEventDto) {
+    public Result updateEvent(Event event) {
 
-        //var event = getEventById(requestEventDto.getId()).getData();
-        var event = eventDao.findById(requestEventDto.getId());
-
-        if (event == null) {
-            return new ErrorResult(EventMessages.eventNotFound);
+        var eventResult = eventDao.findById(event.getId());
+        if (eventResult.isEmpty()){
+            return new ErrorResult(EventMessages.eventNotFound, HttpStatus.NOT_FOUND);
         }
-
-        if (requestEventDto.getName() == null) {
-            return new ErrorResult(EventMessages.nameCanotBeNull);
-        }
-
-        if (requestEventDto.getContext() == null) {
-            return new ErrorResult(EventMessages.contentCanotBeNull);
-        }
-
-        if (requestEventDto.getDate() == null) {
-            return new ErrorResult(ImageMessages.photoCanotBeNull);
-        }
-
-        event.setContext(requestEventDto.getContext().isEmpty() ? event.getContext() : requestEventDto.getContext());
-        event.setName(requestEventDto.getName().isEmpty() ? event.getName() : requestEventDto.getName());
-
 
         eventDao.save(event);
-        return new SuccessResult(EventMessages.eventAddSuccess);
+        return new SuccessResult(EventMessages.eventUpdateSuccess, HttpStatus.OK);
     }
 
         @Override
@@ -81,31 +59,31 @@ public class EventManager implements EventService {
         var result = eventDao.findAll();
 
         if (result.isEmpty())
-            return new ErrorDataResult<>(EventMessages.eventNotFound);
+            return new ErrorDataResult<>(EventMessages.eventNotFound, HttpStatus.NOT_FOUND);
 
-        return new SuccessDataResult<List<Event>>(result, EventMessages.getEventsSuccess);
+        return new SuccessDataResult<List<Event>>(result, EventMessages.getEventsSuccess, HttpStatus.OK);
     }
 
     @Override
-    public DataResult<Event> getEventById(int id){
+    public DataResult<Event> getEventById(UUID id){
         var result = eventDao.findById(id);
-        if(result == null){
-            return new ErrorDataResult<>(EventMessages.eventNotFound);
+        if(result.isEmpty()){
+            return new ErrorDataResult<>(EventMessages.eventNotFound, HttpStatus.NOT_FOUND);
         }
 
-        return new SuccessDataResult<Event>(result, EventMessages.getEventSuccess);
+        return new SuccessDataResult<Event>(result.get(), EventMessages.getEventSuccess, HttpStatus.OK);
     }
 
     @Override
-    public Result deleteEvent(int id) {
+    public Result deleteEvent(UUID id) {
         var result = eventDao.findById(id);
 
-        if (result == null){
-            return new ErrorResult(EventMessages.eventNotFound);
+        if (result.isEmpty()){
+            return new ErrorResult(EventMessages.eventNotFound, HttpStatus.NOT_FOUND);
         }
 
-        this.eventDao.delete(result);
-        return new SuccessResult(EventMessages.eventDeleteSuccess);
+        this.eventDao.delete(result.get());
+        return new SuccessResult(EventMessages.eventDeleteSuccess, HttpStatus.OK);
 
     }
 }

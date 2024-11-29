@@ -7,10 +7,10 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
-public interface ImageDao extends JpaRepository<Image, Integer> {
-    Optional<Image> findById(int id);
+public interface ImageDao extends JpaRepository<Image, UUID> {
 
     @Transactional
     Optional<Image> findByUrl(String url);

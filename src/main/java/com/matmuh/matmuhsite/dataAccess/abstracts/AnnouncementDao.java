@@ -10,11 +10,10 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
-public interface AnnouncementDao extends JpaRepository<Announcement, Integer> {
-
-    Announcement findById(int id);
+public interface AnnouncementDao extends JpaRepository<Announcement, UUID> {
 
     Page<Announcement> findAll(Pageable pageable);
 

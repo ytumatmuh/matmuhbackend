@@ -7,14 +7,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.UUID;
 
 @Repository
-public interface ProjectDao extends JpaRepository<Project, Integer> {
+public interface ProjectDao extends JpaRepository<Project, UUID> {
 
-    Project findById(int id);
 
     Page<Project> findAll(Pageable pageable);
 
-    List<Project> findAll();
 
 }

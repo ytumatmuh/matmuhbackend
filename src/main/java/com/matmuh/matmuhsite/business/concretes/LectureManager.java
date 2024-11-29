@@ -10,9 +10,11 @@ import com.matmuh.matmuhsite.dataAccess.abstracts.LectureDao;
 import com.matmuh.matmuhsite.entities.Lecture;
 import com.matmuh.matmuhsite.entities.dtos.RequestLectureDto;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class LectureManager implements LectureService {
@@ -20,89 +22,48 @@ public class LectureManager implements LectureService {
 
     private final LectureDao lectureDao;
 
-    @Autowired
     public LectureManager(LectureDao lectureDao) {
         this.lectureDao = lectureDao;
     }
 
     @Override
-    public Result addLecture(RequestLectureDto requestLectureDto) {
+    public Result addLecture(Lecture lecture) {
 
-        if(requestLectureDto.getName() == null){
-            return new SuccessResult(LectureMessages.nameCanotBeNull);
+        if(lecture.getName().isEmpty()){
+            return new SuccessResult(LectureMessages.nameCanotBeNull, HttpStatus.BAD_REQUEST);
         }
 
-
-        if(requestLectureDto.getLectureCode() == null){
-            return new SuccessResult(LectureMessages.lectureCodeCanotBeNull);
+        if(lecture.getLectureCode().isEmpty()){
+            return new SuccessResult(LectureMessages.lectureCodeCanotBeNull, HttpStatus.BAD_REQUEST);
         }
 
-        if(requestLectureDto.getCount() == 0){
-            return new SuccessResult(LectureMessages.countCanotBeNull);
+        if(lecture.getCount() == 0){
+            return new SuccessResult(LectureMessages.countCanotBeNull, HttpStatus.BAD_REQUEST);
         }
 
-        if(requestLectureDto.getCredit() == 0){
-            return new SuccessResult(LectureMessages.creditCanotBeNull);
+        if(lecture.getCredit() == 0){
+            return new SuccessResult(LectureMessages.creditCanotBeNull, HttpStatus.BAD_REQUEST);
         }
 
-        if(requestLectureDto.getTerm() == 0){
-            return new SuccessResult(LectureMessages.termCanotBeNull);
+        if(lecture.getTerm() == 0){
+            return new SuccessResult(LectureMessages.termCanotBeNull, HttpStatus.BAD_REQUEST);
         }
-
-        Lecture lecture = Lecture.builder()
-                .name(requestLectureDto.getName())
-                .lectureCode(requestLectureDto.getLectureCode())
-                .count(requestLectureDto.getCount())
-                .credit(requestLectureDto.getCredit())
-                .term(requestLectureDto.getTerm())
-                .syllabusLink(requestLectureDto.getSyllabusLink())
-                .notesLink(requestLectureDto.getNotesLink())
-                .build();
 
         lectureDao.save(lecture);
 
-        return new SuccessResult(LectureMessages.lectureAddSuccess);
+        return new SuccessResult(LectureMessages.lectureAddSuccess, HttpStatus.CREATED);
     }
 
     @Override
-    public Result updateLecture(RequestLectureDto requestLectureDto) {
-        var lecture = getLectureByLectureCode(requestLectureDto.getLectureCode()).getData();
-
-        if(lecture == null){
-            return new SuccessResult(LectureMessages.lectureNotFound);
-        }
-
-        if(requestLectureDto.getName() == null){
-            return new SuccessResult(LectureMessages.nameCanotBeNull);
-        }
-
-        if(requestLectureDto.getLectureCode() == null){
-            return new SuccessResult(LectureMessages.lectureCodeCanotBeNull);
-        }
-
-        if(requestLectureDto.getCount() == 0){
-            return new SuccessResult(LectureMessages.countCanotBeNull);
-        }
-
-        if(requestLectureDto.getCredit() == 0){
-            return new SuccessResult(LectureMessages.creditCanotBeNull);
-        }
-
-        if(requestLectureDto.getTerm() == 0){
-            return new SuccessResult(LectureMessages.termCanotBeNull);
-        }
-
-        lecture.setName(requestLectureDto.getName().isEmpty() ? lecture.getName() : requestLectureDto.getName());
-        lecture.setLectureCode(requestLectureDto.getLectureCode().isEmpty() ? lecture.getLectureCode() : requestLectureDto.getLectureCode());
-        lecture.setCount(requestLectureDto.getCount() == 0 ? lecture.getCount() : requestLectureDto.getCount());
-        lecture.setCredit(requestLectureDto.getCredit() == 0 ? lecture.getCredit() : requestLectureDto.getCredit());
-        lecture.setTerm(requestLectureDto.getTerm() == 0 ? lecture.getTerm() : requestLectureDto.getTerm());
-        lecture.setSyllabusLink(requestLectureDto.getSyllabusLink().isEmpty() ? lecture.getSyllabusLink() : requestLectureDto.getSyllabusLink());
-        lecture.setNotesLink(requestLectureDto.getNotesLink().isEmpty() ? lecture.getNotesLink() : requestLectureDto.getNotesLink());
+    public Result updateLecture(Lecture lecture) {
+       var result = lectureDao.findById(lecture.getId());
+       if (result.isEmpty()){
+           return new SuccessResult(LectureMessages.lectureNotFound, HttpStatus.NOT_FOUND);
+         }
 
         lectureDao.save(lecture);
 
-        return new SuccessResult(LectureMessages.lectureUpdateSuccess);
+        return new SuccessResult(LectureMessages.lectureUpdateSuccess, HttpStatus.OK);
     }
 
     @Override
@@ -110,21 +71,21 @@ public class LectureManager implements LectureService {
         var result = lectureDao.findAll();
 
         if (result.isEmpty()){
-            return new SuccessDataResult<>(LectureMessages.lectureNotFound);
+            return new SuccessDataResult<>(LectureMessages.lectureNotFound, HttpStatus.NOT_FOUND);
         }
 
-        return new SuccessDataResult<List<Lecture>>(result, LectureMessages.getMessagesSuccess);
+        return new SuccessDataResult<List<Lecture>>(result, LectureMessages.getMessagesSuccess, HttpStatus.OK);
     }
 
     @Override
-    public DataResult<Lecture> getLectureById(int id) {
+    public DataResult<Lecture> getLectureById(UUID id) {
         var result = lectureDao.findById(id);
 
         if(result == null){
-            return new SuccessDataResult<>(LectureMessages.lectureNotFound);
+            return new SuccessDataResult<>(LectureMessages.lectureNotFound, HttpStatus.NOT_FOUND);
         }
 
-        return new SuccessDataResult<Lecture>(result, LectureMessages.getLectureByIdSuccess);
+        return new SuccessDataResult<Lecture>(result.get(), LectureMessages.getLectureByIdSuccess, HttpStatus.OK);
     }
 
     @Override
@@ -132,33 +93,33 @@ public class LectureManager implements LectureService {
         var result = lectureDao.findAllByTerm(term);
 
         if(result.isEmpty()){
-            return new SuccessDataResult<>(LectureMessages.lectureNotFound);
+            return new SuccessDataResult<>(LectureMessages.lectureNotFound, HttpStatus.NOT_FOUND);
         }
 
-        return new SuccessDataResult<>(result, LectureMessages.getMessagesSuccess);
+        return new SuccessDataResult<>(result, LectureMessages.getMessagesSuccess, HttpStatus.OK);
     }
 
     @Override
     public DataResult<Lecture> getLectureByLectureCode(String lectureCode) {
         var result = lectureDao.findByLectureCode(lectureCode);
 
-        if(result == null){
-            return new SuccessDataResult<>(LectureMessages.lectureNotFound);
+        if(result.isEmpty()){
+            return new SuccessDataResult<>(LectureMessages.lectureNotFound, HttpStatus.NOT_FOUND);
         }
 
 
-        return new SuccessDataResult<>(result, LectureMessages.getLectureByLectureCodeSuccess);
+        return new SuccessDataResult<>(result.get(), LectureMessages.getLectureByLectureCodeSuccess, HttpStatus.OK);
     }
 
     @Override
-    public Result deleteLecture(int id) {
+    public Result deleteLecture(UUID id) {
         var result = lectureDao.findById(id);
 
-        if(result == null){
-            return new SuccessResult(LectureMessages.lectureNotFound);
+        if(result.isEmpty()){
+            return new SuccessResult(LectureMessages.lectureNotFound, HttpStatus.NOT_FOUND);
         }
 
         this.lectureDao.deleteById(id);
-        return new SuccessResult(LectureMessages.lectureDeleteSuccess);
+        return new SuccessResult(LectureMessages.lectureDeleteSuccess, HttpStatus.OK);
     }
 }

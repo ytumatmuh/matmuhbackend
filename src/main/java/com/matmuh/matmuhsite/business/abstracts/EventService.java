@@ -6,18 +6,19 @@ import com.matmuh.matmuhsite.entities.Event;
 import com.matmuh.matmuhsite.entities.dtos.RequestEventDto;
 
 import java.util.List;
+import java.util.UUID;
 
 public interface EventService {
 
-    Result addEvent(RequestEventDto requestEventDto);
+    Result addEvent(Event event);
 
-    Result updateEvent(RequestEventDto requestEventDto);
+    Result updateEvent(Event event);
 
     DataResult<List<Event>> getEvents();
 
-    DataResult<Event> getEventById(int id);
+    DataResult<Event> getEventById(UUID id);
 
-    Result deleteEvent(int id);
+    Result deleteEvent(UUID id);
 
 
 

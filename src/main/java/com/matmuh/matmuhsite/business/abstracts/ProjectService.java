@@ -9,17 +9,18 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 public interface ProjectService {
-    Result addProject(RequestProjectDto requestProjectDto, MultipartFile image);
+    Result addProject(Project project, Optional<MultipartFile> image);
 
-    Result updateProject(RequestProjectDto requestProjectDto);
+    Result updateProject(Project requestProjectDto);
 
-    DataResult <List<ResponseProjectDto>> getProjects(Optional<Integer> numberOfProjects);
+    DataResult <List<Project>> getProjects(Optional<Integer> numberOfProjects);
 
-    DataResult<Project> getProjectById(int id);
+    DataResult<Project> getProjectById(UUID id);
 
-    Result deleteProject(int id);
+    Result deleteProject(UUID id);
 
 
 }

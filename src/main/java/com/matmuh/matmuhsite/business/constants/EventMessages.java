@@ -1,5 +1,6 @@
 package com.matmuh.matmuhsite.business.constants;
 
+
 public class EventMessages {
 
     public static String eventAddSuccess = "Event başarıyla eklendi!";
@@ -9,4 +10,5 @@ public class EventMessages {
     public static String nameCanotBeNull = "Event adı boş olamaz!";
     public static String eventNotFound = "Event bulunamadı!";
     public static String eventDeleteSuccess = "Event başarıyla silindi!";
+    public static String eventUpdateSuccess = "Event başarıyla güncellendi!";
 }

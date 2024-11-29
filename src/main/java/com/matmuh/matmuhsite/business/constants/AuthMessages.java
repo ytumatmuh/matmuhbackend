@@ -9,4 +9,5 @@ public class AuthMessages {
     public static String emailCannotBeNull = "Email boş olamaz!";
     public static String passwordCannotBeNull  = "Şifre boş olamaz!";
     public static String passwordLengthMustBeGreaterThanSix = "Şifre en az 6 karakter olmalıdır!";
+    public static String emailOrUsernameCannotBeNull = "Email veya kullanıcı adı boş olamaz!";
 }

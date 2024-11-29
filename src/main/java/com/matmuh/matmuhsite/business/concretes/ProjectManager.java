@@ -14,155 +14,112 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class ProjectManager implements ProjectService {
 
-    @Autowired
-    private ProjectDao projectDao;
+    private final ProjectDao projectDao;
 
-    @Autowired
-    private ImageService imageService;
+    private final ImageService imageService;
 
     @Value("${api.url}")
     private String API_URL;
 
-    @Override
-    public Result addProject(RequestProjectDto requestProjectDto, MultipartFile image) {
+    public ProjectManager(ProjectDao projectDao, ImageService imageService) {
+        this.projectDao = projectDao;
+        this.imageService = imageService;
+    }
 
-        if (requestProjectDto.getName() == null){
-            return new ErrorResult(ProjectMessages.nameCanotBeNull);
+    @Override
+    public Result addProject(Project project, Optional<MultipartFile> image) {
+
+        if (project.getName().isEmpty()){
+            return new ErrorResult(ProjectMessages.nameCanotBeNull, HttpStatus.BAD_REQUEST);
         }
-        if (requestProjectDto.getDescription() == null){
-            return new ErrorResult(ProjectMessages.descriptionCanotBeNull);
+        if (project.getDescription().isEmpty()){
+            return new ErrorResult(ProjectMessages.descriptionCanotBeNull, HttpStatus.BAD_REQUEST);
         }
-        if (requestProjectDto.getDate() == null){
-            return new ErrorResult(ProjectMessages.dateCanotBeNull);
+        if (project.getDate() == null){
+            return new ErrorResult(ProjectMessages.dateCanotBeNull, HttpStatus.BAD_REQUEST);
         }
 
         Image projectImage = null;
 
-        if(image != null){
-            var imageResult = imageService.addImage(image);
+        if(image.isPresent()){
+            var imageResult = imageService.addImage(image.get());
             if (!imageResult.isSuccess()){
-                return new ErrorResult(imageResult.getMessage());
+                return imageResult;
             }
 
-            projectImage = imageResult.getData();
+            projectImage = (Image) imageResult.getData();
         }
 
-        var projectToSave = Project.builder()
-                .name(requestProjectDto.getName())
-                .description(requestProjectDto.getDescription())
-                .date(requestProjectDto.getDate())
-                .image(projectImage)
-                .build();
+        project.setImage(projectImage);
 
-        projectDao.save(projectToSave);
-        return new SuccessResult(ProjectMessages.projectAddSuccess);
+        projectDao.save(project);
+        return new SuccessResult(ProjectMessages.projectAddSuccess, HttpStatus.CREATED);
 
     }
     @Override
-    public Result updateProject(RequestProjectDto requestProjectDto) {
+    public Result updateProject(Project project) {
 
-//            var result = getProjectById(requestProjectDto.getId());
-//
-//            if (!result.isSuccess()){
-//                return result;
-//            }
-//
-//            var projectToUpdate = result.getData();
-//
-//            projectToUpdate.setContext(requestProjectDto.getContext()==null?projectToUpdate.getContext():requestProjectDto.getContext());
-//            projectToUpdate.setDate(requestProjectDto.getDate()==null?projectToUpdate.getDate():requestProjectDto.getDate());
-//            projectToUpdate.setDescription(requestProjectDto.getDescription()==null?projectToUpdate.getDescription():requestProjectDto.getDescription());
-//            projectToUpdate.setName(requestProjectDto.getName()==null?projectToUpdate.getName():requestProjectDto.getName());
-
-//            projectDao.save(projectToUpdate);
-
-            var project = projectDao.findById(requestProjectDto.getId());
-
-            if (project == null){
-                return new ErrorResult(ProjectMessages.projectNotFound);
-            }
-            if (requestProjectDto.getName() == null){
-                return new ErrorResult(ProjectMessages.nameCanotBeNull);
-            }
-            if (requestProjectDto.getDescription() == null){
-                return new ErrorResult(ProjectMessages.descriptionCanotBeNull);
-            }
-
-
-            project.setName(requestProjectDto.getName().isEmpty() ? project.getName() : requestProjectDto.getName());
-            project.setDescription(requestProjectDto.getDescription().isEmpty() ? project.getDescription() : requestProjectDto.getDescription());
-            //project.setContext(requestProjectDto.getContext().isEmpty() ? project.getContext() : requestProjectDto.getContext());
-
+        var result = projectDao.findById(project.getId());
+        if (result.isEmpty()){
+            return new ErrorResult(ProjectMessages.projectNotFound, HttpStatus.NOT_FOUND);
+        }
             projectDao.save(project);
 
-            return new SuccessResult(ProjectMessages.projectAddSuccess);
+            return new SuccessResult(ProjectMessages.projectUpdateSuccess, HttpStatus.OK);
     }
 
     @Override
-    public DataResult<List<ResponseProjectDto>> getProjects(Optional<Integer> numberOfProjects) {
+    public DataResult<List<Project>> getProjects(Optional<Integer> numberOfProjects) {
 
         List<Project> result = new ArrayList<>();
         if(numberOfProjects.isPresent()) {
             result = projectDao.findAll(PageRequest.of(0, numberOfProjects.get())).toList();
         }
         else {
-
             result = projectDao.findAll();
         }
 
-        if (result == null){
-            return new ErrorDataResult<>(ProjectMessages.PorjectsNotFound);
+        if (result.isEmpty()){
+            return new ErrorDataResult<>(ProjectMessages.projectsNotFound, HttpStatus.NOT_FOUND);
         }
 
-        var projectResult = result.stream().map(project -> ResponseProjectDto.builder()
-                .id(project.getId())
-                .name(project.getName())
-                .description(project.getDescription())
-                .date(project.getDate())
-                .imageUrl(project.getImage()==null? null : API_URL+"/api/images/getImageByUrl/"+project.getImage().getUrl())
-                .build())
-                .toList();
 
-        return new SuccessDataResult<List<ResponseProjectDto>>(projectResult, ProjectMessages.getProjectsSuccess);
+        return new SuccessDataResult<List<Project>>(result, ProjectMessages.getProjectsSuccess, HttpStatus.OK);
     }
 
     @Override
-    public DataResult<Project> getProjectById(int id) {
+    public DataResult<Project> getProjectById(UUID id) {
         var result = projectDao.findById(id);
 
         if(result == null){
-            return new ErrorDataResult<>(ProjectMessages.projectNotFound);
+            return new ErrorDataResult<>(ProjectMessages.projectNotFound, HttpStatus.NOT_FOUND);
         }
 
-        return new SuccessDataResult<Project>(result, ProjectMessages.getProjectSuccess);
+        return new SuccessDataResult<Project>(result.get(), ProjectMessages.getProjectSuccess, HttpStatus.OK);
     }
     //dont repeat yourself chain
     @Override
-    public Result deleteProject(int id) {
-
-//        var result = getProjectById(id);
-//
-//        if (!result.isSuccess()){
-//            return result;
-//        }
+    public Result deleteProject(UUID id) {
 
         var result = projectDao.findById(id);
 
-        if (result == null){
-            return new ErrorResult(ProjectMessages.projectNotFound);
+        if (result.isEmpty()){
+            return new ErrorResult(ProjectMessages.projectNotFound, HttpStatus.NOT_FOUND);
         }
-        projectDao.delete(result);
-        return new SuccessResult(ProjectMessages.deleteProjectsuccess);
+        projectDao.delete(result.get());
+        return new SuccessResult(ProjectMessages.deleteProjectsuccess, HttpStatus.OK);
 
     }
 

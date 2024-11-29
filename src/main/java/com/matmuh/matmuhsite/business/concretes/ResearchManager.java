@@ -8,49 +8,51 @@ import com.matmuh.matmuhsite.entities.Research;
 import com.matmuh.matmuhsite.entities.dtos.RequestResearchDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
-public record ResearchManager (ResearchDao researchDao) implements ResearchService  {
+public class ResearchManager implements ResearchService  {
 
+    private final ResearchDao researchDao;
+
+
+    public ResearchManager(ResearchDao researchDao) {
+        this.researchDao = researchDao;
+    }
 
     @Override
-    public Result addResearch(RequestResearchDto requestResearchDto) {
-        if (requestResearchDto.getTitle() == null) {
-            return new ErrorResult(ResearchMessages.titleCanotBeNull);
+    public Result addResearch(Research research) {
+        if (research.getTitle().isEmpty()) {
+            return new ErrorResult(ResearchMessages.titleCanotBeNull, HttpStatus.BAD_REQUEST);
         }
 
-        if (requestResearchDto.getDescription() == null) {
-        return new ErrorResult(ResearchMessages.descriptionCanotBeNull);
+        if (research.getDescription().isEmpty()) {
+        return new ErrorResult(ResearchMessages.descriptionCanotBeNull, HttpStatus.BAD_REQUEST);
         }
 
 
-        Research research = Research.builder()
-                .title(requestResearchDto.getTitle())
-                .description(requestResearchDto.getDescription())
-                //.context(requestResearchDto.getContext())
-                .build();
-        this.researchDao.save(research);
-        return new SuccessResult(ResearchMessages.researchAddSuccess);
+        researchDao.save(research);
+        return new SuccessResult(ResearchMessages.researchAddSuccess, HttpStatus.CREATED);
     }
 
 
 
     @Override
-    public Result updateResearch(RequestResearchDto requestResearchDto) {
-        var result = researchDao.findById(requestResearchDto.getId());
+    public Result updateResearch(Research research) {
 
+        var result = researchDao.findById(research.getId());
+        if (result.isEmpty()){
+            return new ErrorResult(ResearchMessages.researchNotFoundById, HttpStatus.NOT_FOUND);
+        }
 
-        //result.setContext(requestResearchDto.getContext()==null?result.getContext():requestResearchDto.getContext());
-        result.setDescription(requestResearchDto.getDescription()==null?result.getDescription():requestResearchDto.getDescription());
-        result.setTitle(requestResearchDto.getTitle()==null?result.getTitle():requestResearchDto.getTitle());
-
-        this.researchDao.save(result);
-        return new SuccessResult(ResearchMessages.researchAddSuccess);
+        researchDao.save(result.get());
+        return new SuccessResult(ResearchMessages.researchAddSuccess, HttpStatus.CREATED);
     }
 
     @Override
@@ -64,33 +66,33 @@ public record ResearchManager (ResearchDao researchDao) implements ResearchServi
         }
 
         if(result == null){
-            return new ErrorDataResult<>(ResearchMessages.researchNotFound);
+            return new ErrorDataResult<>(ResearchMessages.researchNotFound, HttpStatus.NOT_FOUND);
         }
 
-        return new SuccessDataResult<List<Research>>(result, ResearchMessages.getResearchsSuccess);
+        return new SuccessDataResult<List<Research>>(result, ResearchMessages.getResearchsSuccess, HttpStatus.OK);
     }
 
     @Override
-    public DataResult<Research> getResearchById(int id) {
+    public DataResult<Research> getResearchById(UUID id) {
         var result = researchDao.findById(id);
 
-        if (result == null) {
-            return new SuccessDataResult<>(ResearchMessages.researchNotFoundById);
+        if (result.isEmpty()) {
+            return new SuccessDataResult<>(ResearchMessages.researchNotFoundById, HttpStatus.NOT_FOUND);
         }
 
-        return new SuccessDataResult<Research>(result, ResearchMessages.getResearchSuccess);
+        return new SuccessDataResult<Research>(result.get(), ResearchMessages.getResearchSuccess, HttpStatus.OK);
     }
 
     @Override
-    public Result deleteResearch(int id) {
+    public Result deleteResearch(UUID id) {
         var result = researchDao.findById(id);
 
-        if (result == null) {
-            return new ErrorResult(ResearchMessages.researchNotFoundById);
+        if (result.isEmpty()) {
+            return new ErrorResult(ResearchMessages.researchNotFoundById, HttpStatus.NOT_FOUND);
         }
 
-        researchDao.delete(result);
-        return new SuccessResult(ResearchMessages.researchAddSuccess);
+        researchDao.delete(result.get());
+        return new SuccessResult(ResearchMessages.researchAddSuccess, HttpStatus.CREATED);
     }
 
 }

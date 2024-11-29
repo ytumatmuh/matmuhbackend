@@ -12,71 +12,99 @@ import com.matmuh.matmuhsite.entities.User;
 import com.matmuh.matmuhsite.entities.dtos.RequestLoginDto;
 import com.matmuh.matmuhsite.entities.dtos.RequestRegisterDto;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 public class AuthManager implements AuthService {
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
+    private final AuthenticationManager authenticationManager;
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
 
-    @Autowired
-    private JwtService jwtService;
+    private final JwtService jwtService;
 
+    private final PasswordEncoder passwordEncoder;
+
+
+    public AuthManager(AuthenticationManager authenticationManager, UserService userService, JwtService jwtService, PasswordEncoder passwordEncoder) {
+        this.authenticationManager = authenticationManager;
+        this.userService = userService;
+        this.jwtService = jwtService;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     @Override
-    public DataResult<String> login(RequestLoginDto requestLoginDto) {
-        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(requestLoginDto.getUsername(), requestLoginDto.getPassword()));
-        if (authentication.isAuthenticated()) {
-            var token = jwtService.generateToken(requestLoginDto.getUsername());
-            return new SuccessDataResult<String>(token, AuthMessages.loginSuccess);
+    public DataResult<?> login(User user) {
+
+        if (user.getEmail().isEmpty() && user.getUsername().isEmpty()){
+            return new ErrorDataResult<>(AuthMessages.emailOrUsernameCannotBeNull, HttpStatus.BAD_REQUEST);
         }
 
-        return new ErrorDataResult<>(AuthMessages.invalidUsernameOrPassword);
+        if (user.getPassword().isEmpty()){
+            return new ErrorDataResult<>(AuthMessages.passwordCannotBeNull, HttpStatus.BAD_REQUEST);
+        }
+
+        switch (user.getEmail().isEmpty() ? "username" : "email"){
+            case "username":
+                var userByUsername = userService.getUserByUsername(user.getUsername());
+                if (!userByUsername.isSuccess()){
+                    return userByUsername;
+                }
+                user = userByUsername.getData();
+                break;
+            case "email":
+                var userByEmail = userService.getUserByEmail(user.getEmail());
+                if (!userByEmail.isSuccess()){
+                    return userByEmail;
+                }
+                user = userByEmail.getData();
+                break;
+        }
+
+        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(user.getEmail(),user.getPassword()));
+        if (authentication.isAuthenticated()) {
+            var token = jwtService.generateToken(user.getEmail(), user.getAuthorities());
+
+            return new SuccessDataResult<>(token, AuthMessages.loginSuccess, HttpStatus.CREATED);
+        }
+
+        return new ErrorDataResult<>(AuthMessages.invalidUsernameOrPassword, HttpStatus.BAD_REQUEST);
 
     }
 
     @Override
-    public Result register(RequestRegisterDto requestRegisterDto) {
+    public Result register(User user) {
 
-        if(requestRegisterDto.getFirstName() == null){
-            return new ErrorDataResult<>(AuthMessages.firstNameCannotBeNull);
+        if(user.getFirstName().isEmpty()){
+            return new ErrorDataResult<>(AuthMessages.firstNameCannotBeNull, HttpStatus.BAD_REQUEST);
         }
 
-        if(requestRegisterDto.getLastName() == null){
-            return new ErrorDataResult<>(AuthMessages.lastNameCannotBeNull);
+        if(user.getLastName().isEmpty()){
+            return new ErrorDataResult<>(AuthMessages.lastNameCannotBeNull, HttpStatus.BAD_REQUEST);
         }
 
-        if(requestRegisterDto.getUsername() == null){
-            return new ErrorDataResult<>(AuthMessages.usernameCannotBeNull);
+        if(user.getUsername().isEmpty()){
+            return new ErrorDataResult<>(AuthMessages.usernameCannotBeNull, HttpStatus.BAD_REQUEST);
         }
 
-        if(requestRegisterDto.getEmail() == null){
-            return new ErrorDataResult<>(AuthMessages.emailCannotBeNull);
+        if(user.getEmail().isEmpty()){
+            return new ErrorDataResult<>(AuthMessages.emailCannotBeNull, HttpStatus.BAD_REQUEST);
         }
 
-        if(requestRegisterDto.getPassword() == null){
-            return new ErrorDataResult<>(AuthMessages.passwordCannotBeNull);
+        if(user.getPassword().isEmpty()){
+            return new ErrorDataResult<>(AuthMessages.passwordCannotBeNull, HttpStatus.BAD_REQUEST);
         }
 
-        if(requestRegisterDto.getPassword().length() < 6){
-            return new ErrorDataResult<>(AuthMessages.passwordLengthMustBeGreaterThanSix);
+        if(user.getPassword().length() < 6){
+            return new ErrorDataResult<>(AuthMessages.passwordLengthMustBeGreaterThanSix, HttpStatus.BAD_REQUEST);
         }
 
-        var user = User.builder()
-                .firstName(requestRegisterDto.getFirstName())
-                .lastName(requestRegisterDto.getLastName())
-                .username(requestRegisterDto.getUsername())
-                .email(requestRegisterDto.getEmail())
-                .password(requestRegisterDto.getPassword())
-                .build();
-
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
 
         return userService.addUser(user);
 

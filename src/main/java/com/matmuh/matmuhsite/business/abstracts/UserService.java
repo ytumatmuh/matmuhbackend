@@ -7,20 +7,23 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 
 import java.util.List;
+import java.util.UUID;
 
 public interface UserService extends UserDetailsService {
 
     Result addUser(User user);
 
+    DataResult<User> getUserByEmail(String email);
+
     DataResult<List<User>> getUsers();
 
-    DataResult<User> getUserById(int id);
+    DataResult<User> getUserById(UUID id);
 
-    DataResult<User> getByUsername(String username);
+    DataResult<User> getUserByUsername(String username);
 
     UserDetails loadUserByUsername(String username);
 
-    Result deleteUser(int id);
+    Result deleteUser(UUID id);
 
     DataResult<User> getAuthenticatedUser();
 

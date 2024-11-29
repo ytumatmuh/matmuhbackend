@@ -1,8 +1,5 @@
 package com.matmuh.matmuhsite.business.constants;
 
-import com.matmuh.matmuhsite.entities.Announcement;
-
-import java.util.List;
 
 public class AnnouncementMessages {
     public static String announcementAddSuccess = "Duuyuru başarıyla eklendi!";

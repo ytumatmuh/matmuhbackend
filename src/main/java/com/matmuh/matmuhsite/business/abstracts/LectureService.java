@@ -6,22 +6,23 @@ import com.matmuh.matmuhsite.entities.Lecture;
 import com.matmuh.matmuhsite.entities.dtos.RequestLectureDto;
 
 import java.util.List;
+import java.util.UUID;
 
 public interface LectureService {
 
-    Result addLecture(RequestLectureDto requestLectureDto);
+    Result addLecture(Lecture lecture);
 
-    Result updateLecture(RequestLectureDto requestLectureDto);
+    Result updateLecture(Lecture Lecture);
 
     DataResult<List<Lecture>> getLectures();
 
-    DataResult<Lecture> getLectureById(int id);
+    DataResult<Lecture> getLectureById(UUID id);
 
     DataResult<List<Lecture>> getLecturesByTerm(int term);
 
     DataResult<Lecture> getLectureByLectureCode(String lectureCode);
 
-    Result deleteLecture(int id);
+    Result deleteLecture(UUID id);
 
 
 
