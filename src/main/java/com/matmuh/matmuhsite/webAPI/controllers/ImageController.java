@@ -9,6 +9,7 @@ import com.matmuh.matmuhsite.core.utilities.results.Result;
 import com.matmuh.matmuhsite.entities.Image;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,8 +22,7 @@ import java.util.Optional;
 @RequestMapping("/api/images")
 public class ImageController {
 
-    @Autowired
-    private ImageService imageService;
+    private final ImageService imageService;
 
     @Value("${api.url}")
     private String API_URL;
@@ -30,24 +30,27 @@ public class ImageController {
     @Value("${image.get.url}")
     private String IMAGE_GET_URL;
 
+    public ImageController(ImageService imageService) {
+        this.imageService = imageService;
+    }
 
     @PostMapping("/addImage")
     public ResponseEntity<DataResult<Image>> addImage(@RequestParam("image") Optional<MultipartFile> image){
 
         if (!image.isPresent()){
-            return ResponseEntity.badRequest().body(new ErrorDataResult<>(ImageMessages.photoCanotBeNull));
+            var error = new ErrorDataResult<Image>(ImageMessages.photoCanotBeNull, HttpStatus.BAD_REQUEST);
+            return ResponseEntity.status(error.getHttpStatus()).body(error);
         }
 
         var result = imageService.addImage(image.get());
-
         if (!result.isSuccess()){
-            return ResponseEntity.badRequest().body(new ErrorDataResult<>(result.getMessage()));
+            return ResponseEntity.status(result.getHttpStatus()).body(result);
         }
         result.getData().setData(null);
         result.getData().setUrl(API_URL+IMAGE_GET_URL+result.getData().getUrl());
 
 
-        return ResponseEntity.ok().body(result);
+        return ResponseEntity.status(result.getHttpStatus()).body(result);
     }
 
     /*
@@ -63,15 +66,18 @@ public class ImageController {
     public ResponseEntity<byte[]> getImageByUrl(@PathVariable Optional<String> url) {
 
         if (!url.isPresent()){
-            return ResponseEntity.badRequest().body(ImageMessages.photoUrlCanotBeNull.getBytes());
+            var error = new ErrorResult(ImageMessages.photoUrlCanotBeNull, HttpStatus.BAD_REQUEST);
+            return ResponseEntity.status(error.getHttpStatus()).build();
         }
 
-        var image = imageService.getImageByImageUrl(url.get());
+        var imageResult = imageService.getImageByImageUrl(url.get());
 
-        if(image.isSuccess()) {
-            return ResponseEntity.ok().contentType(MediaType.valueOf(image.getData().getType())).body(image.getData().getData());
+        if(imageResult.isSuccess()) {
+            return ResponseEntity.status(imageResult.getHttpStatus())
+                    .contentType(MediaType.valueOf(imageResult.getData().getType()))
+                    .body(imageResult.getData().getData());
         }else{
-            return ResponseEntity.status(404).build();
+            return ResponseEntity.status(imageResult.getHttpStatus()).build();
         }
 
     }
@@ -80,22 +86,17 @@ public class ImageController {
     public ResponseEntity<DataResult<Image>> getImageDetailsByUrl(@PathVariable Optional<String> url){
 
         if (!url.isPresent()){
-            return ResponseEntity.badRequest().body(new ErrorDataResult<>(ImageMessages.photoUrlCanotBeNull));
+            var error = new ErrorDataResult<Image>(ImageMessages.photoUrlCanotBeNull, HttpStatus.BAD_REQUEST);
+            return ResponseEntity.status(error.getHttpStatus()).body(error);
         }
 
         var imageResult = imageService.getImageByImageUrl(url.get());
 
-
-
         if (!imageResult.isSuccess()){
-            return ResponseEntity.badRequest().body(imageResult);
+            return ResponseEntity.status(imageResult.getHttpStatus()).body(imageResult);
         }
-        imageResult.getData().setData(null);
 
-        return ResponseEntity.ok().body(imageResult);
-
-
-
+        return ResponseEntity.status(imageResult.getHttpStatus()).body(imageResult);
     }
 
 }

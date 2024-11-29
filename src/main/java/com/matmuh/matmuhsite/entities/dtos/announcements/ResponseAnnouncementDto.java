@@ -1,12 +1,14 @@
-package com.matmuh.matmuhsite.entities.dtos;
+package com.matmuh.matmuhsite.entities.dtos.announcements;
 
+import com.matmuh.matmuhsite.entities.dtos.users.ResponseUserDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.Date;
-import java.util.List;
+import java.util.UUID;
 
 @Data
 @AllArgsConstructor
@@ -14,15 +16,17 @@ import java.util.List;
 @Builder
 public class ResponseAnnouncementDto {
 
-    private int id;
+    private UUID id;
 
     private String title;
 
-    private Date publishDate;
+    private LocalDateTime publishDate;
 
     private String content;
 
     private String coverImageUrl;
+
+    private ResponseUserDto publisher;
 
 
 }

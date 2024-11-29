@@ -1,4 +1,4 @@
-package com.matmuh.matmuhsite.entities.dtos;
+package com.matmuh.matmuhsite.entities.dtos.events;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

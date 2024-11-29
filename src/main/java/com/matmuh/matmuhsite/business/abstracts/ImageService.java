@@ -11,7 +11,7 @@ import java.util.UUID;
 
 public interface ImageService {
 
-    DataResult<?> addImage(MultipartFile file);
+    DataResult<Image> addImage(MultipartFile file);
 
     DataResult<List<Image>> getImages();
 

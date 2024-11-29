@@ -32,7 +32,7 @@ public class FileManager implements FileService {
 
 
     @Override
-    public DataResult<?> addFile(MultipartFile file) {
+    public DataResult<File> addFile(MultipartFile file) {
 
         if (file.getContentType().equals("application/pdf") && file.getContentType().equals("application/vnd.ms-excel")){
             return new ErrorDataResult<>(FileMessages.fileTypeNotSupported, HttpStatus.UNPROCESSABLE_ENTITY);
@@ -41,7 +41,7 @@ public class FileManager implements FileService {
         var userResult = userService.getAuthenticatedUser();
 
         if (!userResult.isSuccess()){
-         return userResult;
+         return new ErrorDataResult<>(userResult.getMessage(), userResult.getHttpStatus());
         }
 
         try {

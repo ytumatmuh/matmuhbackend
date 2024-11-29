@@ -13,7 +13,6 @@ import java.util.UUID;
 @Table(name = "researches")
 public class Research {
 
-
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id")

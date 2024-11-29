@@ -3,6 +3,7 @@ package com.matmuh.matmuhsite.entities;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.UUID;
 
@@ -27,7 +28,7 @@ public class Project {
     private String description;
 
     @Column(name = "date")
-    private Date date;
+    private LocalDateTime date;
 
     @OneToOne(cascade = CascadeType.ALL)
     private Image image;

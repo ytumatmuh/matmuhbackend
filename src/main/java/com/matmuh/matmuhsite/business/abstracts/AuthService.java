@@ -8,7 +8,7 @@ import com.matmuh.matmuhsite.entities.dtos.RequestRegisterDto;
 
 public interface AuthService {
 
-    DataResult<?> login(User user);
+    DataResult<String> login(User user);
 
     Result register(User user);
 

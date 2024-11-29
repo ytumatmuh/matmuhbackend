@@ -2,21 +2,19 @@ package com.matmuh.matmuhsite.business.concretes;
 
 import com.matmuh.matmuhsite.business.abstracts.AnnouncementService;
 import com.matmuh.matmuhsite.business.abstracts.ImageService;
+import com.matmuh.matmuhsite.business.abstracts.UserService;
 import com.matmuh.matmuhsite.business.constants.AnnouncementMessages;
 import com.matmuh.matmuhsite.core.utilities.results.*;
 import com.matmuh.matmuhsite.dataAccess.abstracts.AnnouncementDao;
 import com.matmuh.matmuhsite.entities.Announcement;
-import com.matmuh.matmuhsite.entities.File;
 import com.matmuh.matmuhsite.entities.Image;
-import com.matmuh.matmuhsite.entities.dtos.RequestAnnouncementDto;
-import com.matmuh.matmuhsite.entities.dtos.ResponseAnnouncementDto;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -26,6 +24,8 @@ public class AnnouncementManager implements AnnouncementService {
 
     private final ImageService imageService;
 
+    private final UserService userService;
+
 
     @Value("${api.url}")
     private String API_URL;
@@ -34,18 +34,24 @@ public class AnnouncementManager implements AnnouncementService {
     private String IMAGE_GET_URL;
 
 
-    public AnnouncementManager(AnnouncementDao announcementDao, ImageService imageService) {
+    public AnnouncementManager(AnnouncementDao announcementDao, ImageService imageService, UserService userService) {
         this.announcementDao = announcementDao;
         this.imageService = imageService;
+        this.userService = userService;
     }
 
     @Override
     public Result addAnnouncement(Announcement announcement, Optional<MultipartFile> coverImage) {
-        if (announcement.getTitle() == null){
+        var authenticatedUserResult = userService.getAuthenticatedUser();
+        if (!authenticatedUserResult.isSuccess()){
+            return authenticatedUserResult;
+        }
+
+        if (announcement.getTitle().isEmpty()){
             return new ErrorResult(AnnouncementMessages.nameCanotBeNull, HttpStatus.BAD_REQUEST);
         }
 
-        if(announcement.getContent() == null){
+        if(announcement.getContent().isEmpty()){
             return new ErrorResult(AnnouncementMessages.contentCanotBeNull, HttpStatus.BAD_REQUEST);
         }
 
@@ -57,10 +63,11 @@ public class AnnouncementManager implements AnnouncementService {
                 return imageResult;
             }
 
-            announcementImage = imageResult.getData();
+            announcementImage = (Image) imageResult.getData();
         }
         announcement.setCoverImage(announcementImage);
-
+        announcement.setPublishDate(LocalDateTime.now());
+        announcement.setPublisher(authenticatedUserResult.getData());
 
         announcementDao.save(announcement);
         return new SuccessResult(AnnouncementMessages.announcementAddSuccess, HttpStatus.CREATED);
@@ -68,6 +75,11 @@ public class AnnouncementManager implements AnnouncementService {
 
     @Override
     public Result updateAnnouncement(Announcement announcement) {
+
+        var result = announcementDao.findById(announcement.getId());
+        if (result.isEmpty()){
+            return new ErrorResult(AnnouncementMessages.announcementNotFound, HttpStatus.NOT_FOUND);
+        }
 
         announcementDao.save(announcement);
 

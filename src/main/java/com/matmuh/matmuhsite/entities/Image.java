@@ -1,5 +1,6 @@
 package com.matmuh.matmuhsite.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.Type;
@@ -18,6 +19,7 @@ public class Image{
     @Column(name = "id")
     private UUID id;
 
+    @JsonIgnore
     @Lob
     @Column(name = "data")
     private byte[] data;

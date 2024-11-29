@@ -39,7 +39,7 @@ public class AuthManager implements AuthService {
     }
 
     @Override
-    public DataResult<?> login(User user) {
+    public DataResult<String> login(User user) {
 
         if (user.getEmail().isEmpty() && user.getUsername().isEmpty()){
             return new ErrorDataResult<>(AuthMessages.emailOrUsernameCannotBeNull, HttpStatus.BAD_REQUEST);
@@ -53,14 +53,14 @@ public class AuthManager implements AuthService {
             case "username":
                 var userByUsername = userService.getUserByUsername(user.getUsername());
                 if (!userByUsername.isSuccess()){
-                    return userByUsername;
+                    return new ErrorDataResult<>(userByUsername.getMessage(), userByUsername.getHttpStatus());
                 }
                 user = userByUsername.getData();
                 break;
             case "email":
                 var userByEmail = userService.getUserByEmail(user.getEmail());
                 if (!userByEmail.isSuccess()){
-                    return userByEmail;
+                    return new ErrorDataResult<>(userByEmail.getMessage(), userByEmail.getHttpStatus());
                 }
                 user = userByEmail.getData();
                 break;

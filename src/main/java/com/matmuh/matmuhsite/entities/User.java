@@ -1,5 +1,6 @@
 package com.matmuh.matmuhsite.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -54,6 +55,10 @@ public class User implements UserDetails {
     @JsonIgnore
     @OneToMany(mappedBy = "createdBy")
     private List<Image> createdImages;
+
+    @JsonBackReference
+    @OneToMany(mappedBy = "publisher")
+    private List<Announcement> publishedAnnouncements;
 
 
 }

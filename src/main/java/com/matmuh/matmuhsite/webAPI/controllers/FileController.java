@@ -28,7 +28,6 @@ public class FileController {
     }
 
 
-
     @PostMapping("/addFile")
     public ResponseEntity<DataResult<File>> addFile(@RequestParam("file") MultipartFile file){
         var result = fileService.addFile(file);

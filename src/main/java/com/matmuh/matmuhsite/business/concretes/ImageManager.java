@@ -40,11 +40,11 @@ public class ImageManager implements ImageService {
     }
 
     @Override
-    public DataResult<?> addImage(MultipartFile image) {
+    public DataResult<Image> addImage(MultipartFile image) {
 
         var userResult = userService.getAuthenticatedUser();
         if (!userResult.isSuccess()){
-            return userResult;
+            return new ErrorDataResult<>(userResult.getMessage(), userResult.getHttpStatus());
         }
 
         try {

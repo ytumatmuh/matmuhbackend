@@ -6,6 +6,7 @@ import com.matmuh.matmuhsite.core.utilities.results.Result;
 import com.matmuh.matmuhsite.entities.Lecture;
 import com.matmuh.matmuhsite.entities.dtos.RequestLectureDto;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,17 +15,37 @@ import java.util.List;
 @RequestMapping("api/lectures")
 public class LectureController {
 
-    @Autowired
-    private LectureService lectureService;
+    private final LectureService lectureService;
+
+    public LectureController(LectureService lectureService) {
+        this.lectureService = lectureService;
+    }
 
     @GetMapping("/getLectures")
-    public DataResult<List<Lecture>> getLectures(){
-        return lectureService.getLectures();
+    public ResponseEntity<DataResult<List<Lecture>>> getLectures(){
+        var result = lectureService.getLectures();
+
+        return ResponseEntity.status(result.getHttpStatus()).body(result);
+
     }
 
     @PostMapping("/addLecture")
-    public Result addLecture(@RequestBody RequestLectureDto lectureDto){
-        return lectureService.addLecture(lectureDto);
+    public ResponseEntity<Result> addLecture(@RequestBody RequestLectureDto lectureDto){
+
+            Lecture lecture = Lecture.builder()
+                    .id(lectureDto.getId())
+                    .name(lectureDto.getName())
+                    .lectureCode(lectureDto.getLectureCode())
+                    .term(lectureDto.getTerm())
+                    .count(lectureDto.getCount())
+                    .credit(lectureDto.getCredit())
+                    .syllabusLink(lectureDto.getSyllabusLink())
+                    .notesLink(lectureDto.getNotesLink())
+                    .build();
+
+            var result = lectureService.addLecture(lecture);
+
+            return ResponseEntity.status(result.getHttpStatus()).body(result);
     }
 
 

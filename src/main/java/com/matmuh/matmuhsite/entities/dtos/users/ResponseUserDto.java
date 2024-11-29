@@ -1,21 +1,26 @@
-package com.matmuh.matmuhsite.entities.dtos;
+package com.matmuh.matmuhsite.entities.dtos.users;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
 import java.util.UUID;
 
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
 @Builder
-public class RequestProjectDto {
+public class ResponseUserDto {
+
     private UUID id;
-    private String name;
-    private String description;
-    private Date date;
+
+    private String firstName;
+
+    private String lastName;
+
+    private String username;
+
+    private String email;
 
 }

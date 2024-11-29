@@ -8,7 +8,7 @@ import java.util.UUID;
 
 public interface FileService {
 
-    DataResult<?> addFile(MultipartFile file);
+    DataResult<File> addFile(MultipartFile file);
 
     DataResult<File> getFileById(UUID id);
 

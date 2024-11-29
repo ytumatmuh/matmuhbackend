@@ -6,8 +6,6 @@ import com.matmuh.matmuhsite.business.constants.ImageMessages;
 import com.matmuh.matmuhsite.core.utilities.results.*;
 import com.matmuh.matmuhsite.dataAccess.abstracts.EventDao;
 import com.matmuh.matmuhsite.entities.Event;
-import com.matmuh.matmuhsite.entities.dtos.RequestEventDto;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 

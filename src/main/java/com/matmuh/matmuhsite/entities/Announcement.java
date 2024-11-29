@@ -1,14 +1,13 @@
 package com.matmuh.matmuhsite.entities;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.Date;
-import java.util.List;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
-//
+
 @Data
 @Entity
 @AllArgsConstructor
@@ -26,12 +25,17 @@ public class Announcement {
     private String title;
 
     @Column(name = "publish_date")
-    private Date publishDate;
+    private LocalDateTime publishDate;
 
     @Column(name = "content", length = 8192)
     private String content;
 
     @OneToOne(cascade = CascadeType.ALL)
     private Image coverImage;
+
+    @JsonManagedReference
+    @ManyToOne
+    @JoinColumn(name = "publisher_id")
+    private User publisher;
 
 }
