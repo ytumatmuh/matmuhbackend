@@ -29,6 +29,14 @@ public class UserManager implements UserService {
 
     @Override
     public Result addUser(User user) {
+        if (userDao.findByEmail(user.getEmail()).isPresent()){
+            return new ErrorResult(UserMessages.emailAlreadyExists, HttpStatus.CONFLICT);
+        }
+
+        if (userDao.findByUsername(user.getUsername()).isPresent()){
+            return new ErrorResult(UserMessages.usernameAlreadyExists, HttpStatus.CONFLICT);
+        }
+
         userDao.save(user);
         return new SuccessResult(UserMessages.userAddSuccess, HttpStatus.CREATED);
     }

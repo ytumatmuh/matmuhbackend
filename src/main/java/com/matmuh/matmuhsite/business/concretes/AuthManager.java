@@ -8,6 +8,7 @@ import com.matmuh.matmuhsite.core.utilities.results.DataResult;
 import com.matmuh.matmuhsite.core.utilities.results.ErrorDataResult;
 import com.matmuh.matmuhsite.core.utilities.results.Result;
 import com.matmuh.matmuhsite.core.utilities.results.SuccessDataResult;
+import com.matmuh.matmuhsite.entities.Role;
 import com.matmuh.matmuhsite.entities.User;
 import com.matmuh.matmuhsite.entities.dtos.RequestLoginDto;
 import com.matmuh.matmuhsite.entities.dtos.RequestRegisterDto;
@@ -18,6 +19,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.Set;
 
 @Service
 public class AuthManager implements AuthService {
@@ -41,34 +44,36 @@ public class AuthManager implements AuthService {
     @Override
     public DataResult<String> login(User user) {
 
-        if (user.getEmail().isEmpty() && user.getUsername().isEmpty()){
+        if (user.getEmail() == null && user.getUsername() == null){
             return new ErrorDataResult<>(AuthMessages.emailOrUsernameCannotBeNull, HttpStatus.BAD_REQUEST);
         }
 
-        if (user.getPassword().isEmpty()){
+        if (user.getPassword() == null){
             return new ErrorDataResult<>(AuthMessages.passwordCannotBeNull, HttpStatus.BAD_REQUEST);
         }
 
-        switch (user.getEmail().isEmpty() ? "username" : "email"){
+
+
+        switch (user.getEmail() == null ? "username" : "email"){
             case "username":
                 var userByUsername = userService.getUserByUsername(user.getUsername());
                 if (!userByUsername.isSuccess()){
                     return new ErrorDataResult<>(userByUsername.getMessage(), userByUsername.getHttpStatus());
                 }
-                user = userByUsername.getData();
+                user.setUsername(userByUsername.getData().getUsername());
                 break;
             case "email":
                 var userByEmail = userService.getUserByEmail(user.getEmail());
                 if (!userByEmail.isSuccess()){
                     return new ErrorDataResult<>(userByEmail.getMessage(), userByEmail.getHttpStatus());
                 }
-                user = userByEmail.getData();
+                user.setUsername(userByEmail.getData().getUsername());
                 break;
         }
 
-        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(user.getEmail(),user.getPassword()));
+        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(user.getUsername(),user.getPassword()));
         if (authentication.isAuthenticated()) {
-            var token = jwtService.generateToken(user.getEmail(), user.getAuthorities());
+            var token = jwtService.generateToken(user.getUsername(), user.getAuthorities());
 
             return new SuccessDataResult<>(token, AuthMessages.loginSuccess, HttpStatus.CREATED);
         }
@@ -80,23 +85,23 @@ public class AuthManager implements AuthService {
     @Override
     public Result register(User user) {
 
-        if(user.getFirstName().isEmpty()){
+        if(user.getFirstName() == null){
             return new ErrorDataResult<>(AuthMessages.firstNameCannotBeNull, HttpStatus.BAD_REQUEST);
         }
 
-        if(user.getLastName().isEmpty()){
+        if(user.getLastName() == null){
             return new ErrorDataResult<>(AuthMessages.lastNameCannotBeNull, HttpStatus.BAD_REQUEST);
         }
 
-        if(user.getUsername().isEmpty()){
+        if(user.getUsername() == null){
             return new ErrorDataResult<>(AuthMessages.usernameCannotBeNull, HttpStatus.BAD_REQUEST);
         }
 
-        if(user.getEmail().isEmpty()){
+        if(user.getEmail() == null){
             return new ErrorDataResult<>(AuthMessages.emailCannotBeNull, HttpStatus.BAD_REQUEST);
         }
 
-        if(user.getPassword().isEmpty()){
+        if(user.getPassword() == null){
             return new ErrorDataResult<>(AuthMessages.passwordCannotBeNull, HttpStatus.BAD_REQUEST);
         }
 
@@ -105,6 +110,7 @@ public class AuthManager implements AuthService {
         }
 
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setAuthorities(Set.of(Role.ROLE_USER));
 
         return userService.addUser(user);
 
