@@ -10,4 +10,5 @@ public class ResearchMessages {
     public static String descriptionCanotBeNull = "Açıklama boş olamaz";
     public static String researchNotFoundById = "Araştırma bulunamadı";
     public static String  researchNotFound = "Araştırma bulunamadı";
+    public static String researchUpdateSuccess  = "Araştırma başarıyla güncellendi";
 }

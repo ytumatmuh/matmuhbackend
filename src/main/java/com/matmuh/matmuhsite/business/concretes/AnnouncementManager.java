@@ -27,12 +27,6 @@ public class AnnouncementManager implements AnnouncementService {
     private final UserService userService;
 
 
-    @Value("${api.url}")
-    private String API_URL;
-
-    @Value("${image.get.url}")
-    private String IMAGE_GET_URL;
-
 
     public AnnouncementManager(AnnouncementDao announcementDao, ImageService imageService, UserService userService) {
         this.announcementDao = announcementDao;
@@ -41,7 +35,7 @@ public class AnnouncementManager implements AnnouncementService {
     }
 
     @Override
-    public Result addAnnouncement(Announcement announcement, Optional<MultipartFile> coverImage) {
+    public Result addAnnouncement(Announcement announcement, MultipartFile coverImage) {
         var authenticatedUserResult = userService.getAuthenticatedUser();
         if (!authenticatedUserResult.isSuccess()){
             return authenticatedUserResult;
@@ -57,8 +51,8 @@ public class AnnouncementManager implements AnnouncementService {
 
          Image announcementImage = null;
 
-        if(coverImage.isPresent()){
-            var imageResult = imageService.addImage(coverImage.get());
+        if(coverImage != null){
+            var imageResult = imageService.addImage(coverImage);
             if (!imageResult.isSuccess()){
                 return imageResult;
             }
@@ -74,13 +68,30 @@ public class AnnouncementManager implements AnnouncementService {
     }
 
     @Override
-    public Result updateAnnouncement(Announcement announcement) {
+    public Result updateAnnouncement(Announcement announcement, MultipartFile coverImage) {
 
         var result = announcementDao.findById(announcement.getId());
         if (result.isEmpty()){
             return new ErrorResult(AnnouncementMessages.announcementNotFound, HttpStatus.NOT_FOUND);
         }
 
+        if (coverImage != null){
+            var imageResult = imageService.addImage(coverImage);
+            if (!imageResult.isSuccess()){
+                return imageResult;
+            }
+
+            announcement.setCoverImage(imageResult.getData());
+        }else {
+            announcement.setCoverImage(result.get().getCoverImage());
+        }
+
+        var authenticatedUserResult = userService.getAuthenticatedUser();
+        if (!authenticatedUserResult.isSuccess()){
+            return authenticatedUserResult;
+        }
+
+        announcement.setPublisher(authenticatedUserResult.getData());
         announcementDao.save(announcement);
 
         return new SuccessResult(AnnouncementMessages.announcementUpdateSuccess, HttpStatus.OK);

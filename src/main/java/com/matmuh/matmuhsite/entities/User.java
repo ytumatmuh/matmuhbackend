@@ -60,5 +60,9 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "publisher")
     private List<Announcement> publishedAnnouncements;
 
+    @JsonBackReference
+    @OneToMany(mappedBy = "publisher")
+    private List<Project> publishedProjects;
+
 
 }

@@ -2,6 +2,8 @@ package com.matmuh.matmuhsite.core.config;
 
 
 import com.matmuh.matmuhsite.business.abstracts.UserService;
+import com.matmuh.matmuhsite.core.exceptionHandlers.CustomAccessDeniedHandler;
+import com.matmuh.matmuhsite.core.exceptionHandlers.CustomAuthenticationEntryPointHandler;
 import com.matmuh.matmuhsite.core.security.JwtAuthFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -32,10 +34,16 @@ public class SecurityConfig {
 
     private final PasswordEncoder passwordEncoder;
 
-    public SecurityConfig(JwtAuthFilter jwtAuthFilter, UserService userService, PasswordEncoder passwordEncoder) {
+    private final CustomAccessDeniedHandler customAccessDeniedHandler;
+
+    private final CustomAuthenticationEntryPointHandler customAuthenticationEntryPointHandler;
+
+    public SecurityConfig(JwtAuthFilter jwtAuthFilter, UserService userService, PasswordEncoder passwordEncoder, CustomAccessDeniedHandler customAccessDeniedHandler, CustomAuthenticationEntryPointHandler customAuthenticationEntryPointHandler) {
         this.jwtAuthFilter = jwtAuthFilter;
         this.userService = userService;
         this.passwordEncoder = passwordEncoder;
+        this.customAccessDeniedHandler = customAccessDeniedHandler;
+        this.customAuthenticationEntryPointHandler = customAuthenticationEntryPointHandler;
     }
 
     @Bean
@@ -50,7 +58,39 @@ public class SecurityConfig {
                                 .requestMatchers("/api/auth/login").permitAll()
                                 .requestMatchers("/api/auth/register").permitAll()
 
+                                .requestMatchers("/api/announcements/addAnnouncement").hasAnyRole("ADMIN")
+                                .requestMatchers("/api/announcements/getAnnouncements/**").permitAll()
+                                .requestMatchers("/api/announcements/getAnnouncementById/**").permitAll()
+                                .requestMatchers("/api/announcements/deleteAnnouncementById/**").hasAnyRole("ADMIN")
+                                .requestMatchers("/api/announcements/updateAnnouncementById/**").hasAnyRole("ADMIN")
+
+                                .requestMatchers("/api/projects/addProject").hasAnyRole("ADMIN")
+                                .requestMatchers("/api/projects/getProjects/**").permitAll()
+                                .requestMatchers("/api/projects/getProjectById/**").permitAll()
+                                .requestMatchers("/api/projects/deleteProjectById/**").hasAnyRole("ADMIN")
+
+                                .requestMatchers("/api/researches/addResearch").hasAnyRole("ADMIN")
+                                .requestMatchers("/api/researches/getResearches/**").permitAll()
+                                .requestMatchers("/api/researches/getResearchById/**").permitAll()
+                                .requestMatchers("/api/researches/deleteResearchById/**").hasAnyRole("ADMIN")
+
+                                .requestMatchers("/api/lectures/addLecture").hasAnyRole("ADMIN")
+                                .requestMatchers("/api/lectures/getLectures").permitAll()
+
+                                .requestMatchers("/api/files/addFile").hasAnyRole("ADMIN")
+                                .requestMatchers("/api/files/getFileDetailsByUrl/**").permitAll()
+                                .requestMatchers("/api/files/getFileByUrl/**").permitAll()
+
+                                .requestMatchers("/api/images/addImage").hasAnyRole("ADMIN")
+                                .requestMatchers("/api/images/getImageByUrl/**").permitAll()
+                                .requestMatchers("/api/images/getImageDetailsByUrl/**").hasAnyRole("ADMIN")
+
                                 .anyRequest().authenticated()
+                )
+                .exceptionHandling(x ->
+                        x
+                                .accessDeniedHandler(customAccessDeniedHandler)
+                                .authenticationEntryPoint(customAuthenticationEntryPointHandler)
                 )
                 .sessionManagement(x -> x.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())

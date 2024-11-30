@@ -5,8 +5,6 @@ import com.matmuh.matmuhsite.business.constants.ResearchMessages;
 import com.matmuh.matmuhsite.core.utilities.results.*;
 import com.matmuh.matmuhsite.dataAccess.abstracts.ResearchDao;
 import com.matmuh.matmuhsite.entities.Research;
-import com.matmuh.matmuhsite.entities.dtos.RequestResearchDto;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -51,8 +49,8 @@ public class ResearchManager implements ResearchService  {
             return new ErrorResult(ResearchMessages.researchNotFoundById, HttpStatus.NOT_FOUND);
         }
 
-        researchDao.save(result.get());
-        return new SuccessResult(ResearchMessages.researchAddSuccess, HttpStatus.CREATED);
+        researchDao.save(research);
+        return new SuccessResult(ResearchMessages.researchUpdateSuccess, HttpStatus.CREATED);
     }
 
     @Override

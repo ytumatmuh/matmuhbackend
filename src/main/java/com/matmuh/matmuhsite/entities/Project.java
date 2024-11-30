@@ -1,5 +1,6 @@
 package com.matmuh.matmuhsite.entities;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -31,6 +32,11 @@ public class Project {
     private LocalDateTime date;
 
     @OneToOne(cascade = CascadeType.ALL)
-    private Image image;
+    private Image coverImage;
+
+    @JsonManagedReference
+    @ManyToOne
+    @JoinColumn(name = "publisher_id")
+    private User publisher;
 }
 

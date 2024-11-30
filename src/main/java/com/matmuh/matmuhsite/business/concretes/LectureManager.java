@@ -8,8 +8,6 @@ import com.matmuh.matmuhsite.core.utilities.results.SuccessDataResult;
 import com.matmuh.matmuhsite.core.utilities.results.SuccessResult;
 import com.matmuh.matmuhsite.dataAccess.abstracts.LectureDao;
 import com.matmuh.matmuhsite.entities.Lecture;
-import com.matmuh.matmuhsite.entities.dtos.RequestLectureDto;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 

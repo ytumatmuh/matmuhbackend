@@ -1,13 +1,11 @@
 package com.matmuh.matmuhsite.webAPI.controllers;
 
 import com.matmuh.matmuhsite.business.abstracts.AuthService;
-import com.matmuh.matmuhsite.core.security.JwtService;
 import com.matmuh.matmuhsite.core.utilities.results.DataResult;
 import com.matmuh.matmuhsite.core.utilities.results.Result;
 import com.matmuh.matmuhsite.entities.User;
-import com.matmuh.matmuhsite.entities.dtos.RequestLoginDto;
-import com.matmuh.matmuhsite.entities.dtos.RequestRegisterDto;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.matmuh.matmuhsite.webAPI.dtos.auth.RequestLoginDto;
+import com.matmuh.matmuhsite.webAPI.dtos.auth.RequestRegisterDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

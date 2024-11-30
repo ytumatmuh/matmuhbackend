@@ -4,8 +4,7 @@ import com.matmuh.matmuhsite.business.abstracts.LectureService;
 import com.matmuh.matmuhsite.core.utilities.results.DataResult;
 import com.matmuh.matmuhsite.core.utilities.results.Result;
 import com.matmuh.matmuhsite.entities.Lecture;
-import com.matmuh.matmuhsite.entities.dtos.RequestLectureDto;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.matmuh.matmuhsite.webAPI.dtos.RequestLectureDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

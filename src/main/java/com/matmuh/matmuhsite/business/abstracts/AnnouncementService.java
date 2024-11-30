@@ -10,9 +10,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface AnnouncementService {
-    Result addAnnouncement(Announcement announcement, Optional<MultipartFile> image);
+    Result addAnnouncement(Announcement announcement, MultipartFile image);
 
-    Result updateAnnouncement(Announcement announcement);
+    Result updateAnnouncement(Announcement announcement, MultipartFile image);
 
     DataResult<List<Announcement>> getAnnouncements(Optional<Integer> numberOfAnnouncements);
 

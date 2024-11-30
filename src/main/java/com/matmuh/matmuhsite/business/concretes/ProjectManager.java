@@ -2,17 +2,12 @@ package com.matmuh.matmuhsite.business.concretes;
 
 import com.matmuh.matmuhsite.business.abstracts.ImageService;
 import com.matmuh.matmuhsite.business.abstracts.ProjectService;
+import com.matmuh.matmuhsite.business.abstracts.UserService;
 import com.matmuh.matmuhsite.business.constants.ProjectMessages;
 import com.matmuh.matmuhsite.core.utilities.results.*;
 import com.matmuh.matmuhsite.dataAccess.abstracts.ProjectDao;
 import com.matmuh.matmuhsite.entities.Image;
 import com.matmuh.matmuhsite.entities.Project;
-import com.matmuh.matmuhsite.entities.dtos.RequestProjectDto;
-import com.matmuh.matmuhsite.entities.dtos.ResponseProjectDto;
-import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -31,31 +26,28 @@ public class ProjectManager implements ProjectService {
 
     private final ImageService imageService;
 
-    @Value("${api.url}")
-    private String API_URL;
+    private final UserService userService;
 
-    public ProjectManager(ProjectDao projectDao, ImageService imageService) {
+
+    public ProjectManager(ProjectDao projectDao, ImageService imageService, UserService userService) {
         this.projectDao = projectDao;
         this.imageService = imageService;
+        this.userService = userService;
     }
 
     @Override
-    public Result addProject(Project project, Optional<MultipartFile> image) {
-
+    public Result addProject(Project project, MultipartFile coverImage) {
         if (project.getName().isEmpty()){
             return new ErrorResult(ProjectMessages.nameCanotBeNull, HttpStatus.BAD_REQUEST);
         }
         if (project.getDescription().isEmpty()){
             return new ErrorResult(ProjectMessages.descriptionCanotBeNull, HttpStatus.BAD_REQUEST);
         }
-        if (project.getDate() == null){
-            return new ErrorResult(ProjectMessages.dateCanotBeNull, HttpStatus.BAD_REQUEST);
-        }
 
         Image projectImage = null;
 
-        if(image.isPresent()){
-            var imageResult = imageService.addImage(image.get());
+        if(coverImage != null){
+            var imageResult = imageService.addImage(coverImage);
             if (!imageResult.isSuccess()){
                 return imageResult;
             }
@@ -63,7 +55,13 @@ public class ProjectManager implements ProjectService {
             projectImage = (Image) imageResult.getData();
         }
 
-        project.setImage(projectImage);
+        var authenticatedUserResult = userService.getAuthenticatedUser();
+        if (!authenticatedUserResult.isSuccess()){
+            return authenticatedUserResult;
+        }
+
+        project.setPublisher(authenticatedUserResult.getData());
+        project.setCoverImage(projectImage);
         project.setDate(LocalDateTime.now());
 
         projectDao.save(project);
@@ -71,15 +69,32 @@ public class ProjectManager implements ProjectService {
 
     }
     @Override
-    public Result updateProject(Project project) {
-
+    public Result updateProject(Project project, MultipartFile coverImage) {
         var result = projectDao.findById(project.getId());
         if (result.isEmpty()){
             return new ErrorResult(ProjectMessages.projectNotFound, HttpStatus.NOT_FOUND);
         }
-            projectDao.save(project);
 
-            return new SuccessResult(ProjectMessages.projectUpdateSuccess, HttpStatus.OK);
+        if (coverImage != null){
+            var imageResult = imageService.addImage(coverImage);
+            if (!imageResult.isSuccess()){
+                return imageResult;
+            }
+
+            project.setCoverImage(imageResult.getData());
+        }else {
+            project.setCoverImage(result.get().getCoverImage());
+        }
+
+        var authenticatedUserResult = userService.getAuthenticatedUser();
+        if (!authenticatedUserResult.isSuccess()){
+            return authenticatedUserResult;
+        }
+
+        project.setPublisher(authenticatedUserResult.getData());
+        projectDao.save(project);
+
+        return new SuccessResult(ProjectMessages.projectUpdateSuccess, HttpStatus.OK);
     }
 
     @Override
@@ -105,13 +120,14 @@ public class ProjectManager implements ProjectService {
     public DataResult<Project> getProjectById(UUID id) {
         var result = projectDao.findById(id);
 
-        if(result == null){
+        if(result.isEmpty()){
             return new ErrorDataResult<>(ProjectMessages.projectNotFound, HttpStatus.NOT_FOUND);
         }
 
         return new SuccessDataResult<Project>(result.get(), ProjectMessages.getProjectSuccess, HttpStatus.OK);
     }
-    //dont repeat yourself chain
+
+
     @Override
     public Result deleteProject(UUID id) {
 

@@ -6,12 +6,8 @@ import com.matmuh.matmuhsite.business.constants.ImageMessages;
 import com.matmuh.matmuhsite.core.utilities.results.*;
 import com.matmuh.matmuhsite.dataAccess.abstracts.ImageDao;
 import com.matmuh.matmuhsite.entities.Image;
-import com.matmuh.matmuhsite.entities.dtos.RequestImageDto;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -58,8 +54,6 @@ public class ImageManager implements ImageService {
 
             imageDao.save(imageToSave);
 
-            //image.setImageUrl(API_URL+IMAGE_GET_URL+image.getImageUrl());
-
             return new SuccessDataResult<>(imageToSave,ImageMessages.photoAddSuccess, HttpStatus.CREATED);
         } catch (IOException e) {
             return new ErrorDataResult<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -75,8 +69,6 @@ public class ImageManager implements ImageService {
             return new ErrorDataResult<>(ImageMessages.getPhotosEmpty, HttpStatus.NOT_FOUND);
         }
 
-        result.forEach(image -> image.setUrl(API_URL+IMAGE_GET_URL+image.getUrl()));
-
         return new SuccessDataResult<List<Image>>(result, ImageMessages.getPhotosSuccess, HttpStatus.OK);
     }
 
@@ -87,8 +79,6 @@ public class ImageManager implements ImageService {
         if(!result.isPresent()){
             return new ErrorDataResult<>(ImageMessages.getPhotosEmpty, HttpStatus.NOT_FOUND);
         }
-
-        result.get().setUrl(API_URL+IMAGE_GET_URL+result.get().getUrl());
         return new SuccessDataResult<Image>(result.get(), ImageMessages.getPhotoSuccess, HttpStatus.OK);
     }
 
