@@ -101,7 +101,7 @@ public class ProjectController {
             }).toList();
 
             return ResponseEntity.status(result.getHttpStatus()).body(
-                    new ErrorDataResult<>(projectsToReturn, result.getMessage(), result.getHttpStatus())
+                    new SuccessDataResult<>(projectsToReturn, result.getMessage(), result.getHttpStatus())
             );
     }
 

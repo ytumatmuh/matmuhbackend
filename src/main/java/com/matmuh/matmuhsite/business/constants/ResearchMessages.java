@@ -11,4 +11,5 @@ public class ResearchMessages {
     public static String researchNotFoundById = "Araştırma bulunamadı";
     public static String  researchNotFound = "Araştırma bulunamadı";
     public static String researchUpdateSuccess  = "Araştırma başarıyla güncellendi";
+    public static String    researchDeleteSuccess = "Araştırma başarıyla silindi";
 }

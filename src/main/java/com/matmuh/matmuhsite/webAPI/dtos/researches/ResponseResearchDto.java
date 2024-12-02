@@ -1,4 +1,4 @@
-package com.matmuh.matmuhsite.webAPI.dtos;
+package com.matmuh.matmuhsite.webAPI.dtos.researches;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -7,13 +7,19 @@ import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
 @Builder
-public class RequestResearchDto {
+public class ResponseResearchDto {
+
     private UUID id;
+
     private String title;
+
     private String description;
+
+    private String coverImageUrl;
+
 
 }
