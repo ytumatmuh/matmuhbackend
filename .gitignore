@@ -5,6 +5,8 @@ HELP.md
 !**/src/test/**/target/
 target/
 
+.DS_Store
+
 ### STS ###
 .apt_generated
 .classpath

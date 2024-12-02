@@ -1,14 +1,19 @@
 package com.matmuh.matmuhsite.business.concretes;
 
+import com.matmuh.matmuhsite.business.abstracts.ImageService;
 import com.matmuh.matmuhsite.business.abstracts.ResearchService;
+import com.matmuh.matmuhsite.business.abstracts.UserService;
 import com.matmuh.matmuhsite.business.constants.ResearchMessages;
 import com.matmuh.matmuhsite.core.utilities.results.*;
 import com.matmuh.matmuhsite.dataAccess.abstracts.ResearchDao;
+import com.matmuh.matmuhsite.entities.Image;
 import com.matmuh.matmuhsite.entities.Research;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -19,35 +24,70 @@ public class ResearchManager implements ResearchService  {
 
     private final ResearchDao researchDao;
 
+    private final ImageService imageService;
 
-    public ResearchManager(ResearchDao researchDao) {
+    private final UserService userService;
+
+
+    public ResearchManager(ResearchDao researchDao, ImageService imageService, UserService userService) {
         this.researchDao = researchDao;
+        this.imageService = imageService;
+        this.userService = userService;
     }
 
     @Override
-    public Result addResearch(Research research) {
-        if (research.getTitle().isEmpty()) {
+    public Result addResearch(Research research, MultipartFile coverImage) {
+
+        if (research.getTitle() == null){
             return new ErrorResult(ResearchMessages.titleCanotBeNull, HttpStatus.BAD_REQUEST);
         }
 
-        if (research.getDescription().isEmpty()) {
-        return new ErrorResult(ResearchMessages.descriptionCanotBeNull, HttpStatus.BAD_REQUEST);
+        if (research.getDescription() == null){
+            return new ErrorResult(ResearchMessages.descriptionCanotBeNull, HttpStatus.BAD_REQUEST);
         }
 
+        Image researchImage = null;
+
+        if(coverImage != null){
+            var imageResult = imageService.addImage(coverImage);
+            if (!imageResult.isSuccess()){
+                return imageResult;
+            }
+
+            researchImage =imageResult.getData();
+        }
+
+        research.setCreatedAt(LocalDateTime.now());
+        research.setCoverImage(researchImage);
 
         researchDao.save(research);
+
         return new SuccessResult(ResearchMessages.researchAddSuccess, HttpStatus.CREATED);
+
     }
 
 
 
     @Override
-    public Result updateResearch(Research research) {
+    public Result updateResearch(Research research, MultipartFile coverImage) {
 
         var result = researchDao.findById(research.getId());
         if (result.isEmpty()){
             return new ErrorResult(ResearchMessages.researchNotFoundById, HttpStatus.NOT_FOUND);
         }
+
+        if (coverImage != null){
+            var imageResult = imageService.addImage(coverImage);
+            if (!imageResult.isSuccess()){
+                return imageResult;
+            }
+            research.setCoverImage(imageResult.getData());
+
+        }else {
+            research.setCoverImage(result.get().getCoverImage());
+        }
+
+        research.setCreatedAt(result.get().getCreatedAt());
 
         researchDao.save(research);
         return new SuccessResult(ResearchMessages.researchUpdateSuccess, HttpStatus.CREATED);
@@ -90,7 +130,7 @@ public class ResearchManager implements ResearchService  {
         }
 
         researchDao.delete(result.get());
-        return new SuccessResult(ResearchMessages.researchAddSuccess, HttpStatus.CREATED);
+        return new SuccessResult(ResearchMessages.researchDeleteSuccess, HttpStatus.OK);
     }
 
 }

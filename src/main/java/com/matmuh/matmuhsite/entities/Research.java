@@ -3,6 +3,7 @@ package com.matmuh.matmuhsite.entities;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
@@ -23,5 +24,11 @@ public class Research {
 
     @Column(name = "description", length = 8192)
     private String description;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    private Image coverImage;
 
 }
