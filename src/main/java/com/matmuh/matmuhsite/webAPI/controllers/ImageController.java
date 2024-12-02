@@ -3,10 +3,8 @@ package com.matmuh.matmuhsite.webAPI.controllers;
 import com.matmuh.matmuhsite.business.abstracts.ImageService;
 import com.matmuh.matmuhsite.business.constants.ImageMessages;
 import com.matmuh.matmuhsite.core.utilities.results.*;
-import com.matmuh.matmuhsite.entities.Image;
 import com.matmuh.matmuhsite.entities.dtos.users.ResponseUserDto;
 import com.matmuh.matmuhsite.webAPI.dtos.images.ResponseImageDto;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -14,7 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -39,7 +36,7 @@ public class ImageController {
         var result = imageService.addImage(image.get());
         if (!result.isSuccess()){
             return ResponseEntity.status(result.getHttpStatus()).body(
-                    new ErrorDataResult<ResponseImageDto>(result.getMessage(), result.getHttpStatus()));
+                    new ErrorDataResult<>(result.getMessage(), result.getHttpStatus()));
         }
 
 

@@ -5,7 +5,6 @@ import com.matmuh.matmuhsite.core.utilities.results.DataResult;
 import com.matmuh.matmuhsite.core.utilities.results.ErrorDataResult;
 import com.matmuh.matmuhsite.core.utilities.results.Result;
 import com.matmuh.matmuhsite.core.utilities.results.SuccessDataResult;
-import com.matmuh.matmuhsite.entities.File;
 import com.matmuh.matmuhsite.entities.dtos.users.ResponseUserDto;
 import com.matmuh.matmuhsite.webAPI.dtos.files.ResponseFileDto;
 import org.springframework.beans.factory.annotation.Value;

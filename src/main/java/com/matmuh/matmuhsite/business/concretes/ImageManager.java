@@ -6,7 +6,6 @@ import com.matmuh.matmuhsite.business.constants.ImageMessages;
 import com.matmuh.matmuhsite.core.utilities.results.*;
 import com.matmuh.matmuhsite.dataAccess.abstracts.ImageDao;
 import com.matmuh.matmuhsite.entities.Image;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
