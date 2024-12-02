@@ -76,14 +76,18 @@ public class SecurityConfig {
 
                                 .requestMatchers("/api/lectures/addLecture").hasAnyRole("ADMIN")
                                 .requestMatchers("/api/lectures/getLectures").permitAll()
+                                .requestMatchers("/api/lectures/updateLectureById/**").hasAnyRole("ADMIN")
+                                .requestMatchers("/api/lectures/deleteLectureById/**").hasAnyRole("ADMIN")
 
                                 .requestMatchers("/api/files/addFile").hasAnyRole("ADMIN")
-                                .requestMatchers("/api/files/getFileDetailsByUrl/**").permitAll()
+                                .requestMatchers("/api/files/getFileDetailsByUrl/**").hasAnyRole("ADMIN")
                                 .requestMatchers("/api/files/getFileByUrl/**").permitAll()
+                                .requestMatchers("/api/files/deleteFileById/**").hasAnyRole("ADMIN")
 
                                 .requestMatchers("/api/images/addImage").hasAnyRole("ADMIN")
                                 .requestMatchers("/api/images/getImageByUrl/**").permitAll()
                                 .requestMatchers("/api/images/getImageDetailsByUrl/**").hasAnyRole("ADMIN")
+                                .requestMatchers("/api/images/deleteImageById/**").hasAnyRole("ADMIN")
 
                                 .anyRequest().authenticated()
                 )

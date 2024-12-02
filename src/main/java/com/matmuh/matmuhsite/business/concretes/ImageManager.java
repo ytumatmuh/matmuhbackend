@@ -24,12 +24,6 @@ public class ImageManager implements ImageService {
 
     private final UserService userService;
 
-    @Value("${api.url}")
-    private String API_URL;
-
-    @Value("${image.get.url}")
-    private String IMAGE_GET_URL;
-
     public ImageManager(ImageDao imageDao, UserService userService) {
         this.imageDao = imageDao;
         this.userService = userService;
@@ -37,6 +31,10 @@ public class ImageManager implements ImageService {
 
     @Override
     public DataResult<Image> addImage(MultipartFile image) {
+
+        if (image == null){
+            return new ErrorDataResult<>(ImageMessages.photoCanotBeNull, HttpStatus.BAD_REQUEST);
+        }
 
         var userResult = userService.getAuthenticatedUser();
         if (!userResult.isSuccess()){
@@ -95,14 +93,13 @@ public class ImageManager implements ImageService {
 
     }
 
-    public DataResult<Image> getImageByImageUrl(String url){
+    public DataResult<Image> getImageByUrl(String url){
         var result = imageDao.findByUrl(url);
 
         if(!result.isPresent()){
             return new ErrorDataResult<>(ImageMessages.getPhotosEmpty, HttpStatus.NOT_FOUND);
         }
 
-        result.get().setUrl(API_URL+IMAGE_GET_URL+result.get().getUrl());
 
         return new SuccessDataResult<Image>(result.get(), ImageMessages.getPhotoSuccess, HttpStatus.OK);
     }

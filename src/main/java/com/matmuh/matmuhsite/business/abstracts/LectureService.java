@@ -19,9 +19,9 @@ public interface LectureService {
 
     DataResult<List<Lecture>> getLecturesByTerm(int term);
 
-    DataResult<Lecture> getLectureByLectureCode(String lectureCode);
+    DataResult<Lecture> getLecturesByCode(String lectureCode);
 
-    Result deleteLecture(UUID id);
+    Result deleteLectureById(UUID id);
 
 
 

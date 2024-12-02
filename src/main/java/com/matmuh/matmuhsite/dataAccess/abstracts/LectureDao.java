@@ -11,7 +11,7 @@ import java.util.UUID;
 @Repository
 public interface LectureDao extends JpaRepository<Lecture, UUID> {
 
-    Optional<Lecture> findByLectureCode(String lectureCode);
+    Optional<Lecture> findByCode(String code);
 
     List<Lecture> findAllByTerm(int term);
 

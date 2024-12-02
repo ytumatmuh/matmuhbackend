@@ -2,11 +2,10 @@ package com.matmuh.matmuhsite.webAPI.controllers;
 
 import com.matmuh.matmuhsite.business.abstracts.ImageService;
 import com.matmuh.matmuhsite.business.constants.ImageMessages;
-import com.matmuh.matmuhsite.core.utilities.results.DataResult;
-import com.matmuh.matmuhsite.core.utilities.results.ErrorDataResult;
-import com.matmuh.matmuhsite.core.utilities.results.ErrorResult;
-import com.matmuh.matmuhsite.core.utilities.results.Result;
+import com.matmuh.matmuhsite.core.utilities.results.*;
 import com.matmuh.matmuhsite.entities.Image;
+import com.matmuh.matmuhsite.entities.dtos.users.ResponseUserDto;
+import com.matmuh.matmuhsite.webAPI.dtos.images.ResponseImageDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -17,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/images")
@@ -35,22 +35,35 @@ public class ImageController {
     }
 
     @PostMapping("/addImage")
-    public ResponseEntity<DataResult<Image>> addImage(@RequestParam("image") Optional<MultipartFile> image){
-
-        if (!image.isPresent()){
-            var error = new ErrorDataResult<Image>(ImageMessages.photoCanotBeNull, HttpStatus.BAD_REQUEST);
-            return ResponseEntity.status(error.getHttpStatus()).body(error);
-        }
-
+    public ResponseEntity<DataResult<ResponseImageDto>> addImage(@RequestParam("image") Optional<MultipartFile> image){
         var result = imageService.addImage(image.get());
         if (!result.isSuccess()){
-            return ResponseEntity.status(result.getHttpStatus()).body(result);
+            return ResponseEntity.status(result.getHttpStatus()).body(
+                    new ErrorDataResult<ResponseImageDto>(result.getMessage(), result.getHttpStatus()));
         }
-        result.getData().setData(null);
-        result.getData().setUrl(API_URL+IMAGE_GET_URL+result.getData().getUrl());
 
 
-        return ResponseEntity.status(result.getHttpStatus()).body(result);
+        ResponseUserDto responseUserDto = ResponseUserDto.builder()
+                .id(result.getData().getCreatedBy().getId())
+                .firstName(result.getData().getCreatedBy().getFirstName())
+                .lastName(result.getData().getCreatedBy().getLastName())
+                .username(result.getData().getCreatedBy().getUsername())
+                .email(result.getData().getCreatedBy().getEmail())
+                .build();
+
+        ResponseImageDto responseImageDto = ResponseImageDto.builder()
+                .id(result.getData().getId())
+                .name(result.getData().getName())
+                .type(result.getData().getType())
+                .url(API_URL+IMAGE_GET_URL+result.getData().getUrl())
+                .createdBy(responseUserDto)
+                .build();
+
+
+        return ResponseEntity.status(result.getHttpStatus()).body(
+                new ErrorDataResult<>(responseImageDto, result.getMessage(), result.getHttpStatus())
+        );
+
     }
 
     /*
@@ -70,7 +83,7 @@ public class ImageController {
             return ResponseEntity.status(error.getHttpStatus()).build();
         }
 
-        var imageResult = imageService.getImageByImageUrl(url.get());
+        var imageResult = imageService.getImageByUrl(url.get());
 
         if(imageResult.isSuccess()) {
             return ResponseEntity.status(imageResult.getHttpStatus())
@@ -83,20 +96,41 @@ public class ImageController {
     }
 
     @GetMapping("/getImageDetailsByUrl/{url}")
-    public ResponseEntity<DataResult<Image>> getImageDetailsByUrl(@PathVariable Optional<String> url){
-
-        if (!url.isPresent()){
-            var error = new ErrorDataResult<Image>(ImageMessages.photoUrlCanotBeNull, HttpStatus.BAD_REQUEST);
-            return ResponseEntity.status(error.getHttpStatus()).body(error);
-        }
-
-        var imageResult = imageService.getImageByImageUrl(url.get());
+    public ResponseEntity<DataResult<ResponseImageDto>> getImageDetailsByUrl(@PathVariable String url){
+        var imageResult = imageService.getImageByUrl(url);
 
         if (!imageResult.isSuccess()){
-            return ResponseEntity.status(imageResult.getHttpStatus()).body(imageResult);
+            return ResponseEntity.status(imageResult.getHttpStatus()).body(
+                    new ErrorDataResult<ResponseImageDto>(imageResult.getMessage(), imageResult.getHttpStatus())
+            );
         }
 
-        return ResponseEntity.status(imageResult.getHttpStatus()).body(imageResult);
+        ResponseUserDto responseUserDto = ResponseUserDto.builder()
+                .id(imageResult.getData().getCreatedBy().getId())
+                .firstName(imageResult.getData().getCreatedBy().getFirstName())
+                .lastName(imageResult.getData().getCreatedBy().getLastName())
+                .username(imageResult.getData().getCreatedBy().getUsername())
+                .email(imageResult.getData().getCreatedBy().getEmail())
+                .build();
+
+        ResponseImageDto responseImageDto = ResponseImageDto.builder()
+                .id(imageResult.getData().getId())
+                .name(imageResult.getData().getName())
+                .type(imageResult.getData().getType())
+                .url(API_URL+IMAGE_GET_URL+imageResult.getData().getUrl())
+                .createdBy(responseUserDto)
+                .build();
+
+        return ResponseEntity.status(imageResult.getHttpStatus()).body(
+                new SuccessDataResult<>(responseImageDto, imageResult.getMessage(), imageResult.getHttpStatus())
+        );
+    }
+
+    @DeleteMapping("/deleteImageById/{id}")
+    public ResponseEntity<Result> deleteImageById(@PathVariable UUID id){
+        var result = imageService.deleteImage(id);
+
+        return ResponseEntity.status(result.getHttpStatus()).body(result);
     }
 
 }

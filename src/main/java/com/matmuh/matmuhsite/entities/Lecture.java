@@ -27,8 +27,8 @@ public class Lecture {
     @Column(name = "name")
     private String name;
 
-    @Column(name = "lecture_code")
-    private String lectureCode;
+    @Column(name = "code")
+    private String code;
 
     @Column(name = "term")
     private int term;

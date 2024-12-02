@@ -12,11 +12,12 @@ import java.util.UUID;
 @Data
 @Builder
 public class RequestLectureDto {
+
     private UUID id;
 
     private String name;
 
-    private String lectureCode;
+    private String code;
 
     private int term;
 

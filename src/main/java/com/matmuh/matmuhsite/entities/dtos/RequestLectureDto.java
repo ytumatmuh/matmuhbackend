@@ -16,7 +16,7 @@ public class RequestLectureDto {
 
     private String name;
 
-    private String lectureCode;
+    private String code;
 
     private int term;
 

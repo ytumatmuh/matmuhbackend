@@ -3,10 +3,7 @@ package com.matmuh.matmuhsite.business.concretes;
 import com.matmuh.matmuhsite.business.abstracts.FileService;
 import com.matmuh.matmuhsite.business.abstracts.UserService;
 import com.matmuh.matmuhsite.business.constants.FileMessages;
-import com.matmuh.matmuhsite.core.utilities.results.DataResult;
-import com.matmuh.matmuhsite.core.utilities.results.ErrorDataResult;
-import com.matmuh.matmuhsite.core.utilities.results.ErrorResult;
-import com.matmuh.matmuhsite.core.utilities.results.SuccessDataResult;
+import com.matmuh.matmuhsite.core.utilities.results.*;
 import com.matmuh.matmuhsite.dataAccess.abstracts.FileDao;
 import com.matmuh.matmuhsite.entities.File;
 import org.springframework.http.HttpStatus;
@@ -34,6 +31,10 @@ public class FileManager implements FileService {
     @Override
     public DataResult<File> addFile(MultipartFile file) {
 
+        if (file == null){
+            return new ErrorDataResult<>(FileMessages.fileCanNotBeNull, HttpStatus.BAD_REQUEST);
+        }
+
         if (file.getContentType().equals("application/pdf") && file.getContentType().equals("application/vnd.ms-excel")){
             return new ErrorDataResult<>(FileMessages.fileTypeNotSupported, HttpStatus.UNPROCESSABLE_ENTITY);
         }
@@ -55,7 +56,7 @@ public class FileManager implements FileService {
 
             fileDao.save(fileToSave);
 
-            return new SuccessDataResult<>(fileToSave, FileMessages.pdfAddSuccess, HttpStatus.CREATED);
+            return new SuccessDataResult<>(fileToSave, FileMessages.fileAddSuccess, HttpStatus.CREATED);
         } catch (Exception e) {
             return new ErrorDataResult<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -68,10 +69,10 @@ public class FileManager implements FileService {
         var pdf = fileDao.findById(id);
 
         if (!pdf.isPresent()){
-            return new ErrorDataResult<>(FileMessages.pdfNotFound, HttpStatus.NOT_FOUND);
+            return new ErrorDataResult<>(FileMessages.fileNotFound, HttpStatus.NOT_FOUND);
         }
 
-        return new SuccessDataResult<>(pdf.get(), FileMessages.pdfGetSuccess, HttpStatus.OK);
+        return new SuccessDataResult<>(pdf.get(), FileMessages.fileGetSuccess, HttpStatus.OK);
 
     }
 
@@ -80,10 +81,23 @@ public class FileManager implements FileService {
         var file = fileDao.findFileByUrl(url);
 
         if (!file.isPresent()){
-            return new ErrorDataResult<>(FileMessages.pdfNotFound, HttpStatus.NOT_FOUND);
+            return new ErrorDataResult<>(FileMessages.fileNotFound, HttpStatus.NOT_FOUND);
         }
 
-        return new SuccessDataResult<>(file.get(), FileMessages.pdfGetSuccess, HttpStatus.OK);
+        return new SuccessDataResult<>(file.get(), FileMessages.fileGetSuccess, HttpStatus.OK);
+    }
+
+    @Override
+    public Result deleteFileById(UUID id) {
+        var file = fileDao.findById(id);
+
+        if (!file.isPresent()){
+            return new ErrorResult(FileMessages.fileNotFound, HttpStatus.NOT_FOUND);
+        }
+
+        fileDao.delete(file.get());
+
+        return new SuccessResult(FileMessages.fileDeleteSuccess, HttpStatus.OK);
     }
 
 

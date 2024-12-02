@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("api/lectures")
@@ -34,7 +35,7 @@ public class LectureController {
             Lecture lecture = Lecture.builder()
                     .id(lectureDto.getId())
                     .name(lectureDto.getName())
-                    .lectureCode(lectureDto.getLectureCode())
+                    .code(lectureDto.getCode())
                     .term(lectureDto.getTerm())
                     .count(lectureDto.getCount())
                     .credit(lectureDto.getCredit())
@@ -47,5 +48,33 @@ public class LectureController {
             return ResponseEntity.status(result.getHttpStatus()).body(result);
     }
 
+
+    @PutMapping("/updateLectureById/{id}")
+    public ResponseEntity<Result> updateLectureById(@PathVariable UUID id, @RequestBody RequestLectureDto requestLectureDto) {
+        Lecture lecture = Lecture.builder()
+                .id(id)
+                .name(requestLectureDto.getName())
+                .code(requestLectureDto.getCode())
+                .term(requestLectureDto.getTerm())
+                .count(requestLectureDto.getCount())
+                .credit(requestLectureDto.getCredit())
+                .syllabusLink(requestLectureDto.getSyllabusLink())
+                .notesLink(requestLectureDto.getNotesLink())
+                .build();
+
+        var result = lectureService.updateLecture(lecture);
+
+        return ResponseEntity.status(result.getHttpStatus()).body(result);
+
+    }
+
+    @DeleteMapping("/deleteLectureById/{id}")
+    public ResponseEntity<Result> deleteLectureById(@PathVariable UUID id){
+
+        var result = lectureService.deleteLectureById(id);
+
+        return ResponseEntity.status(result.getHttpStatus()).body(result);
+
+    }
 
 }

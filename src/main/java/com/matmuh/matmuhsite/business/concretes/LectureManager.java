@@ -17,7 +17,6 @@ import java.util.UUID;
 @Service
 public class LectureManager implements LectureService {
 
-
     private final LectureDao lectureDao;
 
     public LectureManager(LectureDao lectureDao) {
@@ -27,11 +26,11 @@ public class LectureManager implements LectureService {
     @Override
     public Result addLecture(Lecture lecture) {
 
-        if(lecture.getName().isEmpty()){
+        if(lecture.getName() == null){
             return new SuccessResult(LectureMessages.nameCanotBeNull, HttpStatus.BAD_REQUEST);
         }
 
-        if(lecture.getLectureCode().isEmpty()){
+        if(lecture.getCode() == null){
             return new SuccessResult(LectureMessages.lectureCodeCanotBeNull, HttpStatus.BAD_REQUEST);
         }
 
@@ -98,8 +97,8 @@ public class LectureManager implements LectureService {
     }
 
     @Override
-    public DataResult<Lecture> getLectureByLectureCode(String lectureCode) {
-        var result = lectureDao.findByLectureCode(lectureCode);
+    public DataResult<Lecture> getLecturesByCode(String lectureCode) {
+        var result = lectureDao.findByCode(lectureCode);
 
         if(result.isEmpty()){
             return new SuccessDataResult<>(LectureMessages.lectureNotFound, HttpStatus.NOT_FOUND);
@@ -110,7 +109,7 @@ public class LectureManager implements LectureService {
     }
 
     @Override
-    public Result deleteLecture(UUID id) {
+    public Result deleteLectureById(UUID id) {
         var result = lectureDao.findById(id);
 
         if(result.isEmpty()){

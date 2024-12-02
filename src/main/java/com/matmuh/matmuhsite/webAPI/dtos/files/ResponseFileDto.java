@@ -1,4 +1,4 @@
-package com.matmuh.matmuhsite.webAPI.dtos.images;
+package com.matmuh.matmuhsite.webAPI.dtos.files;
 
 import com.matmuh.matmuhsite.entities.dtos.users.ResponseUserDto;
 import lombok.AllArgsConstructor;
@@ -9,10 +9,10 @@ import lombok.NoArgsConstructor;
 import java.util.UUID;
 
 @Data
-@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ResponseImageDto {
+@Builder
+public class ResponseFileDto {
 
     private UUID id;
 
@@ -22,5 +22,7 @@ public class ResponseImageDto {
 
     private String url;
 
-    private ResponseUserDto createdBy;
+    ResponseUserDto createdBy;
+
+
 }

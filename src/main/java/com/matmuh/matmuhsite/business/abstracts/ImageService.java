@@ -18,7 +18,7 @@ public interface ImageService {
 
     Result deleteImage(UUID id);
 
-    DataResult<Image> getImageByImageUrl(String url);
+    DataResult<Image> getImageByUrl(String url);
 
 
 }
