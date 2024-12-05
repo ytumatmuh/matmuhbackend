@@ -1,10 +1,12 @@
 package com.matmuh.matmuhsite.webAPI.dtos.users;
 
+import com.matmuh.matmuhsite.entities.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Set;
 import java.util.UUID;
 
 @Data
@@ -22,5 +24,7 @@ public class ResponseUserDto {
     private String username;
 
     private String email;
+
+    private Set<Role> authorities;
 
 }

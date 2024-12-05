@@ -15,7 +15,7 @@ public class CorsConfig {
             public void addCorsMappings(CorsRegistry registry) {
                 registry
                         .addMapping("/api/**")
-                        .allowedOrigins("https://matmuh.vercel.app/", "http://localhost:5500", "https://localhost:5500")
+                        .allowedOrigins("https://matmuh.vercel.app/", "https://matmuhadmin.vercel.app/", "http://localhost:3000", "https://localhost:3000","http://localhost:3000","http://localhost:5500", "https://localhost:5500")
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders(
                                 "Access-Control-Allow-Headers",

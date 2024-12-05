@@ -70,7 +70,9 @@ public class AuthManager implements AuthService {
 
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(user.getUsername(),user.getPassword()));
         if (authentication.isAuthenticated()) {
-            var token = jwtService.generateToken(user.getUsername(), user.getAuthorities());
+            var userLoggedIn = userService.getUserByUsername(user.getUsername()).getData();
+
+            var token = jwtService.generateToken(userLoggedIn);
 
             return new SuccessDataResult<>(token, AuthMessages.loginSuccess, HttpStatus.CREATED);
         }

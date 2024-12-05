@@ -23,9 +23,13 @@ public interface UserService extends UserDetailsService {
 
     UserDetails loadUserByUsername(String username);
 
-    Result deleteUser(UUID id);
+    Result deleteUserById(UUID id);
+
+    Result updateUserById(User user);
 
     DataResult<User> getAuthenticatedUser();
+
+    Result changeAuthenticatedUserPassword(String oldPassword, String newPassword);
 
 
 }

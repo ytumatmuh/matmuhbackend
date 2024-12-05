@@ -21,9 +21,12 @@ public class UserManager implements UserService {
 
     private final UserDao userDao;
 
+    private final PasswordEncoder passwordEncoder;
 
-    public UserManager(UserDao userDao) {
+
+    public UserManager(UserDao userDao, PasswordEncoder passwordEncoder) {
         this.userDao = userDao;
+        this.passwordEncoder = passwordEncoder;
     }
 
 
@@ -87,7 +90,7 @@ public class UserManager implements UserService {
     }
 
     @Override
-    public Result deleteUser(UUID id) {
+    public Result deleteUserById(UUID id) {
         var user = userDao.findById(id);
 
         if (user.isEmpty()){
@@ -99,6 +102,24 @@ public class UserManager implements UserService {
     }
 
     @Override
+    public Result updateUserById(User user) {
+        var userResult = getUserById(user.getId());
+
+        if (!userResult.isSuccess()){
+            return new ErrorResult(userResult.getMessage(), userResult.getHttpStatus());
+        }
+
+        if (user.getPassword() != null){
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+        }else {
+            user.setPassword(userResult.getData().getPassword());
+        }
+
+        userDao.save(user);
+        return new SuccessResult(UserMessages.userUpdateSuccess, HttpStatus.OK);
+    }
+
+    @Override
     public DataResult<User> getAuthenticatedUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication.getPrincipal() == "anonymousUser"){
@@ -107,4 +128,30 @@ public class UserManager implements UserService {
         return getUserByUsername(authentication.getName());
 
     }
+
+    @Override
+    public Result changeAuthenticatedUserPassword(String oldPassword, String newPassword) {
+        var userResult = getAuthenticatedUser();
+
+        if (!userResult.isSuccess()){
+            return new ErrorResult(userResult.getMessage(), userResult.getHttpStatus());
+        }
+
+        if (oldPassword == null || newPassword == null){
+            return new ErrorResult(UserMessages.passwordCannotBeNull, HttpStatus.BAD_REQUEST);
+        }
+
+        var user = userResult.getData();
+
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())){
+            return new ErrorResult(UserMessages.oldPasswordIsIncorrect, HttpStatus.BAD_REQUEST);
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userDao.save(user);
+
+        return new SuccessResult(UserMessages.passwordChangeSuccess, HttpStatus.OK);
+    }
+
+
 }

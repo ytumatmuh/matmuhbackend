@@ -3,7 +3,7 @@ package com.matmuh.matmuhsite.webAPI.controllers;
 import com.matmuh.matmuhsite.business.abstracts.ImageService;
 import com.matmuh.matmuhsite.business.constants.ImageMessages;
 import com.matmuh.matmuhsite.core.utilities.results.*;
-import com.matmuh.matmuhsite.entities.dtos.users.ResponseUserDto;
+import com.matmuh.matmuhsite.webAPI.dtos.users.ResponseUserDto;
 import com.matmuh.matmuhsite.webAPI.dtos.images.ResponseImageDto;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -58,7 +58,7 @@ public class ImageController {
 
 
         return ResponseEntity.status(result.getHttpStatus()).body(
-                new ErrorDataResult<>(responseImageDto, result.getMessage(), result.getHttpStatus())
+                new SuccessDataResult<>(responseImageDto, result.getMessage(), result.getHttpStatus())
         );
 
     }

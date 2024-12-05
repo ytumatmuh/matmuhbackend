@@ -103,7 +103,7 @@ public class ResearchManager implements ResearchService  {
             result = researchDao.findAll();
         }
 
-        if(result == null){
+        if(result.isEmpty()){
             return new ErrorDataResult<>(ResearchMessages.researchNotFound, HttpStatus.NOT_FOUND);
         }
 

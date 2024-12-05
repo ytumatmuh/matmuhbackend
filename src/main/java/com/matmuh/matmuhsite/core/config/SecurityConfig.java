@@ -54,7 +54,7 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
                                 .requestMatchers("/api/auth/login").permitAll()
-                                .requestMatchers("/api/auth/register").permitAll()
+                                .requestMatchers("/api/auth/register").hasAnyRole("ADMIN")
 
                                 .requestMatchers("/api/announcements/addAnnouncement").hasAnyRole("ADMIN")
                                 .requestMatchers("/api/announcements/getAnnouncements/**").permitAll()
@@ -65,6 +65,7 @@ public class SecurityConfig {
                                 .requestMatchers("/api/projects/addProject").hasAnyRole("ADMIN")
                                 .requestMatchers("/api/projects/getProjects/**").permitAll()
                                 .requestMatchers("/api/projects/getProjectById/**").permitAll()
+                                .requestMatchers("/api/projects/updateProjectById/**").hasAnyRole("ADMIN")
                                 .requestMatchers("/api/projects/deleteProjectById/**").hasAnyRole("ADMIN")
 
                                 .requestMatchers("/api/researches/addResearch").hasAnyRole("ADMIN")
@@ -86,6 +87,12 @@ public class SecurityConfig {
                                 .requestMatchers("/api/images/getImageByUrl/**").permitAll()
                                 .requestMatchers("/api/images/getImageDetailsByUrl/**").hasAnyRole("ADMIN")
                                 .requestMatchers("/api/images/deleteImageById/**").hasAnyRole("ADMIN")
+
+                                .requestMatchers("/api/users/changeAuthenticatedUserPassword").hasAnyRole("ADMIN", "USER")
+                                .requestMatchers("/api/users/deleteUserById/**").hasAnyRole("ADMIN")
+                                .requestMatchers("/api/users/getAuthenticatedUser").hasAnyRole("ADMIN", "USER")
+                                .requestMatchers("/api/users/updateUserById/**").hasAnyRole("ADMIN")
+                                .requestMatchers("/api/users/getUsers").hasAnyRole("ADMIN")
 
                                 .anyRequest().authenticated()
                 )

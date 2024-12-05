@@ -1,14 +1,17 @@
-package com.matmuh.matmuhsite.entities.dtos;
+package com.matmuh.matmuhsite.webAPI.dtos.users;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
 @Builder
-public class RequestImageDto {
-    private String photoUrl;
+public class RequestChangePaswordDto {
+
+    private String oldPassword;
+
+    private String newPassword;
 }

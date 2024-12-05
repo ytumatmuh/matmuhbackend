@@ -91,6 +91,8 @@ public class AnnouncementManager implements AnnouncementService {
             return authenticatedUserResult;
         }
 
+        announcement.setPublishDate(result.get().getPublishDate());
+
         announcement.setPublisher(authenticatedUserResult.getData());
         announcementDao.save(announcement);
 
@@ -106,7 +108,7 @@ public class AnnouncementManager implements AnnouncementService {
             result = announcementDao.findAll();
         }
 
-        if (result == null){
+        if (result.isEmpty()){
             return new ErrorDataResult<>(AnnouncementMessages.annoucementsNotFound, HttpStatus.NOT_FOUND);
         }
 

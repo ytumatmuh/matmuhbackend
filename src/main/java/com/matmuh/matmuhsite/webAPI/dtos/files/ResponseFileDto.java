@@ -1,6 +1,6 @@
 package com.matmuh.matmuhsite.webAPI.dtos.files;
 
-import com.matmuh.matmuhsite.entities.dtos.users.ResponseUserDto;
+import com.matmuh.matmuhsite.webAPI.dtos.users.ResponseUserDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
