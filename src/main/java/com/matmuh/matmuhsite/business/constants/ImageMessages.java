@@ -1,11 +1,10 @@
 package com.matmuh.matmuhsite.business.constants;
 
 public class ImageMessages {
-    public static String photoAddSuccess = "Fotoğraf başarıyla eklendi!";
-    public static String getPhotosSuccess = "Fotoğraflar başarıyla getirildi!";
-    public static String getPhotoSuccess = "Fotoğraf başarıyla getirildi!";
-    public static String photoCanotBeNull = "Fotoğraf boş olamaz!";
-    public static String photoUrlCanotBeNull = "Fotoğraf url'si boş olamaz!";
-    public static String getPhotosEmpty = "Fotoğraf bulunamadı!";
-    public static String photoDeleteSuccess = "Fotoğraf başarıyla silindi!";
+    public static final String IMAGE_EMPTY_ERROR = "Fotoğraf dosyası boş olamaz!";
+    public static final String IMAGE_SIZE_ERROR = "Fotoğraf dosyası 50 MB'den büyük olamaz!";
+    public static final String IMAGE_UPLOAD_ERROR = "Fotoğraf yüklenirken bir hata oluştu!";
+    public static final String IMAGE_NOT_FOUND_ERROR = "Fotoğraf bulunamadı!";
+    public static final String IMAGE_PERMISSION_ERROR = "Bu fotoğrafı silme izniniz yok!";
+    public static final String IMAGE_DELETE_ERROR = "Fotoğraf silinirken bir hata oluştu!";
 }

@@ -7,7 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.UUID;
+import java.util.*;
 
 @Data
 @Entity
@@ -15,7 +15,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @Builder
 @Table(name = "lectures")
-public class Lecture {
+public class Lecture extends BaseEntity{
 
 
     @Id
@@ -32,18 +32,29 @@ public class Lecture {
     @Column(name = "term")
     private int term;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "semester")
+    private Semester semester;
+
     @Column(name = "count")
     private int count;
 
     @Column(name = "credit")
     private int credit;
 
-    @Column(name = "syllabus_link")
-    private String syllabusLink;
+    @Column(name = "bologna_link")
+    private String bolognaLink;
 
     @Column(name = "notes_link")
     private String notesLink;
 
-    @Column(name = "lecture_term")
-    private String lectureTerm;
+    @OneToMany(mappedBy = "lecture", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    List<LectureNote> lectureNotes = new ArrayList<>();
+
+    @OneToMany(mappedBy = "lecture", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private Set<LectureOffering> offerings = new HashSet<>();
+
+
+
 }

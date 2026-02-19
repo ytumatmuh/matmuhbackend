@@ -3,24 +3,32 @@ version: '3.8'
 services:
   matmuh-app:
     build: .
+    container_name: matmuh-app
+    depends_on:
+      - matmuh-db
     ports:
       - "9001:9001"
-    depends_on:
-      - db
     networks:
         - nginx-network
 
-  db:
-    image: postgres:latest
+  matmuh-db:
+    image: postgres:17
+    container_name: matmuh-db
     environment:
       POSTGRES_DB: matmuhDB
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
       - "5432:5432"
+    volumes:
+      - matmuh_db_data:/var/lib/postgresql/data
     networks:
         - nginx-network
 
 networks:
   nginx-network:
     external: true
+
+
+volumes:
+  matmuh_db_data:

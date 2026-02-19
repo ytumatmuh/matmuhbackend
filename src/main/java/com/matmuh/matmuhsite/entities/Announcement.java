@@ -14,7 +14,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @Builder
 @Table(name = "announcements")
-public class Announcement {
+public class Announcement extends BaseEntity{
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -32,10 +32,5 @@ public class Announcement {
 
     @OneToOne(cascade = CascadeType.ALL)
     private Image coverImage;
-
-    @JsonManagedReference
-    @ManyToOne
-    @JoinColumn(name = "publisher_id")
-    private User publisher;
 
 }

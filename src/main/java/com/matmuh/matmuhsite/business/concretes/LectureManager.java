@@ -1,15 +1,25 @@
 package com.matmuh.matmuhsite.business.concretes;
 
+import com.matmuh.matmuhsite.business.abstracts.LectureNoteService;
+import com.matmuh.matmuhsite.business.abstracts.LectureOfferingService;
 import com.matmuh.matmuhsite.business.abstracts.LectureService;
 import com.matmuh.matmuhsite.business.constants.LectureMessages;
-import com.matmuh.matmuhsite.core.utilities.results.DataResult;
-import com.matmuh.matmuhsite.core.utilities.results.Result;
-import com.matmuh.matmuhsite.core.utilities.results.SuccessDataResult;
-import com.matmuh.matmuhsite.core.utilities.results.SuccessResult;
+import com.matmuh.matmuhsite.core.dtos.lecture.request.CreateLectureRequestDto;
+import com.matmuh.matmuhsite.core.dtos.lecture.response.LectureDto;
+import com.matmuh.matmuhsite.core.dtos.lectureNote.request.LectureNoteCreateRequestDto;
+import com.matmuh.matmuhsite.core.dtos.lectureNote.response.LectureNoteDto;
+import com.matmuh.matmuhsite.core.exceptions.ResourceAlreadyExistsException;
+import com.matmuh.matmuhsite.core.exceptions.ResourceNotFoundException;
+import com.matmuh.matmuhsite.core.mappers.LectureMapper;
+import com.matmuh.matmuhsite.core.mappers.LectureNoteMapper;
 import com.matmuh.matmuhsite.dataAccess.abstracts.LectureDao;
 import com.matmuh.matmuhsite.entities.Lecture;
-import org.springframework.http.HttpStatus;
+import com.matmuh.matmuhsite.core.dtos.lecture.response.LectureStatisticsDto;
+import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
@@ -19,104 +29,117 @@ public class LectureManager implements LectureService {
 
     private final LectureDao lectureDao;
 
-    public LectureManager(LectureDao lectureDao) {
+    private final Logger logger = LoggerFactory.getLogger(LectureManager.class);
+    private final LectureMapper lectureMapper;
+
+    private final LectureNoteService lectureNoteService;
+    private final LectureNoteMapper lectureNoteMapper;
+
+
+    public LectureManager(LectureDao lectureDao, LectureMapper lectureMapper, LectureNoteService lectureNoteService, LectureNoteMapper lectureNoteMapper) {
         this.lectureDao = lectureDao;
+        this.lectureMapper = lectureMapper;
+        this.lectureNoteService = lectureNoteService;
+        this.lectureNoteMapper = lectureNoteMapper;
     }
 
     @Override
-    public Result addLecture(Lecture lecture) {
+    public LectureDto createLecture(CreateLectureRequestDto createLectureRequestDto) {
+        logger.info("Creating lecture with name: {}", createLectureRequestDto.getName());
 
-        if(lecture.getName() == null){
-            return new SuccessResult(LectureMessages.nameCanotBeNull, HttpStatus.BAD_REQUEST);
+
+        //check if lecture with the code exists
+        boolean exists = lectureDao.existsByCode(createLectureRequestDto.getCode());
+        if (exists) {
+            logger.error("Lecture creation failed: Lecture with code {} already exists.", createLectureRequestDto.getCode());
+            throw new ResourceAlreadyExistsException(LectureMessages.LECTURE_CODE_EXISTS);
         }
 
-        if(lecture.getCode() == null){
-            return new SuccessResult(LectureMessages.lectureCodeCanotBeNull, HttpStatus.BAD_REQUEST);
-        }
 
-        if(lecture.getCount() == 0){
-            return new SuccessResult(LectureMessages.countCanotBeNull, HttpStatus.BAD_REQUEST);
-        }
+        Lecture lecture = lectureMapper.toEntity(createLectureRequestDto);
 
-        if(lecture.getCredit() == 0){
-            return new SuccessResult(LectureMessages.creditCanotBeNull, HttpStatus.BAD_REQUEST);
-        }
+        Lecture savedLecture = lectureDao.save(lecture);
+        logger.info("Lecture created successfully with ID: {}", savedLecture.getId());
 
-        if(lecture.getTerm() == 0){
-            return new SuccessResult(LectureMessages.termCanotBeNull, HttpStatus.BAD_REQUEST);
-        }
-
-        lectureDao.save(lecture);
-
-        return new SuccessResult(LectureMessages.lectureAddSuccess, HttpStatus.CREATED);
+        return lectureMapper.toDto(savedLecture);
     }
 
     @Override
-    public Result updateLecture(Lecture lecture) {
-       var result = lectureDao.findById(lecture.getId());
-       if (result.isEmpty()){
-           return new SuccessResult(LectureMessages.lectureNotFound, HttpStatus.NOT_FOUND);
-         }
+    @Transactional
+    public LectureNoteDto addNoteToLecture(UUID lectureId, LectureNoteCreateRequestDto lectureNoteCreateRequestDto, MultipartFile file) {
+        logger.info("Adding note to lecture with ID: {}", lectureId);
 
-        lectureDao.save(lecture);
+        var lecture = lectureDao.findById(lectureId).orElseThrow(() -> {
+            logger.error("Lecture with ID {} not found.", lectureId);
+            return new ResourceNotFoundException(LectureMessages.LECTURE_NOT_FOUND);
+        });
 
-        return new SuccessResult(LectureMessages.lectureUpdateSuccess, HttpStatus.OK);
+        var createdNote = lectureNoteService.createLectureNote(lecture, lectureNoteCreateRequestDto, file);
+        logger.info("Note added to lecture with ID: {}", lectureId);
+
+        return createdNote;
     }
 
     @Override
-    public DataResult<List<Lecture>> getLectures() {
-        var result = lectureDao.findAll();
+    public LectureDto getLectureById(UUID lectureId) {
+        logger.info("Retrieving lecture with ID: {}", lectureId);
 
-        if (result.isEmpty()){
-            return new SuccessDataResult<>(LectureMessages.lectureNotFound, HttpStatus.NOT_FOUND);
-        }
+        var lecture = lectureDao.findById(lectureId).orElseThrow(() -> {
+            logger.error("Lecture with ID {} not found.", lectureId);
+            return new ResourceNotFoundException(LectureMessages.LECTURE_NOT_FOUND);
+        });
 
-        return new SuccessDataResult<List<Lecture>>(result, LectureMessages.getMessagesSuccess, HttpStatus.OK);
+        return lectureMapper.toDto(lecture);
     }
 
     @Override
-    public DataResult<Lecture> getLectureById(UUID id) {
-        var result = lectureDao.findById(id);
+    public List<LectureNoteDto> getLectureNotes(UUID lectureId) {
+        logger.info("Retrieving notes for lecture with ID: {}", lectureId);
 
-        if(result == null){
-            return new SuccessDataResult<>(LectureMessages.lectureNotFound, HttpStatus.NOT_FOUND);
-        }
 
-        return new SuccessDataResult<Lecture>(result.get(), LectureMessages.getLectureByIdSuccess, HttpStatus.OK);
+        var lecture = lectureDao.findById(lectureId).orElseThrow(() -> {
+            logger.error("Lecture with ID {} not found.", lectureId);
+            return new ResourceNotFoundException(LectureMessages.LECTURE_NOT_FOUND);
+        });
+
+        var notes = lectureNoteService.getLectureNotesByLecture(lecture);
+
+        logger.info("Retrieved {} notes for lecture with ID: {}", notes.size(), lectureId);
+
+        return lectureNoteMapper.toLectureNoteDtos(notes);
+
     }
 
     @Override
-    public DataResult<List<Lecture>> getLecturesByTerm(int term) {
-        var result = lectureDao.findAllByTerm(term);
+    public List<LectureDto> getLectures() {
+        logger.info("Retrieving all lectures");
 
-        if(result.isEmpty()){
-            return new SuccessDataResult<>(LectureMessages.lectureNotFound, HttpStatus.NOT_FOUND);
-        }
+        var lectures = lectureDao.findAll();
 
-        return new SuccessDataResult<>(result, LectureMessages.getMessagesSuccess, HttpStatus.OK);
+        logger.info("Retrieved {} lectures", lectures.size());
+
+        return lectureMapper.toLectureDtos(lectures);
     }
 
     @Override
-    public DataResult<Lecture> getLecturesByCode(String lectureCode) {
-        var result = lectureDao.findByCode(lectureCode);
+    public LectureStatisticsDto getLectureStatistics(UUID lectureId) {
+        logger.info("Retrieving statistics for lecture with ID: {}", lectureId);
 
-        if(result.isEmpty()){
-            return new SuccessDataResult<>(LectureMessages.lectureNotFound, HttpStatus.NOT_FOUND);
-        }
+        Lecture lecture = lectureDao.findById(lectureId).orElseThrow(() -> {
+            logger.error("Lecture with ID {} not found.", lectureId);
+            return new ResourceNotFoundException(LectureMessages.LECTURE_NOT_FOUND);
+        });
 
+        logger.info("Retrieved statistics for lecture with ID: {}", lectureId);
 
-        return new SuccessDataResult<>(result.get(), LectureMessages.getLectureByLectureCodeSuccess, HttpStatus.OK);
+        return lectureMapper.toLectureStatisticsDto(lecture);
+
     }
 
     @Override
-    public Result deleteLectureById(UUID id) {
-        var result = lectureDao.findById(id);
+    public Lecture getLectureReferenceById(UUID lectureId) {
+        logger.info("Retrieving reference for lecture with ID: {}", lectureId);
 
-        if(result.isEmpty()){
-            return new SuccessResult(LectureMessages.lectureNotFound, HttpStatus.NOT_FOUND);
-        }
-
-        this.lectureDao.deleteById(id);
-        return new SuccessResult(LectureMessages.lectureDeleteSuccess, HttpStatus.OK);
+        return lectureDao.getReferenceById(lectureId);
     }
 }

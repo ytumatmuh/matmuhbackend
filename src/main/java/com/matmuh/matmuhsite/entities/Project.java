@@ -14,7 +14,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @Builder
 @Table(name = "projects")
-public class Project {
+public class Project extends BaseEntity{
 
 
     @Id
@@ -34,9 +34,5 @@ public class Project {
     @OneToOne(cascade = CascadeType.ALL)
     private Image coverImage;
 
-    @JsonManagedReference
-    @ManyToOne
-    @JoinColumn(name = "publisher_id")
-    private User publisher;
 }
 

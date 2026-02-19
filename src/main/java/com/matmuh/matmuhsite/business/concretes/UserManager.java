@@ -1,11 +1,18 @@
 package com.matmuh.matmuhsite.business.concretes;
 
+import com.matmuh.matmuhsite.business.abstracts.SecurityService;
 import com.matmuh.matmuhsite.business.abstracts.UserService;
 import com.matmuh.matmuhsite.business.constants.UserMessages;
+import com.matmuh.matmuhsite.core.dtos.user.request.CreateUserRequestDto;
+import com.matmuh.matmuhsite.core.dtos.user.response.UserDto;
+import com.matmuh.matmuhsite.core.exceptions.ResourceNotFoundException;
+import com.matmuh.matmuhsite.core.mappers.UserMapper;
 import com.matmuh.matmuhsite.core.utilities.results.*;
 import com.matmuh.matmuhsite.dataAccess.abstracts.UserDao;
+import com.matmuh.matmuhsite.entities.Role;
 import com.matmuh.matmuhsite.entities.User;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -14,6 +21,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -24,133 +32,100 @@ public class UserManager implements UserService {
     private final PasswordEncoder passwordEncoder;
 
 
-    public UserManager(UserDao userDao, PasswordEncoder passwordEncoder) {
+    private final Logger logger = LoggerFactory.getLogger(UserManager.class);
+    private final UserMapper userMapper;
+
+
+    public UserManager(UserDao userDao, PasswordEncoder passwordEncoder, UserMapper userMapper) {
         this.userDao = userDao;
         this.passwordEncoder = passwordEncoder;
-    }
-
-
-    @Override
-    public Result addUser(User user) {
-        if (userDao.findByEmail(user.getEmail()).isPresent()){
-            return new ErrorResult(UserMessages.emailAlreadyExists, HttpStatus.CONFLICT);
-        }
-
-        if (userDao.findByUsername(user.getUsername()).isPresent()){
-            return new ErrorResult(UserMessages.usernameAlreadyExists, HttpStatus.CONFLICT);
-        }
-
-        userDao.save(user);
-        return new SuccessResult(UserMessages.userAddSuccess, HttpStatus.CREATED);
+        this.userMapper = userMapper;
     }
 
     @Override
-    public DataResult<User> getUserByEmail(String email) {
-        var user = userDao.findByEmail(email);
+    public UserDto getUserById(UUID id) {
+        logger.info("Getting user by id: {}", id);
+        User user = userDao.findById(id).orElseThrow(() -> {
+            logger.warn("User not found with id: {}", id);
+            return new ResourceNotFoundException(UserMessages.USER_NOT_FOUND_WITH_ID);
+        });
 
-        if(user.isEmpty()){
-            return new ErrorDataResult<>(UserMessages.userNotFound, HttpStatus.NOT_FOUND);
-        }
-        return new SuccessDataResult<User>(user.get(), UserMessages.userListed, HttpStatus.OK);
+        return userMapper.toDto(user);
     }
 
     @Override
-    public DataResult<List<User>> getUsers() {
-        var users = userDao.findAll();
+    public UserDto createUser(CreateUserRequestDto createUserRequestDto) {
+        logger.info("Creating user with email: {}", createUserRequestDto.getEmail());
 
-        if (users.isEmpty()){
-            return new ErrorDataResult<>(UserMessages.usersNotFound, HttpStatus.NOT_FOUND);
+        User user = new User();
+        user.setFirstName(createUserRequestDto.getFirstName());
+        user.setLastName(createUserRequestDto.getLastName());
+        user.setEmail(createUserRequestDto.getEmail());
+        user.setAuthorities(Set.of(Role.ROLE_USER));
+        if (createUserRequestDto.getPassword() != null){
+            logger.info("");
+            user.setPassword(passwordEncoder.encode(createUserRequestDto.getPassword()));
         }
-        return new SuccessDataResult<List<User>>(users, UserMessages.usersListed, HttpStatus.OK);
+
+        logger.info("User created with email: {}, userId: {}", createUserRequestDto.getEmail(), user.getId());
+
+        var savedUser = userDao.save(user);
+
+        UserDto userDto = new UserDto();
+        userDto.setId(savedUser.getId());
+        userDto.setEmail(savedUser.getEmail());
+        userDto.setFirstName(savedUser.getFirstName());
+        userDto.setLastName(savedUser.getLastName());
+        return userDto;
+
     }
 
     @Override
-    public DataResult<User> getUserById(UUID id) {
-        var user = userDao.findById(id);
-
-        if(user.isEmpty()){
-            return new ErrorDataResult<>(UserMessages.userNotFound, HttpStatus.NOT_FOUND);
-        }
-        return new SuccessDataResult<User>(user.get(), UserMessages.userListed, HttpStatus.OK);
+    public UserDto createUserFromOauth2(User user) {
+        logger.info("Creating user from OAuth2 with email: {}", user.getEmail());
+        var savedUser = userDao.save(user);
+        UserDto userDto = new UserDto();
+        userDto.setId(savedUser.getId());
+        userDto.setEmail(savedUser.getEmail());
+        userDto.setFirstName(savedUser.getFirstName());
+        userDto.setLastName(savedUser.getLastName());
+        logger.info("User created from OAuth2 with email: {}, userId: {}", user.getEmail(), savedUser.getId());
+        return userDto;
     }
 
     @Override
-    public DataResult<User> getUserByUsername(String username) {
-        var user = userDao.findByUsername(username);
-
-        if(user.isEmpty()){
-            return new ErrorDataResult<>(UserMessages.userNotFound, HttpStatus.NOT_FOUND);
-        }
-        return new SuccessDataResult<User>(user.get(), UserMessages.userListed, HttpStatus.OK);
+    public User getUserEntityByEmail(String email) {
+        logger.info("Getting user entity by email: {}", email);
+        return userDao.findByEmail(email).orElseThrow(() -> {
+            logger.warn("User entity not found with email: {}", email);
+            return new ResourceNotFoundException(UserMessages.USER_NOT_FOUND_WITH_EMAIL);
+        });
     }
+
+    @Override
+    public UserDto getUserByEmail(String email) {
+        logger.info("Getting user by email: {}", email);
+
+        User user = userDao.findByEmail(email).orElseThrow(() -> {
+            logger.info("User not found with email: {}", email);
+            throw new  ResourceNotFoundException(UserMessages.USER_NOT_FOUND_WITH_EMAIL);
+        });
+
+        return userMapper.toDto(user);
+
+    }
+
+    @Override
+    public List<UserDto> getUsers() {
+        logger.info("Getting all users");
+        List<User> users = userDao.findAll();
+        return userMapper.toDtoList(users);
+    }
+
 
     @Override
     public UserDetails loadUserByUsername(String username) {
-        return getUserByUsername(username).getData();
-    }
-
-    @Override
-    public Result deleteUserById(UUID id) {
-        var user = userDao.findById(id);
-
-        if (user.isEmpty()){
-            return new ErrorResult(UserMessages.userNotFound, HttpStatus.NOT_FOUND);
-        }
-
-        userDao.delete(user.get());
-        return new SuccessResult(UserMessages.userDeleteSuccess, HttpStatus.OK);
-    }
-
-    @Override
-    public Result updateUserById(User user) {
-        var userResult = getUserById(user.getId());
-
-        if (!userResult.isSuccess()){
-            return new ErrorResult(userResult.getMessage(), userResult.getHttpStatus());
-        }
-
-        if (user.getPassword() != null){
-            user.setPassword(passwordEncoder.encode(user.getPassword()));
-        }else {
-            user.setPassword(userResult.getData().getPassword());
-        }
-
-        userDao.save(user);
-        return new SuccessResult(UserMessages.userUpdateSuccess, HttpStatus.OK);
-    }
-
-    @Override
-    public DataResult<User> getAuthenticatedUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication.getPrincipal() == "anonymousUser"){
-            return new ErrorDataResult<>(UserMessages.userIsNotAuthenticatedPleaseLogin, HttpStatus.UNAUTHORIZED);
-        }
-        return getUserByUsername(authentication.getName());
-
-    }
-
-    @Override
-    public Result changeAuthenticatedUserPassword(String oldPassword, String newPassword) {
-        var userResult = getAuthenticatedUser();
-
-        if (!userResult.isSuccess()){
-            return new ErrorResult(userResult.getMessage(), userResult.getHttpStatus());
-        }
-
-        if (oldPassword == null || newPassword == null){
-            return new ErrorResult(UserMessages.passwordCannotBeNull, HttpStatus.BAD_REQUEST);
-        }
-
-        var user = userResult.getData();
-
-        if (!passwordEncoder.matches(oldPassword, user.getPassword())){
-            return new ErrorResult(UserMessages.oldPasswordIsIncorrect, HttpStatus.BAD_REQUEST);
-        }
-
-        user.setPassword(passwordEncoder.encode(newPassword));
-        userDao.save(user);
-
-        return new SuccessResult(UserMessages.passwordChangeSuccess, HttpStatus.OK);
+        return getUserEntityByEmail(username);
     }
 
 

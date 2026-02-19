@@ -1,5 +1,6 @@
 package com.matmuh.matmuhsite.business.abstracts;
 
+import com.matmuh.matmuhsite.core.dtos.image.response.ImageDto;
 import com.matmuh.matmuhsite.core.utilities.results.DataResult;
 import com.matmuh.matmuhsite.core.utilities.results.Result;
 import com.matmuh.matmuhsite.entities.Image;
@@ -10,15 +11,9 @@ import java.util.UUID;
 
 public interface ImageService {
 
-    DataResult<Image> addImage(MultipartFile file);
+    ImageDto uploadImage(MultipartFile file);
 
-    DataResult<List<Image>> getImages();
-
-    DataResult<Image> getImageById(UUID id);
-
-    Result deleteImage(UUID id);
-
-    DataResult<Image> getImageByUrl(String url);
+    void deleteImage(UUID id);
 
 
 }

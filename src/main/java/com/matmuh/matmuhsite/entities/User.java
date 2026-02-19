@@ -32,9 +32,6 @@ public class User implements UserDetails {
     @Column(name = "last_name")
     private String lastName;
 
-    @Column(name = "username")
-    private String username;
-
     @Column(name = "email")
     private String email;
 
@@ -48,21 +45,18 @@ public class User implements UserDetails {
     @Enumerated(EnumType.STRING)
     private Set<Role> authorities;
 
-    @JsonIgnore
-    @OneToMany(mappedBy = "createdBy")
-    private List<File> createdFiles;
+    @Column(name = "is_email_verified")
+    private boolean isEmailVerified;
 
-    @JsonIgnore
-    @OneToMany(mappedBy = "createdBy")
-    private List<Image> createdImages;
+    @Enumerated(EnumType.STRING)
+    private AuthProvider provider;
 
-    @JsonBackReference
-    @OneToMany(mappedBy = "publisher")
-    private List<Announcement> publishedAnnouncements;
-
-    @JsonBackReference
-    @OneToMany(mappedBy = "publisher")
-    private List<Project> publishedProjects;
+    @Column(name = "provider_id")
+    private String providerId;
 
 
+    @Override
+    public String getUsername() {
+        return email;
+    }
 }

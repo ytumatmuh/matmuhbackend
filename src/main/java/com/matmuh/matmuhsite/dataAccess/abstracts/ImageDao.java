@@ -12,6 +12,4 @@ import java.util.UUID;
 @Repository
 public interface ImageDao extends JpaRepository<Image, UUID> {
 
-    @Transactional
-    Optional<Image> findByUrl(String url);
 }

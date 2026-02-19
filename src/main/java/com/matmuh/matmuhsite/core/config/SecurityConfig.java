@@ -5,6 +5,8 @@ import com.matmuh.matmuhsite.business.abstracts.UserService;
 import com.matmuh.matmuhsite.core.exceptionHandlers.CustomAccessDeniedHandler;
 import com.matmuh.matmuhsite.core.exceptionHandlers.CustomAuthenticationEntryPointHandler;
 import com.matmuh.matmuhsite.core.security.JwtAuthFilter;
+import com.matmuh.matmuhsite.core.security.oauth2.OAuth2LoginSuccessHandler;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -18,6 +20,13 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.registration.ClientRegistration;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
+import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
+import org.springframework.security.oauth2.core.AuthorizationGrantType;
+import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -32,16 +41,23 @@ public class SecurityConfig {
 
     private final PasswordEncoder passwordEncoder;
 
+    private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
+
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
 
     private final CustomAuthenticationEntryPointHandler customAuthenticationEntryPointHandler;
 
-    public SecurityConfig(JwtAuthFilter jwtAuthFilter, UserService userService, PasswordEncoder passwordEncoder, CustomAccessDeniedHandler customAccessDeniedHandler, CustomAuthenticationEntryPointHandler customAuthenticationEntryPointHandler) {
+    private final ClientRegistrationRepository clientRegistrationRepository;
+
+
+    public SecurityConfig(JwtAuthFilter jwtAuthFilter, UserService userService, PasswordEncoder passwordEncoder, OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler, CustomAccessDeniedHandler customAccessDeniedHandler, CustomAuthenticationEntryPointHandler customAuthenticationEntryPointHandler, ClientRegistrationRepository clientRegistrationRepository) {
         this.jwtAuthFilter = jwtAuthFilter;
         this.userService = userService;
         this.passwordEncoder = passwordEncoder;
+        this.oAuth2LoginSuccessHandler = oAuth2LoginSuccessHandler;
         this.customAccessDeniedHandler = customAccessDeniedHandler;
         this.customAuthenticationEntryPointHandler = customAuthenticationEntryPointHandler;
+        this.clientRegistrationRepository = clientRegistrationRepository;
     }
 
     @Bean
@@ -52,47 +68,25 @@ public class SecurityConfig {
                         x
 
                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                                .requestMatchers("/oauth2/**", "/login/**", "/login/oauth2/code/**").permitAll()
 
                                 .requestMatchers("/api/auth/login").permitAll()
-                                .requestMatchers("/api/auth/register").hasAnyRole("ADMIN")
 
-                                .requestMatchers("/api/announcements/addAnnouncement").hasAnyRole("ADMIN")
-                                .requestMatchers("/api/announcements/getAnnouncements/**").permitAll()
-                                .requestMatchers("/api/announcements/getAnnouncementById/**").permitAll()
-                                .requestMatchers("/api/announcements/deleteAnnouncementById/**").hasAnyRole("ADMIN")
-                                .requestMatchers("/api/announcements/updateAnnouncementById/**").hasAnyRole("ADMIN")
+                                .requestMatchers(HttpMethod.POST, "/api/lectures/").hasAnyRole("ADMIN")
+                                .requestMatchers(HttpMethod.GET, "/api/lectures/").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/lectures/{lectureId}/notes").hasAnyRole("ADMIN", "USER")
+                                .requestMatchers(HttpMethod.GET, "/api/lectures/{lectureId}/notes").permitAll()
+                                .requestMatchers(HttpMethod.PUT, "/api/lecture-notes/{lectureNoteId}/approve").hasAnyRole("ADMIN")
+                                .requestMatchers(HttpMethod.GET, "/api/lecture-notes/").hasAnyRole("ADMIN")
 
-                                .requestMatchers("/api/projects/addProject").hasAnyRole("ADMIN")
-                                .requestMatchers("/api/projects/getProjects/**").permitAll()
-                                .requestMatchers("/api/projects/getProjectById/**").permitAll()
-                                .requestMatchers("/api/projects/updateProjectById/**").hasAnyRole("ADMIN")
-                                .requestMatchers("/api/projects/deleteProjectById/**").hasAnyRole("ADMIN")
+                                .requestMatchers(HttpMethod.GET, "/api/lectures/{lectureId}/statistics").hasAnyRole("ADMIN", "USER")
 
-                                .requestMatchers("/api/researches/addResearch").hasAnyRole("ADMIN")
-                                .requestMatchers("/api/researches/getResearches/**").permitAll()
-                                .requestMatchers("/api/researches/getResearchById/**").permitAll()
-                                .requestMatchers("/api/researches/deleteResearchById/**").hasAnyRole("ADMIN")
+                                .requestMatchers(HttpMethod.POST, "/api/lecture-offerings").hasAnyRole("ADMIN")
+                                .requestMatchers(HttpMethod.POST, "/api/lecture-offerings/{lectureOfferingId}/grades").hasAnyRole("ADMIN","USER")
 
-                                .requestMatchers("/api/lectures/addLecture").hasAnyRole("ADMIN")
-                                .requestMatchers("/api/lectures/getLectures").permitAll()
-                                .requestMatchers("/api/lectures/updateLectureById/**").hasAnyRole("ADMIN")
-                                .requestMatchers("/api/lectures/deleteLectureById/**").hasAnyRole("ADMIN")
+                                .requestMatchers(HttpMethod.POST, "/api/instructors").hasAnyRole("ADMIN")
+                                .requestMatchers(HttpMethod.GET, "/api/instructors").permitAll()
 
-                                .requestMatchers("/api/files/addFile").hasAnyRole("ADMIN")
-                                .requestMatchers("/api/files/getFileDetailsByUrl/**").hasAnyRole("ADMIN")
-                                .requestMatchers("/api/files/getFileByUrl/**").permitAll()
-                                .requestMatchers("/api/files/deleteFileById/**").hasAnyRole("ADMIN")
-
-                                .requestMatchers("/api/images/addImage").hasAnyRole("ADMIN")
-                                .requestMatchers("/api/images/getImageByUrl/**").permitAll()
-                                .requestMatchers("/api/images/getImageDetailsByUrl/**").hasAnyRole("ADMIN")
-                                .requestMatchers("/api/images/deleteImageById/**").hasAnyRole("ADMIN")
-
-                                .requestMatchers("/api/users/changeAuthenticatedUserPassword").hasAnyRole("ADMIN", "USER")
-                                .requestMatchers("/api/users/deleteUserById/**").hasAnyRole("ADMIN")
-                                .requestMatchers("/api/users/getAuthenticatedUser").hasAnyRole("ADMIN", "USER")
-                                .requestMatchers("/api/users/updateUserById/**").hasAnyRole("ADMIN")
-                                .requestMatchers("/api/users/getUsers").hasAnyRole("ADMIN")
 
                                 .anyRequest().authenticated()
                 )
@@ -101,16 +95,25 @@ public class SecurityConfig {
                                 .accessDeniedHandler(customAccessDeniedHandler)
                                 .authenticationEntryPoint(customAuthenticationEntryPointHandler)
                 )
-                .sessionManagement(x -> x.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(x -> x.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                        .sessionFixation().migrateSession())
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .oauth2Login(oauth2Login -> oauth2Login
+                        .loginPage("/oauth2/authorization/azure")
+                        .authorizationEndpoint(endpoint -> endpoint
+                                .authorizationRequestResolver(
+                                        authorizationRequestResolver(clientRegistrationRepository)
+                                )
+                        )
+                        .successHandler(oAuth2LoginSuccessHandler)
+                )
                 .build();
     }
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
-        authenticationProvider.setUserDetailsService(userService);
+        DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider(userService);
         authenticationProvider.setPasswordEncoder(passwordEncoder);
         return authenticationProvider;
     }
@@ -118,6 +121,27 @@ public class SecurityConfig {
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
+    }
+
+
+    @Bean
+    public OAuth2AuthorizationRequestResolver authorizationRequestResolver(
+            ClientRegistrationRepository clientRegistrationRepository) {
+
+        DefaultOAuth2AuthorizationRequestResolver resolver =
+                new DefaultOAuth2AuthorizationRequestResolver(
+                        clientRegistrationRepository,
+                        "/oauth2/authorization"
+                );
+
+        resolver.setAuthorizationRequestCustomizer(customizer ->
+                customizer.attributes(attrs -> {
+                    attrs.remove("code_challenge");
+                    attrs.remove("code_challenge_method");
+                })
+        );
+
+        return resolver;
     }
 
 }

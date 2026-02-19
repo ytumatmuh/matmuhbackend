@@ -16,7 +16,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @Builder
 @Table(name = "events")
-public class Event {
+public class Event extends BaseEntity{
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -26,8 +26,8 @@ public class Event {
     @Column(name = "name")
     private String name;
 
-    @Column(name = "date")
-    private LocalDateTime date;
+    @Column(name = "date_time")
+    private LocalDateTime dateTime;
 
     @Column(name = "context")
     private String context;

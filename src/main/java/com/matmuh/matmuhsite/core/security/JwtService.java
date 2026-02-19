@@ -60,6 +60,7 @@ public class JwtService {
                 .getPayload();
         return claims.getSubject();
     }
+
     private String createToken(Map<String, Object> claims, String email) {
         var result = Jwts.builder()
                 .claims(claims)

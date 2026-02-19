@@ -1,5 +1,7 @@
 package com.matmuh.matmuhsite.business.abstracts;
 
+import com.matmuh.matmuhsite.core.dtos.user.request.CreateUserRequestDto;
+import com.matmuh.matmuhsite.core.dtos.user.response.UserDto;
 import com.matmuh.matmuhsite.core.utilities.results.DataResult;
 import com.matmuh.matmuhsite.core.utilities.results.Result;
 import com.matmuh.matmuhsite.entities.User;
@@ -11,25 +13,16 @@ import java.util.UUID;
 
 public interface UserService extends UserDetailsService {
 
-    Result addUser(User user);
+    UserDto getUserById(UUID id);
 
-    DataResult<User> getUserByEmail(String email);
+    UserDto createUser(CreateUserRequestDto createUserRequestDto);
 
-    DataResult<List<User>> getUsers();
+    UserDto createUserFromOauth2(User user);
 
-    DataResult<User> getUserById(UUID id);
+    User getUserEntityByEmail(String email);
 
-    DataResult<User> getUserByUsername(String username);
+    UserDto getUserByEmail(String email);
 
-    UserDetails loadUserByUsername(String username);
-
-    Result deleteUserById(UUID id);
-
-    Result updateUserById(User user);
-
-    DataResult<User> getAuthenticatedUser();
-
-    Result changeAuthenticatedUserPassword(String oldPassword, String newPassword);
-
+    List<UserDto> getUsers();
 
 }
