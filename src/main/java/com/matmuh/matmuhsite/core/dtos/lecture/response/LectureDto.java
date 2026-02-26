@@ -21,6 +21,8 @@ public class LectureDto {
 
     private String name;
 
+    private String code;
+
     private String language;
 
     private String about;
