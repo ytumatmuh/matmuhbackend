@@ -76,10 +76,13 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.GET, "/api/lectures/").permitAll()
                                 .requestMatchers(HttpMethod.POST, "/api/lectures/{lectureId}/notes").hasAnyRole("ADMIN", "USER")
                                 .requestMatchers(HttpMethod.GET, "/api/lectures/{lectureId}/notes").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/lectures/{lectureId}/statistics").hasAnyRole("ADMIN", "USER")
+
+
                                 .requestMatchers(HttpMethod.PUT, "/api/lecture-notes/{lectureNoteId}/approve").hasAnyRole("ADMIN")
                                 .requestMatchers(HttpMethod.GET, "/api/lecture-notes/").hasAnyRole("ADMIN")
 
-                                .requestMatchers(HttpMethod.GET, "/api/lectures/{lectureId}/statistics").hasAnyRole("ADMIN", "USER")
+
 
                                 .requestMatchers(HttpMethod.POST, "/api/lecture-offerings").hasAnyRole("ADMIN")
                                 .requestMatchers(HttpMethod.POST, "/api/lecture-offerings/{lectureOfferingId}/grades").hasAnyRole("ADMIN","USER")

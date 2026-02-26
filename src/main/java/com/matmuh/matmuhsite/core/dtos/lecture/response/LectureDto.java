@@ -21,15 +21,23 @@ public class LectureDto {
 
     private String name;
 
-    private String code;
+    private String language;
+
+    private String about;
+
+    private String gradingPolicy;
+
+    private String resources;
 
     private String term;
 
     private Semester semester;
 
-    private int count;
+    private Integer weeklyHours;
 
-    private int credit;
+    private Integer localCredit;
+
+    private Integer ects;
 
     private String bolognaLink;;
 

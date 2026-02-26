@@ -26,8 +26,20 @@ public class Lecture extends BaseEntity{
     @Column(name = "name")
     private String name;
 
+    @Column(name = "language")
+    private String language;
+
     @Column(name = "code")
     private String code;
+
+    @Column(name = "about")
+    private String about;
+
+    @Column(name = "grading_policy")
+    private String gradingPolicy;
+
+    @Column(name = "resources")
+    private String resources;
 
     @Column(name = "term")
     private int term;
@@ -36,11 +48,14 @@ public class Lecture extends BaseEntity{
     @Column(name = "semester")
     private Semester semester;
 
-    @Column(name = "count")
-    private int count;
+    @Column(name = "weekly_hours")
+    private int weeklyHours;
 
-    @Column(name = "credit")
-    private int credit;
+    @Column(name = "local_credit")
+    private int localCredit;
+
+    @Column(name = "ects")
+    private int ects;
 
     @Column(name = "bologna_link")
     private String bolognaLink;

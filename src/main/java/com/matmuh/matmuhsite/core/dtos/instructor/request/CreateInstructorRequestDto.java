@@ -20,6 +20,8 @@ public class CreateInstructorRequestDto {
     @NotBlank(message = InstructorMessages.LAST_NAME_NOT_BLANK)
     private String lastName;
 
+    private String academicTitle;
+
     @Email(message = InstructorMessages.EMAIL_INVALID)
     private String email;
 
