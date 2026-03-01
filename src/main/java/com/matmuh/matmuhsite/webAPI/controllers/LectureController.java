@@ -39,7 +39,7 @@ public class LectureController {
 
     }
 
-    @GetMapping()
+    @GetMapping
     public ResponseEntity<DataResult<List<LectureDto>>> getLectures(){
         var lectures = lectureService.getLectures();
 
