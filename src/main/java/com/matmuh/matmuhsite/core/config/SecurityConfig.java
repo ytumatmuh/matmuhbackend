@@ -103,7 +103,7 @@ public class SecurityConfig {
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .oauth2Login(oauth2Login -> oauth2Login
-                        .loginPage("/oauth2/authorization/azure")
+                        .loginPage("/api/oauth2/authorization/azure")
                         .authorizationEndpoint(endpoint -> endpoint
                                 .authorizationRequestResolver(
                                         authorizationRequestResolver(clientRegistrationRepository)
