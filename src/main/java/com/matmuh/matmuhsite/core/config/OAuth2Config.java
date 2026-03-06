@@ -1,5 +1,7 @@
 package com.matmuh.matmuhsite.core.config;
 
+import com.matmuh.matmuhsite.core.properties.AzureProperties;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,46 +18,29 @@ import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import java.util.List;
 
 @Configuration
+@RequiredArgsConstructor
 public class OAuth2Config {
 
-    @Value("${spring.security.oauth2.client.registration.azure.client-id}")
-    private String clientId;
-
-    @Value("${spring.security.oauth2.client.registration.azure.client-secret}")
-    private String clientSecret;
-
-    @Value("${spring.security.oauth2.client.registration.azure.redirect-uri}")
-    private String redirectUri;
-
-    @Value("${spring.security.oauth2.client.registration.azure.scope}")
-    private List<String> scope;
-
-    @Value("${spring.security.oauth2.client.provider.azure.authorization-uri}")
-    private String authorizationUri;
-
-    @Value("${spring.security.oauth2.client.provider.azure.token-uri}")
-    private String tokenUri;
-
-    @Value("${spring.security.oauth2.client.provider.azure.jwk-set-uri}")
-    private String jwkSetUri;
-
-    @Value("${spring.security.oauth2.client.provider.azure.user-name-attribute}")
-    private String userNameAttribute;
+   private final AzureProperties azureProperties;
 
     @Bean
     public ClientRegistrationRepository clientRegistrationRepository() {
+        AzureProperties.Registration reg = azureProperties.getRegistration().get("azure");
+        AzureProperties.Provider prov = azureProperties.getProvider().get("azure");
+
         ClientRegistration azureRegistration = ClientRegistration
                 .withRegistrationId("azure")
-                .clientId(clientId)
-                .clientSecret(clientSecret)
-                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
-                .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
-                .redirectUri(redirectUri)
-                .scope(scope.toArray(new String[0]))
-                .authorizationUri(authorizationUri)
-                .tokenUri(tokenUri)
-                .jwkSetUri(jwkSetUri)
-                .userNameAttributeName(userNameAttribute)
+                .clientId(reg.getClientId())
+                .clientSecret(reg.getClientSecret())
+                .clientAuthenticationMethod(new ClientAuthenticationMethod(reg.getClientAuthenticationMethod()))
+                .authorizationGrantType(new AuthorizationGrantType(reg.getAuthorizationGrantType()))
+                .redirectUri(reg.getRedirectUri())
+                .scope(reg.getScope().toArray(new String[0]))
+                .authorizationUri(prov.getAuthorizationUri())
+                .tokenUri(prov.getTokenUri())
+                .jwkSetUri(prov.getJwkSetUri())
+                .userNameAttributeName(prov.getUserNameAttribute())
+                .clientName(reg.getClientName())
                 .build();
 
         return new InMemoryClientRegistrationRepository(azureRegistration);
@@ -64,6 +49,8 @@ public class OAuth2Config {
     @Bean
     public OAuth2AuthorizationRequestResolver authorizationRequestResolver(
             ClientRegistrationRepository clientRegistrationRepository) {
+
+        String redirectUri = azureProperties.getRegistration().get("azure").getRedirectUri();
 
         DefaultOAuth2AuthorizationRequestResolver resolver =
                 new DefaultOAuth2AuthorizationRequestResolver(
