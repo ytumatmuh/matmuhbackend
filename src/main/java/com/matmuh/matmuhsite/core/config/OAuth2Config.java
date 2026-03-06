@@ -46,7 +46,7 @@ public class OAuth2Config {
                 .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                 .redirectUri(redirectUri)
-                .scope("openid", "profile", "email", "offline_access")
+                .scope("openid", "profile", "email", "offline_access", "User.Read", "People.Read")
                 .authorizationUri(authorizationUri)
                 .tokenUri(tokenUri)
                 .jwkSetUri(jwkSetUri)
