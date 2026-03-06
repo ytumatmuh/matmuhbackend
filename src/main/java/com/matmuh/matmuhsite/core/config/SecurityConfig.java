@@ -68,7 +68,7 @@ public class SecurityConfig {
                         x
 
                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                                .requestMatchers("/oauth2/**", "/login/**", "/login/oauth2/code/**").permitAll()
+                                .requestMatchers("/api/oauth2/**", "/api/login/**", "/api/login/oauth2/code/**").permitAll()
 
                                 .requestMatchers("/api/auth/login").permitAll()
 

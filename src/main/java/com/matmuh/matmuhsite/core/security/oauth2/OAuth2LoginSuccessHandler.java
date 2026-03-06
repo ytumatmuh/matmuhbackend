@@ -89,7 +89,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
             throw new RuntimeException("Giriş işlemi sırasında bir hata oluştu: " + e.getMessage());
          }
 
-        String targetUrl = UriComponentsBuilder.fromUriString("http://localhost:3000/oauth-success")
+        String targetUrl = UriComponentsBuilder.fromUriString("https://matmuh.yusufacmaci.com/oauth-success")
                 .queryParam("token", token)
                 .build().toUriString();
 
