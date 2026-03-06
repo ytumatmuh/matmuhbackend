@@ -18,8 +18,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
-import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -35,7 +33,7 @@ public class SecurityConfig {
     private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
     private final CustomAuthenticationEntryPointHandler customAuthenticationEntryPointHandler;
-    private final ClientRegistrationRepository clientRegistrationRepository;
+    private final OAuth2AuthorizationRequestResolver authorizationRequestResolver;
 
     public SecurityConfig(
             JwtAuthFilter jwtAuthFilter,
@@ -44,14 +42,14 @@ public class SecurityConfig {
             OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler,
             CustomAccessDeniedHandler customAccessDeniedHandler,
             CustomAuthenticationEntryPointHandler customAuthenticationEntryPointHandler,
-            ClientRegistrationRepository clientRegistrationRepository) {
+            OAuth2AuthorizationRequestResolver authorizationRequestResolver) {
         this.jwtAuthFilter = jwtAuthFilter;
         this.userService = userService;
         this.passwordEncoder = passwordEncoder;
         this.oAuth2LoginSuccessHandler = oAuth2LoginSuccessHandler;
         this.customAccessDeniedHandler = customAccessDeniedHandler;
         this.customAuthenticationEntryPointHandler = customAuthenticationEntryPointHandler;
-        this.clientRegistrationRepository = clientRegistrationRepository;
+        this.authorizationRequestResolver = authorizationRequestResolver;
     }
 
     @Bean
@@ -60,33 +58,25 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(x -> x
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-
                         .requestMatchers(
-                                "/api/oauth/**",
                                 "/api/oauth2/**",
                                 "/api/login/**",
                                 "/api/login/oauth2/code/**"
                         ).permitAll()
-
-                        // Auth
                         .requestMatchers("/api/auth/login").permitAll()
 
-                        // Lectures
                         .requestMatchers(HttpMethod.POST, "/api/lectures/").hasAnyRole("ADMIN")
                         .requestMatchers(HttpMethod.GET,  "/api/lectures/").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/lectures/{lectureId}/notes").hasAnyRole("ADMIN", "USER")
                         .requestMatchers(HttpMethod.GET,  "/api/lectures/{lectureId}/notes").permitAll()
                         .requestMatchers(HttpMethod.GET,  "/api/lectures/{lectureId}/statistics").hasAnyRole("ADMIN", "USER")
 
-                        // Lecture Notes
                         .requestMatchers(HttpMethod.PUT, "/api/lecture-notes/{lectureNoteId}/approve").hasAnyRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/lecture-notes/").hasAnyRole("ADMIN")
 
-                        // Lecture Offerings
                         .requestMatchers(HttpMethod.POST, "/api/lecture-offerings").hasAnyRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/lecture-offerings/{lectureOfferingId}/grades").hasAnyRole("ADMIN", "USER")
 
-                        // Instructors
                         .requestMatchers(HttpMethod.POST, "/api/instructors").hasAnyRole("ADMIN")
                         .requestMatchers(HttpMethod.GET,  "/api/instructors").permitAll()
 
@@ -104,12 +94,9 @@ public class SecurityConfig {
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .oauth2Login(oauth2 -> oauth2
                         .authorizationEndpoint(endpoint -> endpoint
-                                .baseUri("/api/oauth/microsoft")
-                                .authorizationRequestResolver(
-                                        authorizationRequestResolver(clientRegistrationRepository)
-                                )
+                                .baseUri("/api/oauth2/microsoft")
+                                .authorizationRequestResolver(authorizationRequestResolver)
                         )
-
                         .redirectionEndpoint(redirection -> redirection
                                 .baseUri("/api/login/oauth2/code/*")
                         )
@@ -128,25 +115,5 @@ public class SecurityConfig {
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
-    }
-
-    @Bean
-    public OAuth2AuthorizationRequestResolver authorizationRequestResolver(
-            ClientRegistrationRepository clientRegistrationRepository) {
-
-        DefaultOAuth2AuthorizationRequestResolver resolver =
-                new DefaultOAuth2AuthorizationRequestResolver(
-                        clientRegistrationRepository,
-                        "/api/oauth/microsoft"
-                );
-
-        resolver.setAuthorizationRequestCustomizer(customizer ->
-                customizer.attributes(attrs -> {
-                    attrs.remove("code_challenge");
-                    attrs.remove("code_challenge_method");
-                })
-        );
-
-        return resolver;
     }
 }

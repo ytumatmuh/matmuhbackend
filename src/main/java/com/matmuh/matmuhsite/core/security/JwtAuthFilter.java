@@ -73,9 +73,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     }
 
     private boolean isOAuthPath(String path) {
-        return path.startsWith("/api/oauth/")
-                || path.startsWith("/api/oauth2/")
-                || path.startsWith("/api/login/");
+        return path.startsWith("/api/oauth2/") || path.startsWith("/api/login/");
     }
 
     private String extractToken(HttpServletRequest request) {
