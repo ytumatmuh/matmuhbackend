@@ -87,7 +87,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
             throw new RuntimeException("Giriş işlemi sırasında hata: " + e.getMessage());
         }
 
-        String cookieValue = "jwt=" + token + "; Path=/; HttpOnly; Secure; SameSite=Strict; MaxAge=604800";
+        String cookieValue = "jwt=" + token + "; Path=/; HttpOnly; Secure; SameSite=None; MaxAge=604800";
         response.addHeader("Set-Cookie", cookieValue);
 
         logger.info("Cookie set edildi, frontend'e yönlendiriliyor.");
