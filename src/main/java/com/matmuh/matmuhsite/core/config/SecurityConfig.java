@@ -68,7 +68,7 @@ public class SecurityConfig {
                         x
 
                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                                .requestMatchers("/api/oauth2/**", "/api/login/**", "/api/login/oauth2/code/**").permitAll()
+                                .requestMatchers("/api/oauth/**", "/api/oauth2/**", "/api/login/**", "/api/login/oauth2/code/**").permitAll()
 
                                 .requestMatchers("/api/auth/login").permitAll()
 
@@ -134,7 +134,7 @@ public class SecurityConfig {
         DefaultOAuth2AuthorizationRequestResolver resolver =
                 new DefaultOAuth2AuthorizationRequestResolver(
                         clientRegistrationRepository,
-                        "/oauth2/authorization"
+                        "/api/oauth2/authorization"
                 );
 
         resolver.setAuthorizationRequestCustomizer(customizer ->
