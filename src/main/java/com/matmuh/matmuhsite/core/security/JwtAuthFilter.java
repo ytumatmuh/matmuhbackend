@@ -36,9 +36,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         String path = request.getRequestURI();
         logger.info("Processing request for URI: {}", path);
 
-        if (path.startsWith("/oauth2/") ||
-                path.startsWith("/login/oauth2/") ||
-                path.startsWith("/login/")) {
+        if (path.startsWith("/oauth2/") || path.startsWith("/login/oauth2/") || path.startsWith("/login/")) {
             logger.info("Skipping JWT authentication for URI: {}", path);
             filterChain.doFilter(request, response);
             return;
@@ -48,31 +46,44 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         String token = null;
         String username = null;
 
-        if(authHeader != null && authHeader.startsWith("Bearer ")) {
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
             token = authHeader.substring(7);
-            username = jwtService.extractUser(token);
+            logger.info("Token found in Authorization header!");
 
-            logger.info("Extracted username from token: {}", username);
+
+        } else if (request.getCookies() != null) {
+            for (jakarta.servlet.http.Cookie cookie : request.getCookies()) {
+                if ("jwt".equals(cookie.getName())) {
+                    token = cookie.getValue();
+                    logger.info("Token found in HttpOnly Cookie");
+                    break;
+                }
+            }
         }
 
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null){
+        if (token != null) {
+            try {
+                username = jwtService.extractUser(token);
+                logger.info("Extracted username: {}", username);
+            } catch (Exception e) {
+                logger.error("Could not extract username from token: {}", e.getMessage());
+            }
+        }
+
+        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             logger.info("Loading user details for username: {}", username);
             UserDetails user = userService.loadUserByUsername(username);
 
-            if(jwtService.validateToken(token, user)) {
+            if (jwtService.validateToken(token, user)) {
                 logger.info("Token is valid. Setting authentication for user: {}", username);
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
                 logger.info("Authentication set for user: {}", username);
-                logger.info("User authorities: {}", user.getAuthorities());
             }
-
         }
 
         logger.info("Continuing filter chain for URI: {}", path);
-
         filterChain.doFilter(request, response);
-
     }
 }

@@ -84,6 +84,12 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
             userService.createUserFromOauth2(newUser);
 
             token = jwtService.generateToken(newUser);
+
+            String cookieValue = "jwt=" + token + "; Path=/; HttpOnly; Secure; SameSite=Strict; MaxAge=604800"; //valid for 7 days
+            response.addHeader("Set-Cookie", cookieValue);
+
+            getRedirectStrategy().sendRedirect(request, response, "https://matmuh.yusufacmaci.com/oauth-success");
+
         }catch (Exception e){
             logger.info("Giriş işlemi sırasında beklenmeyen bir hata oluştu: " + e.getMessage());
             throw new RuntimeException("Giriş işlemi sırasında bir hata oluştu: " + e.getMessage());
