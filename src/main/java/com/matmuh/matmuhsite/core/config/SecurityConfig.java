@@ -103,7 +103,7 @@ public class SecurityConfig {
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .oauth2Login(oauth2Login -> oauth2Login
-                        .loginPage("/api/oauth2/authorization/azure")
+                        .loginPage("/api/oauth/microsoft/azure")
                         .authorizationEndpoint(endpoint -> endpoint
                                 .authorizationRequestResolver(
                                         authorizationRequestResolver(clientRegistrationRepository)
@@ -134,7 +134,7 @@ public class SecurityConfig {
         DefaultOAuth2AuthorizationRequestResolver resolver =
                 new DefaultOAuth2AuthorizationRequestResolver(
                         clientRegistrationRepository,
-                        "/api/oauth2/authorization"
+                        "/api/oauth/microsoft"
                 );
 
         resolver.setAuthorizationRequestCustomizer(customizer ->
