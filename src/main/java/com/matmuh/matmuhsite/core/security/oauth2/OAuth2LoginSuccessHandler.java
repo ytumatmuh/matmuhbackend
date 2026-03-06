@@ -126,13 +126,14 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
             headers.setAccept(List.of(MediaType.APPLICATION_JSON));
 
             ResponseEntity<Map> response = restTemplate.exchange(
-                    "https://graph.microsoft.com/v1.0/me?$select=department",
+                    "https://graph.microsoft.com/v1.0/me",  // $select kaldır, her şeyi al
                     HttpMethod.GET,
                     new HttpEntity<>(headers),
                     Map.class
             );
 
             if (response.getBody() != null) {
+                logger.info("Graph API tüm response: {}", response.getBody());
                 return (String) response.getBody().get("department");
             }
         } catch (Exception e) {
