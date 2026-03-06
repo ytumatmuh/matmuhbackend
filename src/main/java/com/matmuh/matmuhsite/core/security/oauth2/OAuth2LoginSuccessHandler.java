@@ -77,6 +77,14 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
             throw new RuntimeException("Hatalı bölüm girişi! Sadece Matematik Mühendisliği öğrencileri giriş yapabilir.");
         }
 
+        String firstName = name;
+        String lastName = "";
+
+        if (name != null && name.contains(" ")) {
+            int lastSpace = name.lastIndexOf(" ");
+            firstName = name.substring(0, lastSpace);
+            lastName = name.substring(lastSpace + 1);
+        }
 
 
         String token;
@@ -97,7 +105,8 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
             logger.info("Yeni kullanıcı kaydediliyor: {}", email);
             User newUser = User.builder()
                     .email(email)
-                    .firstName(name)
+                    .firstName(firstName)
+                    .lastName(lastName)
                     .department(department)
                     .authorities(Set.of(Role.ROLE_USER))
                     .provider(AuthProvider.YTU_MAIL)
