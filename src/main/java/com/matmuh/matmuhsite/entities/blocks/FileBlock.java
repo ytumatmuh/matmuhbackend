@@ -1,6 +1,5 @@
 package com.matmuh.matmuhsite.entities.blocks;
 
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 

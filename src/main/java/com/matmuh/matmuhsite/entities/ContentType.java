@@ -34,4 +34,6 @@ public class ContentType extends BaseEntity{
     @Column(name = "is_active")
     private boolean isActive;
 
+    //duyurular/sinavtakvimi
+
 }

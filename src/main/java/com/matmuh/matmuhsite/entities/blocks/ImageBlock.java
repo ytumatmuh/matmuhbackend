@@ -1,6 +1,5 @@
 package com.matmuh.matmuhsite.entities.blocks;
 
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -16,3 +15,5 @@ public class ImageBlock implements ContentBlock{
     private Map<String, Object> props;
 
 }
+
+//matris blok (tablo), video blok,
