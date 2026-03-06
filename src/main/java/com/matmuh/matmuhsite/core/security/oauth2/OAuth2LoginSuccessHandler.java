@@ -11,11 +11,12 @@ import com.matmuh.matmuhsite.entities.User;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
 import java.util.Set;
@@ -25,6 +26,8 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
 
     private final JwtService jwtService;
     private final UserService userService;
+
+    private Logger logger = LoggerFactory.getLogger(OAuth2LoginSuccessHandler.class);
 
     public OAuth2LoginSuccessHandler(JwtService jwtService, UserService userService) {
         this.jwtService = jwtService;
@@ -41,25 +44,20 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         }
 
         String name = oAuth2User.getAttribute("name");
-
         String providerId = oAuth2User.getAttribute("oid");
-
         String tenantId = oAuth2User.getAttribute("tid");
-        logger.info("OAuth2 kullanıcı bilgileri alındı: email=" + email + ", name=" + name + ", providerId=" + providerId + ", tenantId=" + tenantId);
+
+        logger.info("OAuth2 kullanıcı bilgileri alındı: email={}, name={}, providerId={}, tenantId={}", email, name, providerId, tenantId);
+
         if (!"85602908-e15b-43ba-9148-38bc773a816e".equals(tenantId)) {
-            logger.info("Hatalı organizasyon girişi tespit edildi: " + tenantId);
             throw new RuntimeException("Hatalı organizasyon girişi!");
         }
-
-
-        if (!email.endsWith("@std.yildiz.edu.tr")) {
-            logger.info("Geçersiz e-posta alanı tespit edildi: " + email);
+        if (email == null || !email.endsWith("@std.yildiz.edu.tr")) {
             throw new EmailDoesntFromYildizException("Sadece Yıldız Teknik Üniversitesi öğrencileri giriş yapabilir!");
         }
 
         String token;
         try {
-            logger.info("Giriş işlemi başarılı, kullanıcı bulundu: " + email);
             UserDto user = userService.getUserByEmail(email);
             User userEntity = new User();
             userEntity.setId(user.getId());
@@ -69,10 +67,11 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
             userEntity.setAuthorities(user.getAuthorities());
 
             token = jwtService.generateToken(userEntity);
+            logger.info("Mevcut kullanıcı için token üretildi: {}", email);
 
-        }catch (ResourceNotFoundException e){
-            logger.info("Yeni kullanıcı tespit edildi, veritabanına kaydediliyor: " + email);
-            User newUser = new User().builder()
+        } catch (ResourceNotFoundException e) {
+            logger.info("Yeni kullanıcı kaydediliyor: {}", email);
+            User newUser = User.builder()
                     .email(email)
                     .firstName(name)
                     .authorities(Set.of(Role.ROLE_USER))
@@ -82,28 +81,18 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
                     .build();
 
             userService.createUserFromOauth2(newUser);
-
             token = jwtService.generateToken(newUser);
-
-            String cookieValue = "jwt=" + token + "; Path=/; HttpOnly; Secure; SameSite=Strict; MaxAge=604800"; //valid for 7 days
-            response.addHeader("Set-Cookie", cookieValue);
-
-            getRedirectStrategy().sendRedirect(request, response, "https://matmuh.yusufacmaci.com/oauth-success");
-
-        }catch (Exception e){
-            logger.info("Giriş işlemi sırasında beklenmeyen bir hata oluştu: " + e.getMessage());
-            throw new RuntimeException("Giriş işlemi sırasında bir hata oluştu: " + e.getMessage());
-         }
-
-        String targetUrl = UriComponentsBuilder.fromUriString("https://matmuh.yusufacmaci.com/oauth-success")
-                .queryParam("token", token)
-                .build().toUriString();
-
-        getRedirectStrategy().sendRedirect(request, response, targetUrl);
-
-
-
+        } catch (Exception e) {
+            logger.error("Giriş hatası: {}", e.getMessage());
+            throw new RuntimeException("Giriş işlemi sırasında hata: " + e.getMessage());
         }
+
+        String cookieValue = "jwt=" + token + "; Path=/; HttpOnly; Secure; SameSite=Strict; MaxAge=604800";
+        response.addHeader("Set-Cookie", cookieValue);
+
+        logger.info("Cookie set edildi, frontend'e yönlendiriliyor.");
+        getRedirectStrategy().sendRedirect(request, response, "https://matmuh.yusufacmaci.com/oauth-success");
+    }
 
 
 }

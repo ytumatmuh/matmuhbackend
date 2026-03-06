@@ -105,9 +105,10 @@ public class SecurityConfig {
                 .oauth2Login(oauth2Login -> oauth2Login
                         .loginPage("/api/oauth/microsoft/azure")
                         .authorizationEndpoint(endpoint -> endpoint
-                                .authorizationRequestResolver(
-                                        authorizationRequestResolver(clientRegistrationRepository)
-                                )
+                                .authorizationRequestResolver(authorizationRequestResolver(clientRegistrationRepository))
+                        )
+                        .redirectionEndpoint(redirection -> redirection
+                                .baseUri("/api/login/oauth2/code/*")
                         )
                         .successHandler(oAuth2LoginSuccessHandler)
                 )
