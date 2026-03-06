@@ -14,7 +14,11 @@ import java.io.IOException;
 @Component
 public class CustomAuthenticationEntryPointHandler implements AuthenticationEntryPoint {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
+
+    public CustomAuthenticationEntryPointHandler(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
 
     @Override
     public void commence(
@@ -29,6 +33,7 @@ public class CustomAuthenticationEntryPointHandler implements AuthenticationEntr
         response.setContentType("application/json;charset=UTF-8");
         response.setCharacterEncoding("UTF-8");
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+
         response.getWriter().write(objectMapper.writeValueAsString(errorResult));
     }
 }
