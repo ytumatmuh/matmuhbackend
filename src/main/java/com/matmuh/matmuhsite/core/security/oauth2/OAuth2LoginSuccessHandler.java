@@ -13,12 +13,19 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.*;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Component
@@ -27,17 +34,26 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
     private final JwtService jwtService;
     private final UserService userService;
 
+    private final OAuth2AuthorizedClientService authorizedClientService;
+
     private Logger logger = LoggerFactory.getLogger(OAuth2LoginSuccessHandler.class);
 
-    public OAuth2LoginSuccessHandler(JwtService jwtService, UserService userService) {
+    public OAuth2LoginSuccessHandler(JwtService jwtService, UserService userService, OAuth2AuthorizedClientService authorizedClientService) {
         this.jwtService = jwtService;
         this.userService = userService;
+        this.authorizedClientService = authorizedClientService;
     }
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
 
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
+
+        logger.info("OAuth2 tüm attributes: {}", oAuth2User.getAttributes());
+
+        String department = fetchDepartmentFromGraph(authentication);
+        logger.info("Department from graph: {}", department);
+
         String email = oAuth2User.getAttribute("email");
         if (email == null || email.isEmpty()) {
             email = oAuth2User.getAttribute("preferred_username");
@@ -92,6 +108,37 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
 
         logger.info("Cookie set edildi, frontend'e yönlendiriliyor.");
         getRedirectStrategy().sendRedirect(request, response, "https://matmuh.yusufacmaci.com/oauth-success");
+    }
+
+    private String fetchDepartmentFromGraph(Authentication authentication) {
+        try {
+            OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
+            OAuth2AuthorizedClient client = authorizedClientService.loadAuthorizedClient(
+                    oauthToken.getAuthorizedClientRegistrationId(),
+                    oauthToken.getName()
+            );
+
+            String accessToken = client.getAccessToken().getTokenValue();
+
+            RestTemplate restTemplate = new RestTemplate();
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth(accessToken);
+            headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+
+            ResponseEntity<Map> response = restTemplate.exchange(
+                    "https://graph.microsoft.com/v1.0/me?$select=department",
+                    HttpMethod.GET,
+                    new HttpEntity<>(headers),
+                    Map.class
+            );
+
+            if (response.getBody() != null) {
+                return (String) response.getBody().get("department");
+            }
+        } catch (Exception e) {
+            logger.warn("Graph API'den bölüm alınamadı: {}", e.getMessage());
+        }
+        return null;
     }
 
 
