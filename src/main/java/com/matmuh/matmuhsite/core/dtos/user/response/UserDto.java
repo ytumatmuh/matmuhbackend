@@ -22,6 +22,8 @@ public class UserDto {
 
     private String lastName;
 
+    private String department;
+
     private Set<Role> authorities;
 
 

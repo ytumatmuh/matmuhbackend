@@ -13,6 +13,8 @@ import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequest
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 
+import java.util.List;
+
 @Configuration
 public class OAuth2Config {
 
@@ -24,6 +26,9 @@ public class OAuth2Config {
 
     @Value("${spring.security.oauth2.client.registration.azure.redirect-uri}")
     private String redirectUri;
+
+    @Value("${spring.security.oauth2.client.registration.azure.scope}")
+    private List<String> scope;
 
     @Value("${spring.security.oauth2.client.provider.azure.authorization-uri}")
     private String authorizationUri;
@@ -46,7 +51,7 @@ public class OAuth2Config {
                 .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                 .redirectUri(redirectUri)
-                .scope("openid", "profile", "email", "offline_access", "User.Read", "People.Read")
+                .scope(scope.toArray(new String[0]))
                 .authorizationUri(authorizationUri)
                 .tokenUri(tokenUri)
                 .jwkSetUri(jwkSetUri)

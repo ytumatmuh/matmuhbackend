@@ -49,11 +49,6 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
 
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
 
-        logger.info("OAuth2 tüm attributes: {}", oAuth2User.getAttributes());
-
-        String department = fetchDepartmentFromGraph(authentication);
-        logger.info("Department from graph: {}", department);
-
         String email = oAuth2User.getAttribute("email");
         if (email == null || email.isEmpty()) {
             email = oAuth2User.getAttribute("preferred_username");
@@ -63,7 +58,6 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         String providerId = oAuth2User.getAttribute("oid");
         String tenantId = oAuth2User.getAttribute("tid");
 
-        logger.info("OAuth2 kullanıcı bilgileri alındı: email={}, name={}, providerId={}, tenantId={}", email, name, providerId, tenantId);
 
         if (!"85602908-e15b-43ba-9148-38bc773a816e".equals(tenantId)) {
             throw new RuntimeException("Hatalı organizasyon girişi!");
@@ -71,6 +65,19 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         if (email == null || !email.endsWith("@std.yildiz.edu.tr")) {
             throw new EmailDoesntFromYildizException("Sadece Yıldız Teknik Üniversitesi öğrencileri giriş yapabilir!");
         }
+
+
+        String rawDepartment = fetchDepartmentFromGraph(authentication);
+        String department = normalizeDepartment(rawDepartment);
+
+        logger.info("Raw department from graph: {}, Normalized department: {}", rawDepartment, department);
+
+        if (department == null){
+            logger.warn("Yetkisiz bölüm girişi saptandı: {}", rawDepartment);
+            throw new RuntimeException("Hatalı bölüm girişi! Sadece Matematik Mühendisliği öğrencileri giriş yapabilir.");
+        }
+
+
 
         String token;
         try {
@@ -81,6 +88,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
             userEntity.setLastName(user.getLastName());
             userEntity.setEmail(user.getEmail());
             userEntity.setAuthorities(user.getAuthorities());
+            userEntity.setDepartment(department);
 
             token = jwtService.generateToken(userEntity);
             logger.info("Mevcut kullanıcı için token üretildi: {}", email);
@@ -90,6 +98,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
             User newUser = User.builder()
                     .email(email)
                     .firstName(name)
+                    .department(department)
                     .authorities(Set.of(Role.ROLE_USER))
                     .provider(AuthProvider.YTU_MAIL)
                     .providerId(providerId)
@@ -108,6 +117,18 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
 
         logger.info("Cookie set edildi, frontend'e yönlendiriliyor.");
         getRedirectStrategy().sendRedirect(request, response, "https://matmuh.yusufacmaci.com/oauth-success");
+    }
+
+    private String normalizeDepartment(String rawDepartment){
+        if (rawDepartment == null){
+            return null;
+        }
+        String dept = rawDepartment.trim();
+        return switch (dept){
+            case "Matematik Mühendisliği", "052" -> "Matematik Mühendisliği";
+            case "Matematik Mühendisliği (İngilizce)", "058" -> "Matematik Mühendisliği (İngilizce)";
+            default -> null;
+        };
     }
 
     private String fetchDepartmentFromGraph(Authentication authentication) {

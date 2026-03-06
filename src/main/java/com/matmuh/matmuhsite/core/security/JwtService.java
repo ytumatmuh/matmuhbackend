@@ -30,6 +30,7 @@ public class JwtService {
         claims.put("firstName", user.getFirstName());
         claims.put("lastName", user.getLastName());
         claims.put("email", user.getEmail());
+        claims.put("department", user.getDepartment());
         claims.put("authorities", user.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList()));
