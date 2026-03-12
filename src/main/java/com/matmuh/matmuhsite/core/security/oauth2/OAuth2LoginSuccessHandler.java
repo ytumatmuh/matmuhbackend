@@ -125,7 +125,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         response.addHeader("Set-Cookie", cookieValue);
 
         logger.info("Cookie set edildi, frontend'e yönlendiriliyor.");
-        getRedirectStrategy().sendRedirect(request, response, "https://matmuh.yusufacmaci.com/oauth-success");
+        getRedirectStrategy().sendRedirect(request, response, "http://localhost:3000/auth/callback");
     }
 
     private String normalizeDepartment(String rawDepartment){
