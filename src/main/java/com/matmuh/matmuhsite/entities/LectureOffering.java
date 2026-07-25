@@ -1,6 +1,8 @@
 package com.matmuh.matmuhsite.entities;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 import lombok.*;
 
 import java.util.*;
@@ -10,6 +12,8 @@ import java.util.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@SQLDelete(sql = "UPDATE lecture_offerings SET is_deleted = true WHERE id = ?")
+@SQLRestriction("is_deleted = false")
 @Entity
 @Table(name = "lecture_offerings")
 public class LectureOffering extends BaseEntity{
@@ -21,6 +25,10 @@ public class LectureOffering extends BaseEntity{
 
     @Column(name = "academic_year")
     private String academicYear;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "semester", length = 10)
+    private Semester semester;
 
     @Column(name = "group_number")
     private int groupNumber;
@@ -35,7 +43,10 @@ public class LectureOffering extends BaseEntity{
 
     @OneToMany(mappedBy = "lectureOffering", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private Set<GradeDistribution> gradeDistributions = new HashSet<>();
+    private Set<GradeResult> gradeResults = new HashSet<>();
 
+    @OneToMany(mappedBy = "lectureOffering", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private Set<ExamStatistic> examStatistics = new HashSet<>();
 
 }

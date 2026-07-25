@@ -1,0 +1,33 @@
+name: matmuh-backend ci
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  backend-build:
+    runs-on: ubuntu-latest
+    permissions: { contents: read, packages: write }
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract Clean Version
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and Push Backend
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/matmuh-backend:latest
+            ghcr.io/${{ github.repository_owner }}/matmuh-backend:${{ steps.get_version.outputs.VERSION }}

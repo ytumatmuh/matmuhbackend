@@ -27,4 +27,10 @@ public interface LectureMapper {
 
     LectureStatisticsDto toLectureStatisticsDto(LectureDto lectureDto);
 
+    @org.mapstruct.BeanMapping(nullValuePropertyMappingStrategy = org.mapstruct.NullValuePropertyMappingStrategy.IGNORE)
+    @org.mapstruct.Mapping(target = "id", ignore = true)
+    @org.mapstruct.Mapping(target = "lectureNotes", ignore = true)
+    @org.mapstruct.Mapping(target = "offerings", ignore = true)
+    void updateLectureFromDto(com.matmuh.matmuhsite.core.dtos.lecture.request.UpdateLectureRequestDto dto, @org.mapstruct.MappingTarget Lecture lecture);
+
 }

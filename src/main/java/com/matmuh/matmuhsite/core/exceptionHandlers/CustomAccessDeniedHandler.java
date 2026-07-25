@@ -1,6 +1,7 @@
 package com.matmuh.matmuhsite.core.exceptionHandlers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.matmuh.matmuhsite.core.helpers.MessageResolver;
 import com.matmuh.matmuhsite.core.utilities.results.ErrorResult;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -14,7 +15,13 @@ import java.io.IOException;
 @Component
 public class CustomAccessDeniedHandler implements AccessDeniedHandler {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
+    private final MessageResolver messageResolver;
+
+    public CustomAccessDeniedHandler(ObjectMapper objectMapper, MessageResolver messageResolver) {
+        this.objectMapper = objectMapper;
+        this.messageResolver = messageResolver;
+    }
 
     @Override
     public void handle(
@@ -23,9 +30,8 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
             AccessDeniedException accessDeniedException) throws IOException {
 
         ErrorResult errorResult = new ErrorResult(
-                "Erişim reddedildi, yetkiniz yok! Hata mesajı: " + accessDeniedException.getMessage(),
+                messageResolver.resolve("error.access.denied"),
                 HttpStatus.FORBIDDEN);
-
 
         response.setContentType("application/json;charset=UTF-8");
         response.setCharacterEncoding("UTF-8");

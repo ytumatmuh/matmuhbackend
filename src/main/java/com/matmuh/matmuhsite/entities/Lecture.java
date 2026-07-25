@@ -1,6 +1,8 @@
 package com.matmuh.matmuhsite.entities;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 import jakarta.persistence.Id;
 import lombok.*;
 
@@ -8,6 +10,8 @@ import java.util.*;
 
 @Getter
 @Setter
+@SQLDelete(sql = "UPDATE lectures SET is_deleted = true WHERE id = ?")
+@SQLRestriction("is_deleted = false")
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor

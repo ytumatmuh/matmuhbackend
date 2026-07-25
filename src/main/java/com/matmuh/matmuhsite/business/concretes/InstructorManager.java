@@ -2,7 +2,9 @@ package com.matmuh.matmuhsite.business.concretes;
 
 import com.matmuh.matmuhsite.business.abstracts.InstructorService;
 import com.matmuh.matmuhsite.business.constants.InstructorMessages;
+import com.matmuh.matmuhsite.core.dtos.common.PageDto;
 import com.matmuh.matmuhsite.core.dtos.instructor.request.CreateInstructorRequestDto;
+import org.springframework.data.domain.Pageable;
 import com.matmuh.matmuhsite.core.dtos.instructor.response.InstructorDto;
 import com.matmuh.matmuhsite.core.exceptions.ResourceNotFoundException;
 import com.matmuh.matmuhsite.core.mappers.InstructorMapper;
@@ -44,6 +46,37 @@ public class InstructorManager implements InstructorService {
     }
 
     @Override
+    @org.springframework.transaction.annotation.Transactional
+    public InstructorDto updateInstructor(UUID id, com.matmuh.matmuhsite.core.dtos.instructor.request.UpdateInstructorRequestDto request) {
+        logger.info("Updating instructor with ID: {}", id);
+
+        Instructor instructor = instructorDao.findById(id).orElseThrow(() -> {
+            logger.error("Instructor not found with ID: {}", id);
+            return new ResourceNotFoundException(InstructorMessages.INSTRUCTOR_NOT_FOUND);
+        });
+
+        instructorMapper.updateInstructorFromDto(request, instructor);
+        var saved = instructorDao.save(instructor);
+
+        logger.info("Instructor updated with ID: {}", saved.getId());
+        return instructorMapper.toInstructorDto(saved);
+    }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional
+    public void deleteInstructor(UUID id) {
+        logger.info("Deleting instructor with ID: {}", id);
+
+        Instructor instructor = instructorDao.findById(id).orElseThrow(() -> {
+            logger.error("Instructor not found with ID: {}", id);
+            return new ResourceNotFoundException(InstructorMessages.INSTRUCTOR_NOT_FOUND);
+        });
+
+        instructorDao.delete(instructor);
+        logger.info("Instructor soft deleted with ID: {}", id);
+    }
+
+    @Override
     public Instructor getInstructorReferenceById(UUID id) {
         logger.info("Fetching instructor reference with ID: {}", id);
 
@@ -65,13 +98,17 @@ public class InstructorManager implements InstructorService {
     }
 
     @Override
-    public List<InstructorDto> getAllInstructors() {
-        logger.info("Fetching all instructors");
+    public PageDto<InstructorDto> getInstructors(String search, Pageable pageable) {
+        logger.info("Fetching instructors search={} page={}", search, pageable.getPageNumber());
 
-        List<Instructor> instructors = instructorDao.findAll();
+        var page = instructorDao.search(normalize(search), pageable);
 
-        logger.info("Total instructors found: {}", instructors.size());
+        logger.info("Total instructors found: {}", page.getTotalElements());
 
-        return instructorMapper.toInstructorDtoList(instructors);
+        return PageDto.of(page, instructorMapper::toInstructorDto);
+    }
+
+    private String normalize(String search) {
+        return search == null || search.isBlank() ? null : search.trim();
     }
 }

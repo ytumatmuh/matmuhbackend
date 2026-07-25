@@ -1,9 +1,9 @@
 package com.matmuh.matmuhsite.core.utilities.storage;
 
-import com.matmuh.matmuhsite.core.config.r2.FolderType;
 import com.matmuh.matmuhsite.core.properties.R2Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -13,7 +13,8 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import java.util.UUID;
 
 @Service
-public class R2StorageService {
+@ConditionalOnProperty(name = "storage.type", havingValue = "r2")
+public class R2StorageService implements StorageService {
 
     private final S3Client s3Client;
     private final R2Properties r2Properties;
@@ -26,6 +27,7 @@ public class R2StorageService {
     }
 
 
+    @Override
     public String uploadFile(byte[] fileBytes, String originalFileName, String contentType, FolderType folderType){
 
         logger.info("Uploading file: {}, contentType: {}, folderType: {}", originalFileName, contentType, folderType);
@@ -57,6 +59,7 @@ public class R2StorageService {
         return key;
     }
 
+    @Override
     public void deleteFile(String key){
         logger.info("Deleting file: {}", key);
         DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()

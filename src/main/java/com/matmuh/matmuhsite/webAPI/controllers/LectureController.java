@@ -1,14 +1,35 @@
 package com.matmuh.matmuhsite.webAPI.controllers;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import com.matmuh.matmuhsite.business.abstracts.LectureOfferingService;
 import com.matmuh.matmuhsite.business.abstracts.LectureService;
+import com.matmuh.matmuhsite.business.constants.LectureMessages;
 import com.matmuh.matmuhsite.business.constants.LectureNoteMessages;
+import com.matmuh.matmuhsite.business.constants.LectureOfferingMessages;
+import com.matmuh.matmuhsite.core.dtos.common.PageDto;
 import com.matmuh.matmuhsite.core.dtos.lecture.request.CreateLectureRequestDto;
+import com.matmuh.matmuhsite.core.dtos.lecture.request.UpdateLectureRequestDto;
 import com.matmuh.matmuhsite.core.dtos.lecture.response.LectureDto;
+import com.matmuh.matmuhsite.core.dtos.lecture.response.LectureStatisticsDto;
 import com.matmuh.matmuhsite.core.dtos.lectureNote.request.LectureNoteCreateRequestDto;
 import com.matmuh.matmuhsite.core.dtos.lectureNote.response.LectureNoteDto;
+import com.matmuh.matmuhsite.core.dtos.lectureOfferings.request.CreateLectureOfferingRequestDto;
+import com.matmuh.matmuhsite.core.dtos.lectureOfferings.response.LectureOfferingDto;
+import com.matmuh.matmuhsite.core.helpers.MessageResolver;
+import com.matmuh.matmuhsite.core.helpers.PageableSanitizer;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
+
+import java.util.Set;
 import com.matmuh.matmuhsite.core.utilities.results.DataResult;
+import com.matmuh.matmuhsite.core.utilities.results.Result;
 import com.matmuh.matmuhsite.core.utilities.results.SuccessDataResult;
-import com.matmuh.matmuhsite.core.dtos.lecture.response.LectureStatisticsDto;
+import com.matmuh.matmuhsite.core.utilities.results.SuccessResult;
+import com.matmuh.matmuhsite.entities.Semester;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -18,58 +39,109 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 import java.util.UUID;
 
+@Tag(name = "Lectures", description = "Ders yönetimi")
 @RestController
 @RequestMapping("api/lectures")
 public class LectureController {
 
+    private static final Set<String> SORTABLE = Set.of("code", "name", "term", "semester", "ects", "createdAt");
+
     private final LectureService lectureService;
+    private final LectureOfferingService lectureOfferingService;
+    private final MessageResolver messageResolver;
 
-
-    public LectureController(LectureService lectureService) {
+    public LectureController(LectureService lectureService,
+                             LectureOfferingService lectureOfferingService,
+                             MessageResolver messageResolver) {
         this.lectureService = lectureService;
+        this.lectureOfferingService = lectureOfferingService;
+        this.messageResolver = messageResolver;
     }
 
-
-    @PostMapping()
-    public ResponseEntity<DataResult<LectureDto>> createLecture(@RequestBody CreateLectureRequestDto createLectureRequestDto) {
-
-        var createdLecture = lectureService.createLecture(createLectureRequestDto);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessDataResult<>(createdLecture, LectureNoteMessages.LESSON_CREATE_SUCCESS, HttpStatus.CREATED));
-
-    }
-
+    @Operation(summary = "Dersleri listele",
+            description = "Sayfalı liste. Filtreler: term, semester, search (ad, kod, açıklama). Sayfalama: page, size, sort (örn. code,asc). Sıralanabilir alanlar: code, name, term, semester, ects, createdAt.")
     @GetMapping
-    public ResponseEntity<DataResult<List<LectureDto>>> getLectures(){
-        var lectures = lectureService.getLectures();
-
-        return ResponseEntity.status(HttpStatus.OK).body(new SuccessDataResult<>(lectures, LectureNoteMessages.LECTURES_FETCH_SUCCESS, HttpStatus.OK));
+    public ResponseEntity<DataResult<PageDto<LectureDto>>> getLectures(
+            @RequestParam(required = false) Integer term,
+            @RequestParam(required = false) Semester semester,
+            @RequestParam(required = false) String search,
+            @ParameterObject @PageableDefault(size = 20, sort = "code", direction = Sort.Direction.ASC) Pageable pageable) {
+        var lectures = lectureService.getLectures(term, semester, search, PageableSanitizer.sanitize(pageable, SORTABLE, "code"));
+        return ResponseEntity.ok(new SuccessDataResult<>(lectures, messageResolver.resolve(LectureNoteMessages.LECTURES_FETCH_SUCCESS), HttpStatus.OK));
     }
 
-    @PostMapping(value = "/{lectureId}/notes", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<DataResult<LectureNoteDto>> addNoteToLecture(@PathVariable UUID lectureId, @RequestPart("data") LectureNoteCreateRequestDto lectureNoteCreateRequestDto, @RequestPart("file") MultipartFile file){
-
-        var createdLectureNote = lectureService.addNoteToLecture(lectureId, lectureNoteCreateRequestDto, file);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessDataResult<>(createdLectureNote, LectureNoteMessages.LECTURE_NOTE_CREATE_SUCCESS, HttpStatus.CREATED));
-
+    @Operation(summary = "Ders getir", description = "ID ile tek ders döner.")
+    @GetMapping("/{id}")
+    public ResponseEntity<DataResult<LectureDto>> getLectureById(@PathVariable UUID id) {
+        var lecture = lectureService.getLectureById(id);
+        return ResponseEntity.ok(new SuccessDataResult<>(lecture, messageResolver.resolve(LectureMessages.LECTURE_FETCHED_SUCCESSFULLY), HttpStatus.OK));
     }
 
-    @GetMapping("/{lectureId}/notes")
-    public ResponseEntity<DataResult<List<LectureNoteDto>>> getLectureNotes(@PathVariable UUID lectureId) {
-
-        var lectureNotes = lectureService.getLectureNotes(lectureId);
-
-        return ResponseEntity.status(HttpStatus.OK).body(new SuccessDataResult<>(lectureNotes, LectureNoteMessages.LECTURE_NOTES_FETCH_SUCCESS, HttpStatus.OK));
-
+    @Operation(summary = "Ders oluştur", description = "Yeni ders kaydeder (ADMIN).")
+    @PostMapping
+    public ResponseEntity<DataResult<LectureDto>> createLecture(@Valid @RequestBody CreateLectureRequestDto createLectureRequestDto) {
+        var createdLecture = lectureService.createLecture(createLectureRequestDto);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new SuccessDataResult<>(createdLecture, messageResolver.resolve(LectureNoteMessages.LESSON_CREATE_SUCCESS), HttpStatus.CREATED));
     }
 
-    @GetMapping("/{lectureId}/statistics")
-    public ResponseEntity<DataResult<LectureStatisticsDto>> getLectureStatistics(@PathVariable UUID lectureId) {
+    @Operation(summary = "Ders güncelle",
+            description = "Kısmi güncelleme: sadece gönderilen alanlar değişir, boş bırakılanlar korunur (ADMIN).")
+    @PatchMapping("/{id}")
+    public ResponseEntity<DataResult<LectureDto>> updateLecture(@PathVariable UUID id,
+                                                                @Valid @RequestBody UpdateLectureRequestDto updateLectureRequestDto) {
+        var updated = lectureService.updateLecture(id, updateLectureRequestDto);
+        return ResponseEntity.ok(new SuccessDataResult<>(updated, messageResolver.resolve(LectureMessages.LECTURE_UPDATED_SUCCESSFULLY), HttpStatus.OK));
+    }
 
-        var lectureStatistics = lectureService.getLectureStatistics(lectureId);
+    @Operation(summary = "Ders sil", description = "Dersi soft-delete eder (ADMIN).")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Result> deleteLecture(@PathVariable UUID id) {
+        lectureService.deleteLecture(id);
+        return ResponseEntity.ok(new SuccessResult(messageResolver.resolve(LectureMessages.LECTURE_DELETED_SUCCESSFULLY), HttpStatus.OK));
+    }
 
-        return ResponseEntity.status(HttpStatus.OK).body(new SuccessDataResult<>(lectureStatistics, LectureNoteMessages.LECTURE_STATISTICS_FETCH_SUCCESS, HttpStatus.OK));
+    @Operation(summary = "Ders istatistikleri",
+            description = "Dersin tüm dönemlerinin harf sonuçlarını ve sınav istatistiklerini döner. Giriş yapmış kullanıcılar erişebilir.")
+    @GetMapping("/{id}/statistics")
+    public ResponseEntity<DataResult<LectureStatisticsDto>> getLectureStatistics(@PathVariable UUID id) {
+        var lectureStatistics = lectureService.getLectureStatistics(id);
+        return ResponseEntity.ok(new SuccessDataResult<>(lectureStatistics, messageResolver.resolve(LectureNoteMessages.LECTURE_STATISTICS_FETCH_SUCCESS), HttpStatus.OK));
+    }
 
+    @Operation(summary = "Dersin dönem kayıtlarını listele",
+            description = "Dersin açıldığı tüm yıl/dönem/hoca kayıtlarını harf sonuçları ve sınav istatistikleriyle döner. Giriş yapmış kullanıcılar erişebilir.")
+    @GetMapping("/{id}/offerings")
+    public ResponseEntity<DataResult<List<LectureOfferingDto>>> getLectureOfferings(@PathVariable UUID id) {
+        var offerings = lectureOfferingService.getOfferingsByLecture(id);
+        return ResponseEntity.ok(new SuccessDataResult<>(offerings, messageResolver.resolve(LectureOfferingMessages.OFFERINGS_FETCHED_SUCCESSFULLY), HttpStatus.OK));
+    }
+
+    @Operation(summary = "Derse dönem kaydı aç",
+            description = "Dersi belirli yıl/dönem/hoca ile açar (ADMIN).")
+    @PostMapping("/{id}/offerings")
+    public ResponseEntity<DataResult<LectureOfferingDto>> createLectureOffering(@PathVariable UUID id,
+                                                                                @Valid @RequestBody CreateLectureOfferingRequestDto requestDto) {
+        var created = lectureOfferingService.createOffering(id, requestDto);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new SuccessDataResult<>(created, messageResolver.resolve(LectureOfferingMessages.OFFERING_CREATED_SUCCESSFULLY), HttpStatus.CREATED));
+    }
+
+    @Operation(summary = "Dersin notlarını listele", description = "Sadece onaylanmış notları döner. Giriş yapmış kullanıcılar erişebilir.")
+    @GetMapping("/{id}/notes")
+    public ResponseEntity<DataResult<List<LectureNoteDto>>> getLectureNotes(@PathVariable UUID id) {
+        var lectureNotes = lectureService.getLectureNotes(id);
+        return ResponseEntity.ok(new SuccessDataResult<>(lectureNotes, messageResolver.resolve(LectureNoteMessages.LECTURE_NOTES_FETCH_SUCCESS), HttpStatus.OK));
+    }
+
+    @Operation(summary = "Derse not yükle",
+            description = "Multipart dosya ile ders notu yükler; not admin onayına düşer. Opsiyonel lectureOfferingId ile hoca/dönem bağlanır.")
+    @PostMapping(value = "/{id}/notes", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<DataResult<LectureNoteDto>> addNoteToLecture(@PathVariable UUID id,
+                                                                       @RequestPart("data") LectureNoteCreateRequestDto lectureNoteCreateRequestDto,
+                                                                       @RequestPart("file") MultipartFile file) {
+        var createdLectureNote = lectureService.addNoteToLecture(id, lectureNoteCreateRequestDto, file);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new SuccessDataResult<>(createdLectureNote, messageResolver.resolve(LectureNoteMessages.LECTURE_NOTE_CREATE_SUCCESS), HttpStatus.CREATED));
     }
 }

@@ -1,6 +1,10 @@
 package com.matmuh.matmuhsite.business.abstracts;
 
+import com.matmuh.matmuhsite.core.dtos.common.PageDto;
 import com.matmuh.matmuhsite.core.dtos.lecture.request.CreateLectureRequestDto;
+import com.matmuh.matmuhsite.entities.Semester;
+import org.springframework.data.domain.Pageable;
+import com.matmuh.matmuhsite.core.dtos.lecture.request.UpdateLectureRequestDto;
 import com.matmuh.matmuhsite.core.dtos.lecture.response.LectureDto;
 import com.matmuh.matmuhsite.core.dtos.lectureNote.request.LectureNoteCreateRequestDto;
 import com.matmuh.matmuhsite.core.dtos.lectureNote.response.LectureNoteDto;
@@ -23,7 +27,11 @@ public interface LectureService {
 
     List<LectureNoteDto> getLectureNotes(UUID lectureId);
 
-    List<LectureDto> getLectures();
+    LectureDto updateLecture(UUID lectureId, UpdateLectureRequestDto updateLectureRequestDto);
+
+    void deleteLecture(UUID lectureId);
+
+    PageDto<LectureDto> getLectures(Integer term, Semester semester, String search, Pageable pageable);
 
     LectureStatisticsDto getLectureStatistics(UUID lectureId);
 

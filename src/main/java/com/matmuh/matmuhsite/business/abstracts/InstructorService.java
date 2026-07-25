@@ -1,6 +1,9 @@
 package com.matmuh.matmuhsite.business.abstracts;
 
+import com.matmuh.matmuhsite.core.dtos.common.PageDto;
 import com.matmuh.matmuhsite.core.dtos.instructor.request.CreateInstructorRequestDto;
+import org.springframework.data.domain.Pageable;
+import com.matmuh.matmuhsite.core.dtos.instructor.request.UpdateInstructorRequestDto;
 import com.matmuh.matmuhsite.core.dtos.instructor.response.InstructorDto;
 import com.matmuh.matmuhsite.entities.Instructor;
 
@@ -16,6 +19,10 @@ public interface InstructorService {
     InstructorDto createInstructor(CreateInstructorRequestDto createInstructorRequestDto);
 
 
-    List<InstructorDto> getAllInstructors();
+    InstructorDto updateInstructor(UUID id, UpdateInstructorRequestDto updateInstructorRequestDto);
+
+    void deleteInstructor(UUID id);
+
+    PageDto<InstructorDto> getInstructors(String search, Pageable pageable);
 
 }

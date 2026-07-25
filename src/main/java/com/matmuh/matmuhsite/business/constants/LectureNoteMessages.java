@@ -1,12 +1,14 @@
 package com.matmuh.matmuhsite.business.constants;
 
 public class LectureNoteMessages {
-    public static final String LESSON_CREATE_SUCCESS = "Ders başarıyla oluşturuldu.";
-    public static final String LECTURE_NOTE_CREATE_SUCCESS = "Ders notu başarıyla oluşturuldu.";
-    public static final String LECTURE_NOTES_FETCH_SUCCESS = "Ders notları başarıyla getirildi.";
-    public static final String LECTURES_FETCH_SUCCESS = "Dersler başarıyla getirildi.";
-    public static final String LECTURE_NOTE_APPROVE_SUCCESS = "Ders notu başarıyla onaylandı.";
-
-    public static final String LECTURE_NOTE_NOT_FOUND = "Ders notu bulunamadı.";
-    public static final String LECTURE_STATISTICS_FETCH_SUCCESS = "Ders istatistikleri başarıyla getirildi.";
+    public static final String LESSON_CREATE_SUCCESS = "lecture.created";
+    public static final String LECTURE_NOTE_CREATE_SUCCESS = "lecture.note.created";
+    public static final String LECTURE_NOTES_FETCH_SUCCESS = "lecture.note.list.fetched";
+    public static final String LECTURES_FETCH_SUCCESS = "lecture.list.fetched";
+    public static final String LECTURE_NOTE_APPROVE_SUCCESS = "lecture.note.approved";
+    public static final String LECTURE_NOTE_DELETE_SUCCESS = "lecture.note.deleted";
+    public static final String LECTURE_NOTE_FETCH_SUCCESS = "lecture.note.fetched";
+    public static final String APPROVED_NOT_NULL = "{lecture.note.approved.not.null}";
+    public static final String LECTURE_NOTE_NOT_FOUND = "lecture.note.not.found";
+    public static final String LECTURE_STATISTICS_FETCH_SUCCESS = "lecture.statistics.fetched";
 }

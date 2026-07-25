@@ -1,6 +1,7 @@
 package com.matmuh.matmuhsite.core.exceptionHandlers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.matmuh.matmuhsite.core.helpers.MessageResolver;
 import com.matmuh.matmuhsite.core.utilities.results.ErrorResult;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -15,9 +16,11 @@ import java.io.IOException;
 public class CustomAuthenticationEntryPointHandler implements AuthenticationEntryPoint {
 
     private final ObjectMapper objectMapper;
+    private final MessageResolver messageResolver;
 
-    public CustomAuthenticationEntryPointHandler(ObjectMapper objectMapper) {
+    public CustomAuthenticationEntryPointHandler(ObjectMapper objectMapper, MessageResolver messageResolver) {
         this.objectMapper = objectMapper;
+        this.messageResolver = messageResolver;
     }
 
     @Override
@@ -27,7 +30,7 @@ public class CustomAuthenticationEntryPointHandler implements AuthenticationEntr
             AuthenticationException authException) throws IOException {
 
         ErrorResult errorResult = new ErrorResult(
-                "Kimlik doğrulaması başarısız! Lütfen giriş yapınız. Hata mesajı: " + authException.getMessage(),
+                messageResolver.resolve("error.authentication.required"),
                 HttpStatus.UNAUTHORIZED);
 
         response.setContentType("application/json;charset=UTF-8");

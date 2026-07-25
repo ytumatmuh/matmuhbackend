@@ -1,6 +1,8 @@
 package com.matmuh.matmuhsite.business.abstracts;
 
+import com.matmuh.matmuhsite.core.dtos.common.PageDto;
 import com.matmuh.matmuhsite.core.dtos.lectureNote.request.LectureNoteCreateRequestDto;
+import org.springframework.data.domain.Pageable;
 import com.matmuh.matmuhsite.core.dtos.lectureNote.response.LectureNoteDto;
 import com.matmuh.matmuhsite.entities.Lecture;
 import com.matmuh.matmuhsite.entities.LectureNote;
@@ -19,6 +21,10 @@ public interface LectureNoteService {
 
     LectureNoteDto approveLectureNote(UUID lectureNoteId, boolean approved);
 
-    List<LectureNoteWithLectureDto> getAllNotes(Boolean approved);
+    PageDto<LectureNoteWithLectureDto> getAllNotes(Boolean approved, UUID lectureId, UUID lectureOfferingId, UUID instructorId, String search, Pageable pageable);
+
+    LectureNoteDto getLectureNoteById(UUID lectureNoteId);
+
+    void deleteLectureNote(UUID lectureNoteId);
 
 }

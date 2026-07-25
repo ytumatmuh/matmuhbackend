@@ -5,12 +5,12 @@ import com.matmuh.matmuhsite.business.abstracts.SecurityService;
 import com.matmuh.matmuhsite.business.abstracts.UserService;
 import com.matmuh.matmuhsite.business.constants.FileMessages;
 import com.matmuh.matmuhsite.business.constants.ImageMessages;
-import com.matmuh.matmuhsite.core.config.r2.FolderType;
+import com.matmuh.matmuhsite.core.utilities.storage.FolderType;
 import com.matmuh.matmuhsite.core.dtos.file.response.FileDto;
 import com.matmuh.matmuhsite.core.dtos.image.response.ImageDto;
 import com.matmuh.matmuhsite.core.exceptions.*;
 import com.matmuh.matmuhsite.core.utilities.results.*;
-import com.matmuh.matmuhsite.core.utilities.storage.R2StorageService;
+import com.matmuh.matmuhsite.core.utilities.storage.StorageService;
 import com.matmuh.matmuhsite.dataAccess.abstracts.FileDao;
 import com.matmuh.matmuhsite.entities.File;
 import com.matmuh.matmuhsite.entities.Image;
@@ -33,17 +33,17 @@ public class FileManager implements FileService {
 
     private final SecurityService securityService;
 
-    private final R2StorageService r2StorageService;
+    private final StorageService storageService;
 
     private final FileDao fileDao;
 
     private final Logger logger = LoggerFactory.getLogger(FileManager.class);
 
 
-    public FileManager(SecurityService securityService, FileDao fileDao, R2StorageService r2StorageService) {
+    public FileManager(SecurityService securityService, FileDao fileDao, StorageService storageService) {
         this.securityService = securityService;
         this.fileDao = fileDao;
-        this.r2StorageService = r2StorageService;
+        this.storageService = storageService;
     }
 
     @Override
@@ -61,7 +61,7 @@ public class FileManager implements FileService {
         }
 
         try {
-            String fileKey = r2StorageService.uploadFile(
+            String fileKey = storageService.uploadFile(
                     file.getBytes(),
                     file.getOriginalFilename(),
                     file.getContentType(),
@@ -120,22 +120,12 @@ public class FileManager implements FileService {
 
         if (!isAdmin && !isOwner){
             logger.error("File deletion failed: User {} does not have permission to delete file with ID {}. File creator ID: {}", user.getId(), fileId, fileToDelete.getCreatedBy().getId());
-            throw new ResourceNotFoundException(FileMessages.FILE_PERMISSION_ERROR);
+            throw new PermissionDeniedException(FileMessages.FILE_PERMISSION_ERROR);
         }
 
+        fileDao.deleteById(fileId);
 
-        try {
-            r2StorageService.deleteFile(fileToDelete.getFileUrl());
-
-            fileDao.deleteById(fileId);
-
-            logger.info("File with ID {} deleted successfully by userID {}", fileId, user.getId());
-
-        }catch (Exception e){
-            logger.error("File deletion failed for ID {}: errorMessage {}", fileId, e.getMessage());
-
-            throw new FileDeleteException(FileMessages.FILE_DELETE_ERROR);
-        }
+        logger.info("File with ID {} soft deleted by userID {}", fileId, user.getId());
     }
 
     @Override

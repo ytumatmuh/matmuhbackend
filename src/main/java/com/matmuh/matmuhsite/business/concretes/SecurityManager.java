@@ -34,8 +34,15 @@ public class SecurityManager implements SecurityService {
             logger.warn("User not authenticated or anonymous");
             throw new ResourceNotFoundException(UserMessages.USER_NOT_AUTHENTICATED);
         }
-        User user = (User) authentication.getPrincipal();
-        return user;
+
+        if (authentication.getPrincipal() instanceof User user) {
+            return user;
+        }
+
+        return userDao.findByEmail(authentication.getName()).orElseThrow(() -> {
+            logger.warn("Authenticated principal could not be resolved to a user: {}", authentication.getName());
+            return new ResourceNotFoundException(UserMessages.USER_NOT_AUTHENTICATED);
+        });
     }
 
     @Override

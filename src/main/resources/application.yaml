@@ -1,0 +1,106 @@
+spring:
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        type:
+          json_format_mapper: com.matmuh.matmuhsite.core.config.Jackson3JsonFormatMapper
+      javax:
+        persistence:
+          validation:
+            mode: none
+    hibernate:
+      ddl-auto: ${JPA_DDL_AUTO:update}
+    show-sql: ${JPA_SHOW_SQL:false}
+
+  data:
+    web:
+      pageable:
+        default-page-size: 20
+        max-page-size: 100
+
+  jackson:
+    deserialization:
+      fail-on-null-for-primitives: false
+      fail-on-unknown-properties: false
+
+  servlet:
+    multipart:
+      max-file-size: ${MAX_FILE_SIZE:50MB}
+      max-request-size: ${MAX_REQUEST_SIZE:50MB}
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/matmuhDB}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+
+  security:
+    oauth2:
+      client:
+        registration:
+          azure:
+            client-id: ${AZURE_CLIENT_ID:}
+            client-secret: ${AZURE_CLIENT_SECRET:}
+            client-name: YTU Giris
+            scope:
+              - openid
+              - profile
+              - email
+              - User.Read
+            authorization-grant-type: authorization_code
+            client-authentication-method: client_secret_post
+            redirect-uri: ${AZURE_REDIRECT_URI:http://localhost:3000/api/login/oauth2/code/azure}
+        provider:
+          azure:
+            authorization-uri: https://login.microsoftonline.com/${AZURE_TENANT_ID:common}/oauth2/v2.0/authorize
+            token-uri: https://login.microsoftonline.com/${AZURE_TENANT_ID:common}/oauth2/v2.0/token
+            jwk-set-uri: https://login.microsoftonline.com/${AZURE_TENANT_ID:common}/discovery/v2.0/keys
+            user-name-attribute: preferred_username
+
+server:
+  port: ${SERVER_PORT:9001}
+  forward-headers-strategy: framework
+  servlet:
+    session:
+      cookie:
+        same-site: ${COOKIE_SAME_SITE:Lax}
+        secure: ${COOKIE_SECURE:true}
+        http-only: true
+        name: JSESSIONID
+
+logging:
+  level:
+    org.springframework.security: ${SECURITY_LOG_LEVEL:INFO}
+
+api:
+  url: ${API_URL:http://localhost:9001}
+
+jwt:
+  secret: ${JWT_SECRET:}
+  access-validity-seconds: ${JWT_ACCESS_VALIDITY_SECONDS:3600}
+  refresh-validity-days: ${JWT_REFRESH_VALIDITY_DAYS:30}
+
+storage:
+  type: ${STORAGE_TYPE:local}
+  local:
+    path: ${STORAGE_LOCAL_PATH:uploads}
+
+r2:
+  endpoint: ${R2_ENDPOINT:}
+  publicUrl: ${R2_PUBLIC_URL:}
+  accessKey: ${R2_ACCESS_KEY:}
+  secretKey: ${R2_SECRET_KEY:}
+  bucketName: ${R2_BUCKET_NAME:}
+
+app:
+  storage:
+    domain: ${STORAGE_DOMAIN:http://localhost:9001/uploads}
+  frontend:
+    callback-url: ${FRONTEND_CALLBACK_URL:http://localhost:3000/auth/callback}
+  oauth2:
+    allowed-tenant-id: ${AZURE_TENANT_ID:}
+  cookie:
+    same-site: ${COOKIE_SAME_SITE:Lax}
+    secure: ${COOKIE_SECURE:true}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5500}

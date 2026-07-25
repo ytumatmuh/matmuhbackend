@@ -1,9 +1,11 @@
 package com.matmuh.matmuhsite.core.security.oauth2;
 
+import com.matmuh.matmuhsite.business.abstracts.RefreshTokenService;
 import com.matmuh.matmuhsite.business.abstracts.UserService;
 import com.matmuh.matmuhsite.core.dtos.user.response.UserDto;
 import com.matmuh.matmuhsite.core.exceptions.EmailDoesntFromYildizException;
 import com.matmuh.matmuhsite.core.exceptions.ResourceNotFoundException;
+import com.matmuh.matmuhsite.core.properties.CookieProperties;
 import com.matmuh.matmuhsite.core.security.JwtService;
 import com.matmuh.matmuhsite.entities.AuthProvider;
 import com.matmuh.matmuhsite.entities.Role;
@@ -15,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.*;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
@@ -36,12 +39,28 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
 
     private final OAuth2AuthorizedClientService authorizedClientService;
 
+    private final RefreshTokenService refreshTokenService;
+
+    private final CookieProperties cookieProperties;
+
+    @org.springframework.beans.factory.annotation.Value("${app.oauth2.allowed-tenant-id}")
+    private String allowedTenantId;
+
+    @org.springframework.beans.factory.annotation.Value("${app.frontend.callback-url}")
+    private String frontendCallbackUrl;
+
+    @org.springframework.beans.factory.annotation.Value("${jwt.refresh-validity-days:30}")
+    private long refreshValidityDays;
+
     private Logger logger = LoggerFactory.getLogger(OAuth2LoginSuccessHandler.class);
 
-    public OAuth2LoginSuccessHandler(JwtService jwtService, UserService userService, OAuth2AuthorizedClientService authorizedClientService) {
+    public OAuth2LoginSuccessHandler(JwtService jwtService, UserService userService, OAuth2AuthorizedClientService authorizedClientService, RefreshTokenService refreshTokenService,
+                                     CookieProperties cookieProperties) {
         this.jwtService = jwtService;
         this.userService = userService;
         this.authorizedClientService = authorizedClientService;
+        this.refreshTokenService = refreshTokenService;
+        this.cookieProperties = cookieProperties;
     }
 
     @Override
@@ -59,8 +78,8 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         String tenantId = oAuth2User.getAttribute("tid");
 
 
-        if (!"85602908-e15b-43ba-9148-38bc773a816e".equals(tenantId)) {
-            throw new RuntimeException("Hatalı organizasyon girişi!");
+        if (!allowedTenantId.equals(tenantId)) {
+            throw new EmailDoesntFromYildizException("Hatalı organizasyon girişi!");
         }
         if (email == null || !email.endsWith("@std.yildiz.edu.tr")) {
             throw new EmailDoesntFromYildizException("Sadece Yıldız Teknik Üniversitesi öğrencileri giriş yapabilir!");
@@ -87,19 +106,11 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         }
 
 
-        String token;
+        User account;
         try {
-            UserDto user = userService.getUserByEmail(email);
-            User userEntity = new User();
-            userEntity.setId(user.getId());
-            userEntity.setFirstName(user.getFirstName());
-            userEntity.setLastName(user.getLastName());
-            userEntity.setEmail(user.getEmail());
-            userEntity.setAuthorities(user.getAuthorities());
-            userEntity.setDepartment(department);
-
-            token = jwtService.generateToken(userEntity);
-            logger.info("Mevcut kullanıcı için token üretildi: {}", email);
+            account = userService.getUserEntityByEmail(email);
+            account.setDepartment(department);
+            logger.info("Mevcut kullanıcı ile oturum açılıyor: {}", email);
 
         } catch (ResourceNotFoundException e) {
             logger.info("Yeni kullanıcı kaydediliyor: {}", email);
@@ -115,17 +126,32 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
                     .build();
 
             userService.createUserFromOauth2(newUser);
-            token = jwtService.generateToken(newUser);
-        } catch (Exception e) {
-            logger.error("Giriş hatası: {}", e.getMessage());
-            throw new RuntimeException("Giriş işlemi sırasında hata: " + e.getMessage());
+            account = userService.getUserEntityByEmail(email);
         }
 
-        String cookieValue = "jwt=" + token + "; Path=/; HttpOnly; Secure; SameSite=None; MaxAge=604800";
-        response.addHeader("Set-Cookie", cookieValue);
+        var tokens = refreshTokenService.issueTokens(account);
 
-        logger.info("Cookie set edildi, frontend'e yönlendiriliyor.");
-        getRedirectStrategy().sendRedirect(request, response, "http://localhost:3000/auth/callback");
+        response.addHeader("Set-Cookie", buildCookie("jwt", tokens.getToken(), "/", jwtService.getTokenValiditySeconds()));
+        response.addHeader("Set-Cookie", buildCookie("refresh_token", tokens.getRefreshToken(),
+                "/api/auth", refreshValidityDays * 24 * 60 * 60));
+
+        var session = request.getSession(false);
+        if (session != null) {
+            session.invalidate();
+        }
+        SecurityContextHolder.clearContext();
+
+        logger.info("Oturum çerezleri set edildi, frontend'e yönlendiriliyor.");
+        getRedirectStrategy().sendRedirect(request, response, frontendCallbackUrl);
+    }
+
+    private String buildCookie(String name, String value, String path, long maxAgeSeconds) {
+        return name + "=" + value
+                + "; Path=" + path
+                + "; HttpOnly"
+                + (cookieProperties.isSecure() ? "; Secure" : "")
+                + "; SameSite=" + cookieProperties.getSameSite()
+                + "; Max-Age=" + maxAgeSeconds;
     }
 
     private String normalizeDepartment(String rawDepartment){

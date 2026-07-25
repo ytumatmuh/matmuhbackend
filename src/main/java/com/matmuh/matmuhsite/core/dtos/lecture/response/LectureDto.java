@@ -31,7 +31,7 @@ public class LectureDto {
 
     private String resources;
 
-    private String term;
+    private Integer term;
 
     private Semester semester;
 

@@ -1,6 +1,9 @@
 package com.matmuh.matmuhsite.core.security;
 
 import com.matmuh.matmuhsite.business.abstracts.UserService;
+import com.matmuh.matmuhsite.core.helpers.OriginValidator;
+import com.matmuh.matmuhsite.core.properties.CookieProperties;
+import com.matmuh.matmuhsite.entities.User;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -22,11 +25,16 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final UserService userService;
+    private final CookieProperties cookieProperties;
+    private final OriginValidator originValidator;
     private final Logger logger = LoggerFactory.getLogger(JwtAuthFilter.class);
 
-    public JwtAuthFilter(JwtService jwtService, UserService userService) {
+    public JwtAuthFilter(JwtService jwtService, UserService userService,
+                         CookieProperties cookieProperties, OriginValidator originValidator) {
         this.jwtService = jwtService;
         this.userService = userService;
+        this.cookieProperties = cookieProperties;
+        this.originValidator = originValidator;
     }
 
     @Override
@@ -55,7 +63,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             }
         }
 
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+        if (username != null && !isAlreadyAuthenticatedByToken()) {
             UserDetails userDetails = userService.loadUserByUsername(username);
 
             if (jwtService.validateToken(token, userDetails)) {
@@ -72,6 +80,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
+    private boolean isAlreadyAuthenticatedByToken() {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication != null && authentication.getPrincipal() instanceof User;
+    }
+
     private boolean isOAuthPath(String path) {
         return path.startsWith("/api/oauth2/") || path.startsWith("/api/login/");
     }
@@ -81,6 +94,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             logger.debug("Token found in Authorization header");
             return authHeader.substring(7);
+        }
+
+        if (!isSafeMethod(request.getMethod()) && !isCookieWriteAllowed(request)) {
+            return null;
         }
 
         if (request.getCookies() != null) {
@@ -93,5 +110,21 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
 
         return null;
+    }
+
+    private boolean isSafeMethod(String method) {
+        return "GET".equals(method) || "HEAD".equals(method) || "OPTIONS".equals(method);
+    }
+
+    private boolean isCookieWriteAllowed(HttpServletRequest request) {
+        if (!cookieProperties.allowsCookieWrites()) {
+            return false;
+        }
+        if (originValidator.isTrusted(request)) {
+            return true;
+        }
+        logger.warn("Rejecting cookie-authenticated {} from untrusted origin: {}",
+                request.getMethod(), request.getHeader("Origin"));
+        return false;
     }
 }

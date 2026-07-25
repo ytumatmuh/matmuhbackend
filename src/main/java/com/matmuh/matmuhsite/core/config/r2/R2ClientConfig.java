@@ -2,6 +2,7 @@ package com.matmuh.matmuhsite.core.config.r2;
 
 import com.matmuh.matmuhsite.core.properties.R2Properties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
@@ -12,6 +13,7 @@ import software.amazon.awssdk.services.s3.S3Configuration;
 import java.net.URI;
 
 @Configuration
+@ConditionalOnProperty(name = "storage.type", havingValue = "r2")
 public class R2ClientConfig {
 
     private final com.matmuh.matmuhsite.core.properties.R2Properties r2Properties;

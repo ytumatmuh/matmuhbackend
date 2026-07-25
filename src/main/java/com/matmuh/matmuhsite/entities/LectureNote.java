@@ -1,6 +1,8 @@
 package com.matmuh.matmuhsite.entities;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 import lombok.*;
 
 import java.util.UUID;
@@ -9,6 +11,8 @@ import java.util.UUID;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@SQLDelete(sql = "UPDATE lecture_notes SET is_deleted = true WHERE id = ?")
+@SQLRestriction("is_deleted = false")
 @Entity
 @Table(name = "lecture_notes")
 public class LectureNote extends BaseEntity{
@@ -39,6 +43,10 @@ public class LectureNote extends BaseEntity{
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "lecture_id", nullable = false)
     private Lecture lecture;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "lecture_offering_id")
+    private LectureOffering lectureOffering;
 
 
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)

@@ -13,7 +13,6 @@ import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -25,7 +24,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity
 public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
@@ -67,22 +65,44 @@ public class SecurityConfig {
                                 "/api/login/**",
                                 "/api/login/oauth2/code/**"
                         ).permitAll()
-                        .requestMatchers("/api/auth/login").permitAll()
+                        .requestMatchers("/api/auth/login", "/api/auth/refresh", "/api/auth/logout").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/uploads/images/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/uploads/files/**").authenticated()
+                        .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
 
-                        .requestMatchers(HttpMethod.POST, "/api/lectures/").hasAnyRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET,  "/api/lectures/").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/lectures/{lectureId}/notes").hasAnyRole("ADMIN", "USER")
-                        .requestMatchers(HttpMethod.GET,  "/api/lectures/{lectureId}/notes").permitAll()
-                        .requestMatchers(HttpMethod.GET,  "/api/lectures/{lectureId}/statistics").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers(HttpMethod.GET, "/api/cms/data").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/cms/collections/me").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/cms/collections/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/cms/content", "/api/cms/public/*/data").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/api/cms/content", "/api/cms/draft").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/cms/sync", "/api/cms/media").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/cms/collections/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/cms/collections/**").hasRole("ADMIN")
 
-                        .requestMatchers(HttpMethod.PUT, "/api/lecture-notes/{lectureNoteId}/approve").hasAnyRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/lecture-notes/").hasAnyRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/lectures/{id}/notes").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers(HttpMethod.GET,  "/api/lectures/{id}/notes").authenticated()
+                        .requestMatchers(HttpMethod.GET,  "/api/lectures/{id}/offerings").authenticated()
+                        .requestMatchers(HttpMethod.GET,  "/api/lectures/{id}/statistics").authenticated()
+                        .requestMatchers(HttpMethod.GET,  "/api/lectures/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/lectures/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/lectures/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/lectures/**").hasRole("ADMIN")
 
-                        .requestMatchers(HttpMethod.POST, "/api/lecture-offerings").hasAnyRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/lecture-offerings/{lectureOfferingId}/grades").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers("/api/lecture-notes/**").hasRole("ADMIN")
 
-                        .requestMatchers(HttpMethod.POST, "/api/instructors").hasAnyRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET,  "/api/instructors").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/lecture-offerings/**").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/lecture-offerings/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/lecture-offerings/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/lecture-offerings/**").hasRole("ADMIN")
+
+                        .requestMatchers(HttpMethod.GET, "/api/academic-years").permitAll()
+
+                        .requestMatchers(HttpMethod.GET,  "/api/instructors/{id}/notes").authenticated()
+                        .requestMatchers(HttpMethod.GET,  "/api/instructors/{id}/offerings").authenticated()
+                        .requestMatchers(HttpMethod.GET,  "/api/instructors/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/instructors").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/instructors/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/instructors/**").hasRole("ADMIN")
 
                         .anyRequest().authenticated()
                 )

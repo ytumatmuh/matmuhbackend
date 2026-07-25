@@ -1,8 +1,10 @@
 package com.matmuh.matmuhsite.core.dtos.lectureOfferings.response;
 
-import com.matmuh.matmuhsite.core.dtos.gradeDistribution.response.GradeDistributionDto;
+import com.matmuh.matmuhsite.core.dtos.examStatistic.response.ExamStatisticDto;
+import com.matmuh.matmuhsite.core.dtos.gradeDistribution.response.GradeResultDto;
 import com.matmuh.matmuhsite.core.dtos.instructor.response.InstructorDto;
 import com.matmuh.matmuhsite.core.dtos.lecture.response.LectureDto;
+import com.matmuh.matmuhsite.entities.Semester;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,12 +23,16 @@ public class LectureOfferingDto {
 
     private String academicYear;
 
+    private Semester semester;
+
     private int groupNumber;
 
     private LectureDto lecture;
 
     private InstructorDto instructor;
 
-    private List<GradeDistributionDto> gradeDistributions;
+    private List<GradeResultDto> gradeResults;
+
+    private List<ExamStatisticDto> examStatistics;
 
 }

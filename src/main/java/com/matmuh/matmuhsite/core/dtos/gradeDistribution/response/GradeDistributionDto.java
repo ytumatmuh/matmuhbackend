@@ -1,11 +1,11 @@
 package com.matmuh.matmuhsite.core.dtos.gradeDistribution.response;
 
-import com.matmuh.matmuhsite.entities.ExamPeriod;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Getter
@@ -18,11 +18,9 @@ public class GradeDistributionDto {
 
     private String letterGrade;
 
-    private ExamPeriod examPeriod;
+    private BigDecimal minScore;
 
-    private Integer minScore;
-
-    private Integer maxScore;
+    private BigDecimal maxScore;
 
     private Integer studentCount;
 

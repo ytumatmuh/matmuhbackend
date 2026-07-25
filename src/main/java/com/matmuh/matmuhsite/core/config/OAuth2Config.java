@@ -10,6 +10,7 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestCustomizers;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
@@ -55,14 +56,9 @@ public class OAuth2Config {
                         "/api/oauth2/microsoft"
                 );
 
-        resolver.setAuthorizationRequestCustomizer(customizer ->
-                customizer
-                        .redirectUri(redirectUri)
-                        .attributes(attrs -> {
-                            attrs.remove("code_challenge");
-                            attrs.remove("code_challenge_method");
-                        })
-        );
+        resolver.setAuthorizationRequestCustomizer(
+                OAuth2AuthorizationRequestCustomizers.withPkce()
+                        .andThen(customizer -> customizer.redirectUri(redirectUri)));
 
         return resolver;
     }

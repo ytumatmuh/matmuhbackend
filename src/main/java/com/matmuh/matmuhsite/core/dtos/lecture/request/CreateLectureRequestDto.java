@@ -27,7 +27,7 @@ public class CreateLectureRequestDto {
 
     private String language;
 
-    private String term;
+    private Integer term;
 
     private Semester semester;
 

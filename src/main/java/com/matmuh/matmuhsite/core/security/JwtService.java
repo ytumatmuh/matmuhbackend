@@ -24,6 +24,13 @@ public class JwtService {
     @Value("${jwt.secret}")
     private String SECRET;
 
+    @Value("${jwt.access-validity-seconds:3600}")
+    private long tokenValiditySeconds;
+
+    public long getTokenValiditySeconds() {
+        return tokenValiditySeconds;
+    }
+
     public String generateToken(User user){
         Map<String, Object> claims = new HashMap<>();
 
@@ -67,7 +74,7 @@ public class JwtService {
                 .claims(claims)
                 .subject(email)
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis()+ 1000 * 60 * 60 * 12)) //token 12 saat boyunca gecerli
+                .expiration(new Date(System.currentTimeMillis() + tokenValiditySeconds * 1000L))
                 .signWith(getSignKey())
                 .compact();
         return result;

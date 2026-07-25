@@ -4,7 +4,10 @@ import com.matmuh.matmuhsite.business.abstracts.LectureNoteService;
 import com.matmuh.matmuhsite.business.abstracts.LectureOfferingService;
 import com.matmuh.matmuhsite.business.abstracts.LectureService;
 import com.matmuh.matmuhsite.business.constants.LectureMessages;
+import com.matmuh.matmuhsite.core.dtos.common.PageDto;
 import com.matmuh.matmuhsite.core.dtos.lecture.request.CreateLectureRequestDto;
+import com.matmuh.matmuhsite.entities.Semester;
+import org.springframework.data.domain.Pageable;
 import com.matmuh.matmuhsite.core.dtos.lecture.response.LectureDto;
 import com.matmuh.matmuhsite.core.dtos.lectureNote.request.LectureNoteCreateRequestDto;
 import com.matmuh.matmuhsite.core.dtos.lectureNote.response.LectureNoteDto;
@@ -15,7 +18,7 @@ import com.matmuh.matmuhsite.core.mappers.LectureNoteMapper;
 import com.matmuh.matmuhsite.dataAccess.abstracts.LectureDao;
 import com.matmuh.matmuhsite.entities.Lecture;
 import com.matmuh.matmuhsite.core.dtos.lecture.response.LectureStatisticsDto;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -111,14 +114,53 @@ public class LectureManager implements LectureService {
     }
 
     @Override
-    public List<LectureDto> getLectures() {
-        logger.info("Retrieving all lectures");
+    @Transactional
+    public LectureDto updateLecture(UUID lectureId, com.matmuh.matmuhsite.core.dtos.lecture.request.UpdateLectureRequestDto request) {
+        logger.info("Updating lecture with ID: {}", lectureId);
 
-        var lectures = lectureDao.findAll();
+        var lecture = lectureDao.findById(lectureId).orElseThrow(() -> {
+            logger.error("Lecture with ID {} not found.", lectureId);
+            return new ResourceNotFoundException(LectureMessages.LECTURE_NOT_FOUND);
+        });
 
-        logger.info("Retrieved {} lectures", lectures.size());
+        if (request.getCode() != null && !request.getCode().equals(lecture.getCode())
+                && lectureDao.existsByCode(request.getCode())) {
+            logger.error("Lecture update failed: code {} already exists.", request.getCode());
+            throw new ResourceAlreadyExistsException(LectureMessages.LECTURE_CODE_EXISTS);
+        }
 
-        return lectureMapper.toLectureDtos(lectures);
+        lectureMapper.updateLectureFromDto(request, lecture);
+        var saved = lectureDao.save(lecture);
+
+        logger.info("Lecture updated with ID: {}", saved.getId());
+        return lectureMapper.toDto(saved);
+    }
+
+    @Override
+    @Transactional
+    public void deleteLecture(UUID lectureId) {
+        logger.info("Deleting lecture with ID: {}", lectureId);
+
+        var lecture = lectureDao.findById(lectureId).orElseThrow(() -> {
+            logger.error("Lecture with ID {} not found.", lectureId);
+            return new ResourceNotFoundException(LectureMessages.LECTURE_NOT_FOUND);
+        });
+
+        lectureDao.delete(lecture);
+        logger.info("Lecture soft deleted with ID: {}", lectureId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageDto<LectureDto> getLectures(Integer term, Semester semester, String search, Pageable pageable) {
+        logger.info("Retrieving lectures term={} semester={} search={} page={}", term, semester, search, pageable.getPageNumber());
+
+        var page = lectureDao.search(term, semester,
+                search == null || search.isBlank() ? null : search.trim(), pageable);
+
+        logger.info("Retrieved {} lectures", page.getTotalElements());
+
+        return PageDto.of(page, lectureMapper::toDto);
     }
 
     @Override

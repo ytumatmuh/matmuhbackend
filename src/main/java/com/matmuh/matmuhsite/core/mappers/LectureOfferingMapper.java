@@ -1,49 +1,36 @@
 package com.matmuh.matmuhsite.core.mappers;
 
-import com.matmuh.matmuhsite.core.dtos.gradeDistribution.response.GradeDistributionDto;
 import com.matmuh.matmuhsite.core.dtos.lectureOfferings.response.LectureOfferingDto;
+import com.matmuh.matmuhsite.core.dtos.lectureOfferings.response.OfferingStatisticsDto;
 import com.matmuh.matmuhsite.entities.ExamPeriod;
 import com.matmuh.matmuhsite.entities.LectureOffering;
-import com.matmuh.matmuhsite.core.dtos.lectureOfferings.response.OfferingStatisticsDto;
 import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.List;
-
-@Mapper(componentModel = "spring", uses = InstructorMapper.class)
+@Mapper(componentModel = "spring", uses = {InstructorMapper.class, GradeMapper.class})
 public abstract class LectureOfferingMapper {
 
     @Autowired
     private GradeMapper gradeMapper;
 
-
-    @Mapping(target = "finalGrades", ignore = true)
-    @Mapping(target = "butGrades", ignore = true)
+    @Mapping(target = "finalResult", ignore = true)
+    @Mapping(target = "butResult", ignore = true)
     public abstract OfferingStatisticsDto offeringStatisticsDto(LectureOffering lectureOffering);
 
     @AfterMapping
-    protected void splitGradesByType(@MappingTarget OfferingStatisticsDto dto, LectureOffering entity){
-
-
-        if (entity.getGradeDistributions() != null){
-
-            List<GradeDistributionDto> finalGrades = entity.getGradeDistributions().stream()
-                    .filter(gradeDistribution -> ExamPeriod.NORMAL.equals(gradeDistribution.getExamPeriod()))
-                    .map(gradeMapper::toGradeDistributionDto)
-                    .toList();
-
-            List<GradeDistributionDto> butGrades = entity.getGradeDistributions().stream()
-                    .filter(gradeDistribution -> ExamPeriod.BUT.equals(gradeDistribution.getExamPeriod()))
-                    .map(gradeMapper::toGradeDistributionDto)
-                    .toList();
-
-            dto.setFinalGrades(finalGrades);
-            dto.setButGrades(butGrades);
+    protected void splitResultsByPeriod(@MappingTarget OfferingStatisticsDto dto, LectureOffering entity){
+        if (entity.getGradeResults() != null){
+            entity.getGradeResults().forEach(gradeResult -> {
+                if (ExamPeriod.NORMAL.equals(gradeResult.getExamPeriod())) {
+                    dto.setFinalResult(gradeMapper.toGradeResultDto(gradeResult));
+                } else if (ExamPeriod.BUT.equals(gradeResult.getExamPeriod())) {
+                    dto.setButResult(gradeMapper.toGradeResultDto(gradeResult));
+                }
+            });
         }
-
     }
 
     public abstract LectureOfferingDto toLectureOfferingDto(LectureOffering savedOffering);

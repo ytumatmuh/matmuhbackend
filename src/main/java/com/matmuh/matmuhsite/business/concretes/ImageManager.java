@@ -3,10 +3,10 @@ package com.matmuh.matmuhsite.business.concretes;
 import com.matmuh.matmuhsite.business.abstracts.ImageService;
 import com.matmuh.matmuhsite.business.abstracts.SecurityService;
 import com.matmuh.matmuhsite.business.constants.ImageMessages;
-import com.matmuh.matmuhsite.core.config.r2.FolderType;
+import com.matmuh.matmuhsite.core.utilities.storage.FolderType;
 import com.matmuh.matmuhsite.core.dtos.image.response.ImageDto;
 import com.matmuh.matmuhsite.core.exceptions.*;
-import com.matmuh.matmuhsite.core.utilities.storage.R2StorageService;
+import com.matmuh.matmuhsite.core.utilities.storage.StorageService;
 import com.matmuh.matmuhsite.dataAccess.abstracts.ImageDao;
 import com.matmuh.matmuhsite.entities.Image;
 import com.matmuh.matmuhsite.entities.Role;
@@ -29,14 +29,14 @@ public class ImageManager implements ImageService {
 
     private final SecurityService securityService;
 
-    private final R2StorageService r2StorageService;
+    private final StorageService storageService;
 
     private final Logger logger = LoggerFactory.getLogger(ImageManager.class);
 
-    public ImageManager(ImageDao imageDao, SecurityService securityService, R2StorageService r2StorageService) {
+    public ImageManager(ImageDao imageDao, SecurityService securityService, StorageService storageService) {
         this.imageDao = imageDao;
         this.securityService = securityService;
-        this.r2StorageService = r2StorageService;
+        this.storageService = storageService;
     }
 
 
@@ -56,7 +56,7 @@ public class ImageManager implements ImageService {
         try{
             byte[] cleanImageBytes = removeMetadata(image);
 
-            String imageKey = r2StorageService.uploadFile(
+            String imageKey = storageService.uploadFile(
                     cleanImageBytes,
                     image.getOriginalFilename(),
                     image.getContentType(),
@@ -97,14 +97,8 @@ public class ImageManager implements ImageService {
             throw new PermissionDeniedException(ImageMessages.IMAGE_PERMISSION_ERROR);
         }
 
-        try {
-            r2StorageService.deleteFile(image.get().getFileUrl());
-            imageDao.deleteById(id);
-            logger.info("Image with ID {} deleted successfully by userID {}", id, user.getId());
-        } catch (Exception e) {
-            logger.error("Image deletion failed for ID {}: errorMessage {}", id, e.getMessage());
-            throw new ImageDeleteException(ImageMessages.IMAGE_DELETE_ERROR);
-        }
+        imageDao.deleteById(id);
+        logger.info("Image with ID {} soft deleted by userID {}", id, user.getId());
     }
 
 
