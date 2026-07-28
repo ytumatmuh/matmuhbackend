@@ -12,6 +12,7 @@ import com.matmuh.matmuhsite.core.dtos.lecture.response.LectureDto;
 import com.matmuh.matmuhsite.core.dtos.lectureNote.request.LectureNoteCreateRequestDto;
 import com.matmuh.matmuhsite.core.dtos.lectureNote.response.LectureNoteDto;
 import com.matmuh.matmuhsite.core.exceptions.ResourceAlreadyExistsException;
+import com.matmuh.matmuhsite.core.helpers.UniqueSlugResolver;
 import com.matmuh.matmuhsite.core.exceptions.ResourceNotFoundException;
 import com.matmuh.matmuhsite.core.mappers.LectureMapper;
 import com.matmuh.matmuhsite.core.mappers.LectureNoteMapper;
@@ -60,6 +61,13 @@ public class LectureManager implements LectureService {
 
 
         Lecture lecture = lectureMapper.toEntity(createLectureRequestDto);
+        lecture.setSlug(UniqueSlugResolver.resolve(
+                createLectureRequestDto.getSlug(),
+                createLectureRequestDto.getCode(),
+                createLectureRequestDto.getName(),
+                lectureDao::existsBySlug,
+                LectureMessages.SLUG_INVALID,
+                LectureMessages.SLUG_EXISTS));
 
         Lecture savedLecture = lectureDao.save(lecture);
         logger.info("Lecture created successfully with ID: {}", savedLecture.getId());

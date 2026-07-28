@@ -14,4 +14,7 @@ public class InstructorMessages {
     public static final String INSTRUCTORS_FETCHED_SUCCESSFULLY = "instructor.list.fetched";
     public static final String INSTRUCTOR_OFFERINGS_FETCHED_SUCCESSFULLY = "instructor.offerings.fetched";
     public static final String INSTRUCTOR_NOTES_FETCHED_SUCCESSFULLY = "instructor.notes.fetched";
+    public static final String SLUG_NOT_BLANK_IF_PRESENT = "{instructor.slug.not.blank.if.present}";
+    public static final String SLUG_INVALID = "instructor.slug.invalid";
+    public static final String SLUG_EXISTS = "instructor.slug.exists";
 }

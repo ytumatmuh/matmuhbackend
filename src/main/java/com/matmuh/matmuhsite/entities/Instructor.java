@@ -34,6 +34,13 @@ public class Instructor extends BaseEntity{
     @Column(name = "academic_title")
     private String academicTitle;
 
+    @Column(name = "slug")
+    private String slug;
+
+    @Version
+    @Column(name = "version", nullable = false)
+    private int version;
+
     @Column(name = "email")
     private String email;
 

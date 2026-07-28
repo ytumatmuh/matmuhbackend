@@ -34,6 +34,13 @@ public class Lecture extends BaseEntity{
     @Column(name = "code")
     private String code;
 
+    @Column(name = "slug")
+    private String slug;
+
+    @Version
+    @Column(name = "version", nullable = false)
+    private int version;
+
     @Column(name = "about")
     private String about;
 

@@ -14,6 +14,9 @@ import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -84,6 +87,11 @@ public class GlobalExceptionConfig {
         return error(exception.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ErrorResult> handleMissingParameter(MissingServletRequestParameterException exception) {
+        return error("error.request.parameter.missing", HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler({HttpMessageNotReadableException.class, MethodArgumentTypeMismatchException.class})
     public ResponseEntity<ErrorResult> handleMalformedRequest(Exception exception) {
         return error("error.request.malformed", HttpStatus.BAD_REQUEST);
@@ -112,6 +120,17 @@ public class GlobalExceptionConfig {
                 .reduce((a, b) -> a + " " + b)
                 .orElse(messageResolver.resolve("error.validation"));
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResult(message, HttpStatus.BAD_REQUEST));
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResult> handleDataIntegrity(DataIntegrityViolationException exception) {
+        logger.error("Data integrity violation", exception);
+        return error("error.data.conflict", HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    public ResponseEntity<ErrorResult> handleOptimisticLock(ObjectOptimisticLockingFailureException exception) {
+        return error("error.version.conflict", HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(HandlerMethodValidationException.class)

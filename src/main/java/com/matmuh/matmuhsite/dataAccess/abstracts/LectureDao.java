@@ -20,6 +20,10 @@ public interface LectureDao extends JpaRepository<Lecture, UUID> {
 
     boolean existsByCode(String code);
 
+    Optional<Lecture> findBySlug(String slug);
+
+    boolean existsBySlug(String slug);
+
     @EntityGraph(attributePaths = {
             "offerings",
             "offerings.instructor",

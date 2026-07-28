@@ -1,6 +1,7 @@
 package com.matmuh.matmuhsite.core.dtos.lecture.request;
 
 import com.matmuh.matmuhsite.business.constants.LectureMessages;
+import com.matmuh.matmuhsite.core.validation.NullOrNotBlank;
 import com.matmuh.matmuhsite.entities.Semester;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
@@ -18,6 +19,9 @@ public class CreateLectureRequestDto {
     private String name;
 
     private String code;
+
+    @NullOrNotBlank(message = LectureMessages.SLUG_NOT_BLANK_IF_PRESENT)
+    private String slug;
 
     private String about;
 

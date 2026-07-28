@@ -17,13 +17,7 @@ import java.util.UUID;
 @SQLDelete(sql = "UPDATE exam_statistics SET is_deleted = true WHERE id = ?")
 @SQLRestriction("is_deleted = false")
 @Entity
-@Table(
-        name = "exam_statistics",
-        uniqueConstraints = @UniqueConstraint(
-                name = "uk_exam_statistic_offering_type",
-                columnNames = {"lecture_offering_id", "exam_type"}
-        )
-)
+@Table(name = "exam_statistics")
 public class ExamStatistic extends BaseEntity {
 
     @Id

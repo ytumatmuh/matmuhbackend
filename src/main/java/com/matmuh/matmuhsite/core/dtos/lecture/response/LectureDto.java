@@ -23,6 +23,8 @@ public class LectureDto {
 
     private String code;
 
+    private String slug;
+
     private String language;
 
     private String about;

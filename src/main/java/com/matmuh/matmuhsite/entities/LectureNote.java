@@ -50,7 +50,7 @@ public class LectureNote extends BaseEntity{
 
 
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "file_id", referencedColumnName = "id")
+    @JoinColumn(name = "file_id", referencedColumnName = "id", unique = false)
     private File file;
 
 

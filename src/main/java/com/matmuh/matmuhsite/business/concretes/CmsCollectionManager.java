@@ -2,6 +2,7 @@ package com.matmuh.matmuhsite.business.concretes;
 
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.node.JsonNodeFactory;
+import com.matmuh.matmuhsite.business.abstracts.CmsCollectionProvider;
 import com.matmuh.matmuhsite.business.abstracts.CmsCollectionService;
 import com.matmuh.matmuhsite.business.constants.CmsMessages;
 import com.matmuh.matmuhsite.business.constants.CollectionRegistry;
@@ -30,6 +31,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -48,13 +50,17 @@ public class CmsCollectionManager implements CmsCollectionService {
     private final CollectionItemDao collectionItemDao;
     private final CollectionDraftDao collectionDraftDao;
     private final CollectionRegistry registry;
+    private final Map<String, CmsCollectionProvider> providers;
 
     public CmsCollectionManager(CollectionItemDao collectionItemDao,
                                 CollectionDraftDao collectionDraftDao,
-                                CollectionRegistry registry) {
+                                CollectionRegistry registry,
+                                List<CmsCollectionProvider> providers) {
         this.collectionItemDao = collectionItemDao;
         this.collectionDraftDao = collectionDraftDao;
         this.registry = registry;
+        this.providers = providers.stream()
+                .collect(Collectors.toMap(CmsCollectionProvider::collectionKey, provider -> provider));
     }
 
 
@@ -89,10 +95,20 @@ public class CmsCollectionManager implements CmsCollectionService {
         var filterNode = CollectionFilterParser.build(def.schema(), filters);
         var filterJson = filterNode == null ? null : filterNode.toString();
 
-        var items = collectionItemDao.searchByFilter(key, filterJson, offset, limit);
-        var total = collectionItemDao.countByFilter(key, filterJson);
+        var provider = providers.get(key);
 
-        var itemDtos = items.stream().map(this::toDto).collect(Collectors.toList());
+        long total;
+        List<CollectionItemDto> itemDtos;
+
+        if (provider != null) {
+            var result = provider.list(filterNode, offset, limit);
+            total = result.getTotal();
+            itemDtos = new ArrayList<>(result.getItems());
+        } else {
+            var items = collectionItemDao.searchByFilter(key, filterJson, offset, limit);
+            total = collectionItemDao.countByFilter(key, filterJson);
+            itemDtos = items.stream().map(this::toDto).collect(Collectors.toCollection(ArrayList::new));
+        }
 
         if (userId != null) {
             for (var dto : itemDtos) {
@@ -114,14 +130,16 @@ public class CmsCollectionManager implements CmsCollectionService {
         var key = def.key();
         var normalizedSlug = SlugNormalizer.normalizeBlockPath(slug);
 
-        var item = collectionItemDao.findByCollectionKeyAndSlugAndArchivedFalse(key, normalizedSlug)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        CmsMessages.COLLECTION_ITEM_NOT_FOUND + key + "/" + normalizedSlug));
+        var provider = providers.get(key);
+        var dto = provider != null
+                ? provider.getBySlug(normalizedSlug)
+                : toDto(collectionItemDao.findByCollectionKeyAndSlugAndArchivedFalse(key, normalizedSlug)
+                        .orElseThrow(() -> new ResourceNotFoundException(
+                                CmsMessages.COLLECTION_ITEM_NOT_FOUND + key + "/" + normalizedSlug)));
 
-        var dto = toDto(item);
         if (userId != null) {
             dto.setCanEdit(true);
-            dto.setDraftData(resolveItemDraft(key, normalizedSlug, userId, item.getData()));
+            dto.setDraftData(resolveItemDraft(key, normalizedSlug, userId, dto.getData()));
         }
         return dto;
     }
@@ -138,6 +156,17 @@ public class CmsCollectionManager implements CmsCollectionService {
         logger.info("Upserting collection item {}/{} by {}", key, normalizedSlug, updatedBy);
 
         var validated = CollectionSchemaValidator.validateAndStrip(def.schema(), request.getData());
+
+        var provider = providers.get(key);
+        if (provider != null) {
+            if (!provider.existsBySlug(normalizedSlug) && def.slugSource() == SlugSource.AUTO_GENERATED) {
+                throw new CmsValidationException(CmsMessages.AUTO_GENERATED_USE_POST);
+            }
+            var providedDto = provider.upsert(normalizedSlug, validated, request.getVersion());
+            deleteDrafts(key, normalizedSlug, updatedBy, false);
+            providedDto.setCanEdit(true);
+            return providedDto;
+        }
 
         var item = collectionItemDao.findByCollectionKeyAndSlug(key, normalizedSlug).orElse(null);
         var isCreate = item == null;
@@ -196,6 +225,15 @@ public class CmsCollectionManager implements CmsCollectionService {
         if (base.isBlank()) {
             throw new CmsValidationException(CmsMessages.SLUG_SOURCE_FIELD_MISSING);
         }
+        var provider = providers.get(key);
+        if (provider != null) {
+            var providedDto = provider.create(validated);
+            deleteDrafts(key, null, updatedBy, true);
+            providedDto.setCanEdit(true);
+            logger.info("Created collection item {}/{} by {}", key, providedDto.getSlug(), updatedBy);
+            return providedDto;
+        }
+
         var slug = resolveUniqueSlug(key, base);
 
         logger.info("Creating collection item {}/{} by {}", key, slug, updatedBy);
@@ -252,7 +290,11 @@ public class CmsCollectionManager implements CmsCollectionService {
                 throw new CmsValidationException(CmsMessages.SLUG_REQUIRED_FOR_NEW_DRAFT);
             }
             slug = SlugNormalizer.normalizeBlockPath(request.getSlug());
-            if (collectionItemDao.existsByCollectionKeyAndSlug(key, slug)) {
+            var provider = providers.get(key);
+            var taken = provider != null
+                    ? provider.existsBySlug(slug)
+                    : collectionItemDao.existsByCollectionKeyAndSlug(key, slug);
+            if (taken) {
                 throw new CmsValidationException(CmsMessages.SLUG_ALREADY_IN_USE + slug);
             }
         }
@@ -271,6 +313,17 @@ public class CmsCollectionManager implements CmsCollectionService {
     }
 
 
+
+    private void deleteDrafts(String collectionKey, String slug, String userId, boolean isCreate) {
+        if (slug != null) {
+            collectionDraftDao.findByCollectionKeyAndSlugAndUserIdAndForNewItemFalse(collectionKey, slug, userId)
+                    .ifPresent(collectionDraftDao::delete);
+        }
+        if (isCreate) {
+            collectionDraftDao.findByCollectionKeyAndUserIdAndForNewItemTrue(collectionKey, userId)
+                    .ifPresent(collectionDraftDao::delete);
+        }
+    }
 
     private JsonNode resolveItemDraft(String collectionKey, String slug, String userId, JsonNode publishedData) {
         return collectionDraftDao

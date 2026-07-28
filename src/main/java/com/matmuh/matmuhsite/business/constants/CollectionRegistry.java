@@ -21,7 +21,21 @@ public class CollectionRegistry {
             boolean allowAnonymousRead
     ) {}
 
-    private static final List<CollectionDefinition> DEFINITIONS = List.of();
+    private static final List<CollectionDefinition> DEFINITIONS = List.of(
+            new CollectionDefinition(
+                    LectureCollectionSchema.KEY,
+                    LectureCollectionSchema.SCHEMA,
+                    SlugSource.AUTO_GENERATED,
+                    LectureCollectionSchema.SLUG_SOURCE_FIELD,
+                    true),
+            new CollectionDefinition(
+                    InstructorCollectionSchema.KEY,
+                    InstructorCollectionSchema.SCHEMA,
+                    SlugSource.AUTO_GENERATED,
+                    InstructorCollectionSchema.SLUG_SOURCE_FIELD,
+                    true
+            )
+    );
 
     private final Map<String, CollectionDefinition> byKey =
             new TreeMap<>(String.CASE_INSENSITIVE_ORDER);

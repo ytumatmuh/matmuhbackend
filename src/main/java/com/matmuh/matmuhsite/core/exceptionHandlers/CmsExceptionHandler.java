@@ -3,6 +3,7 @@ package com.matmuh.matmuhsite.core.exceptionHandlers;
 import com.matmuh.matmuhsite.core.dtos.cms.response.ProblemDetailsDto;
 import com.matmuh.matmuhsite.core.exceptions.CmsValidationException;
 import com.matmuh.matmuhsite.core.exceptions.ConcurrencyConflictException;
+import com.matmuh.matmuhsite.core.exceptions.ResourceAlreadyExistsException;
 import com.matmuh.matmuhsite.core.exceptions.PermissionDeniedException;
 import com.matmuh.matmuhsite.core.exceptions.ResourceNotFoundException;
 import com.matmuh.matmuhsite.core.helpers.MessageResolver;
@@ -55,6 +56,11 @@ public class CmsExceptionHandler {
     @ExceptionHandler(PermissionDeniedException.class)
     public ResponseEntity<ProblemDetailsDto> handleUnauthorized(PermissionDeniedException exception, HttpServletRequest request) {
         return problem(HttpStatus.UNAUTHORIZED, "Unauthorized", messageResolver.resolve(exception.getMessage()), request);
+    }
+
+    @ExceptionHandler(ResourceAlreadyExistsException.class)
+    public ResponseEntity<ProblemDetailsDto> handleAlreadyExists(ResourceAlreadyExistsException exception, HttpServletRequest request) {
+        return problem(HttpStatus.CONFLICT, "Conflict", messageResolver.resolve(exception.getMessage()), request);
     }
 
     @ExceptionHandler(ConcurrencyConflictException.class)

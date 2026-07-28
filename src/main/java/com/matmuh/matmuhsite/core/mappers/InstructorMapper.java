@@ -13,7 +13,6 @@ public interface InstructorMapper {
 
     InstructorDto toInstructorDto(Instructor instructor);
 
-
     Instructor toInstructor(CreateInstructorRequestDto createInstructorRequestDto);
 
     List<InstructorDto> toInstructorDtoList(List<Instructor> instructors);
