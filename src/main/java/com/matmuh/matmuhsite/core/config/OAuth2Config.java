@@ -2,6 +2,8 @@ package com.matmuh.matmuhsite.core.config;
 
 import com.matmuh.matmuhsite.core.properties.AzureProperties;
 import lombok.RequiredArgsConstructor;
+import com.matmuh.matmuhsite.core.properties.FrontendProperties;
+import com.matmuh.matmuhsite.core.security.oauth2.FrontendCallbackCapturingResolver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.oauth2.client.InMemoryOAuth2AuthorizedClientService;
@@ -46,7 +48,8 @@ public class OAuth2Config {
 
     @Bean
     public OAuth2AuthorizationRequestResolver authorizationRequestResolver(
-            ClientRegistrationRepository clientRegistrationRepository) {
+            ClientRegistrationRepository clientRegistrationRepository,
+            FrontendProperties frontendProperties) {
 
         String redirectUri = azureProperties.getRegistration().get("azure").getRedirectUri();
 
@@ -60,7 +63,7 @@ public class OAuth2Config {
                 OAuth2AuthorizationRequestCustomizers.withPkce()
                         .andThen(customizer -> customizer.redirectUri(redirectUri)));
 
-        return resolver;
+        return new FrontendCallbackCapturingResolver(resolver, frontendProperties);
     }
 
     @Bean

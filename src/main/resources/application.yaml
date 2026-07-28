@@ -97,6 +97,7 @@ app:
     domain: ${STORAGE_DOMAIN:http://localhost:9001/uploads}
   frontend:
     callback-url: ${FRONTEND_CALLBACK_URL:http://localhost:3000/auth/callback}
+    allowed-callbacks: ${FRONTEND_ALLOWED_CALLBACKS:}
   oauth2:
     allowed-tenant-id: ${AZURE_TENANT_ID:}
   cookie:

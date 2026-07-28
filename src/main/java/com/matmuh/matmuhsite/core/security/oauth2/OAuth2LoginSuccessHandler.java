@@ -6,6 +6,7 @@ import com.matmuh.matmuhsite.core.dtos.user.response.UserDto;
 import com.matmuh.matmuhsite.core.exceptions.EmailDoesntFromYildizException;
 import com.matmuh.matmuhsite.core.exceptions.ResourceNotFoundException;
 import com.matmuh.matmuhsite.core.properties.CookieProperties;
+import com.matmuh.matmuhsite.core.properties.FrontendProperties;
 import com.matmuh.matmuhsite.core.security.JwtService;
 import com.matmuh.matmuhsite.entities.AuthProvider;
 import com.matmuh.matmuhsite.entities.Role;
@@ -27,6 +28,8 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -46,8 +49,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
     @org.springframework.beans.factory.annotation.Value("${app.oauth2.allowed-tenant-id}")
     private String allowedTenantId;
 
-    @org.springframework.beans.factory.annotation.Value("${app.frontend.callback-url}")
-    private String frontendCallbackUrl;
+    private final FrontendProperties frontendProperties;
 
     @org.springframework.beans.factory.annotation.Value("${jwt.refresh-validity-days:30}")
     private long refreshValidityDays;
@@ -55,12 +57,14 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
     private Logger logger = LoggerFactory.getLogger(OAuth2LoginSuccessHandler.class);
 
     public OAuth2LoginSuccessHandler(JwtService jwtService, UserService userService, OAuth2AuthorizedClientService authorizedClientService, RefreshTokenService refreshTokenService,
-                                     CookieProperties cookieProperties) {
+                                     CookieProperties cookieProperties,
+                                     FrontendProperties frontendProperties) {
         this.jwtService = jwtService;
         this.userService = userService;
         this.authorizedClientService = authorizedClientService;
         this.refreshTokenService = refreshTokenService;
         this.cookieProperties = cookieProperties;
+        this.frontendProperties = frontendProperties;
     }
 
     @Override
@@ -136,13 +140,26 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
                 "/api/auth", refreshValidityDays * 24 * 60 * 60));
 
         var session = request.getSession(false);
+        String target = frontendProperties.getCallbackUrl();
         if (session != null) {
+            var stored = session.getAttribute(FrontendCallbackCapturingResolver.SESSION_KEY);
+            if (stored instanceof String requested && frontendProperties.isAllowedCallback(requested)) {
+                target = requested;
+            }
             session.invalidate();
         }
         SecurityContextHolder.clearContext();
 
+
+        if (!target.equals(frontendProperties.getCallbackUrl())) {
+            target = target
+                    + "#accessToken=" + URLEncoder.encode(tokens.getToken(), StandardCharsets.UTF_8)
+                    + "&refreshToken=" + URLEncoder.encode(tokens.getRefreshToken(), StandardCharsets.UTF_8);
+            logger.info("Frontend callback devrediliyor (token fragment ile).");
+        }
+
         logger.info("Oturum çerezleri set edildi, frontend'e yönlendiriliyor.");
-        getRedirectStrategy().sendRedirect(request, response, frontendCallbackUrl);
+        getRedirectStrategy().sendRedirect(request, response, target);
     }
 
     private String buildCookie(String name, String value, String path, long maxAgeSeconds) {
