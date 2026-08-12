@@ -12,6 +12,7 @@ import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionSchema;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public interface CmsCollectionService {
 
@@ -22,23 +23,23 @@ public interface CmsCollectionService {
     List<MyCollectionDto> getMyCollections();
 
     CollectionListDto list(String collectionKey, String userId, Map<String, String> filters,
-                           String sort, boolean archived, int offset, int limit);
+                           String sort, boolean archived, String locale, int offset, int limit);
 
-    CollectionItemDto getBySlug(String collectionKey, String slug, String userId);
+    CollectionItemDto getBySlug(String collectionKey, String slug, String userId, String locale);
 
-    CollectionItemDto upsert(String collectionKey, String slug, UpsertCollectionItemRequestDto request, String updatedBy);
+    CollectionItemDto upsert(String collectionKey, String slug, UpsertCollectionItemRequestDto request, String updatedBy, String locale, UUID translationGroup);
 
-    CollectionItemDto createWithAutoSlug(String collectionKey, CreateCollectionItemRequestDto request, String updatedBy);
+    CollectionItemDto createWithAutoSlug(String collectionKey, CreateCollectionItemRequestDto request, String updatedBy, String locale, UUID translationGroup);
 
-    void saveItemDraft(String collectionKey, String slug, String userId, SaveDraftRequestDto request);
+    void saveItemDraft(String collectionKey, String slug, String userId, SaveDraftRequestDto request, String locale);
 
-    void saveNewDraft(String collectionKey, String userId, SaveNewDraftRequestDto request);
+    void saveNewDraft(String collectionKey, String userId, SaveNewDraftRequestDto request, String locale);
 
     ArchiveResultDto archive(String collectionKey, String slug, Integer version, String updatedBy);
 
     CollectionItemDto restore(String collectionKey, String slug, String updatedBy);
 
-    void deleteItemDraft(String collectionKey, String slug, String userId);
+    void deleteItemDraft(String collectionKey, String slug, String userId, String locale);
 
-    void deleteNewDraft(String collectionKey, String userId);
+    void deleteNewDraft(String collectionKey, String userId, String locale);
 }

@@ -39,6 +39,13 @@ public class CollectionItem {
     @Column(name = "slug", nullable = false)
     private String slug;
 
+
+    @Column(name = "locale", length = 16)
+    private String locale;
+
+    @Column(name = "translation_group_id")
+    private UUID translationGroupId;
+
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "data", columnDefinition = "jsonb", nullable = false)
     private JsonNode data;

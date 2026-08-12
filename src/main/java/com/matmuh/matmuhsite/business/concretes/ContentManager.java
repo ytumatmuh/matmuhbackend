@@ -9,6 +9,7 @@ import com.matmuh.matmuhsite.core.dtos.cms.response.ContentResponseDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.SyncResultDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.UpdatePageResponseDto;
 import com.matmuh.matmuhsite.core.exceptions.ConcurrencyConflictException;
+import com.matmuh.matmuhsite.core.helpers.CmsLocaleResolver;
 import com.matmuh.matmuhsite.core.helpers.SlugNormalizer;
 import com.matmuh.matmuhsite.dataAccess.abstracts.cms.ContentBlockDao;
 import com.matmuh.matmuhsite.dataAccess.abstracts.cms.ContentDraftDao;
@@ -34,37 +35,42 @@ public class ContentManager implements ContentService {
     private final ContentBlockDao contentBlockDao;
     private final ContentDraftDao contentDraftDao;
     private final ObjectMapper objectMapper;
+    private final CmsLocaleResolver localeResolver;
 
     public ContentManager(ContentBlockDao contentBlockDao,
                           ContentDraftDao contentDraftDao,
-                          ObjectMapper objectMapper) {
+                          ObjectMapper objectMapper,
+                          CmsLocaleResolver localeResolver) {
         this.contentBlockDao = contentBlockDao;
         this.contentDraftDao = contentDraftDao;
         this.objectMapper = objectMapper;
+        this.localeResolver = localeResolver;
     }
 
 
     @Override
     @Transactional(readOnly = true)
-    public ContentResponseDto getPublishedBySlug(String slug) {
+    public ContentResponseDto getPublishedBySlug(String slug, String locale) {
         var normalizedSlug = SlugNormalizer.normalizeSlug(slug);
-        logger.info("Fetching published content for slug: {}", normalizedSlug);
+        var resolved = localeResolver.resolveForRead(locale);
+        logger.info("Fetching published content for slug: {} locale: {}", normalizedSlug, resolved);
 
-        var blocks = contentBlockDao.findBySlugAndArchivedFalseOrderBySortOrderAsc(normalizedSlug);
+        var blocks = contentBlockDao.findPublished(normalizedSlug, resolved);
 
-        return new ContentResponseDto(normalizedSlug, toBlockDtos(blocks));
+        return new ContentResponseDto(normalizedSlug, resolved, toBlockDtos(blocks));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public ContentResponseDto getBySlugForEditor(String userId, String slug) {
+    public ContentResponseDto getBySlugForEditor(String userId, String slug, String locale) {
         var normalizedSlug = SlugNormalizer.normalizeSlug(slug);
-        logger.info("Fetching editor content for slug: {} user: {}", normalizedSlug, userId);
+        var resolved = localeResolver.resolveForRead(locale);
+        logger.info("Fetching editor content for slug: {} locale: {} user: {}", normalizedSlug, resolved, userId);
 
-        var blocks = contentBlockDao.findBySlugAndArchivedFalseOrderBySortOrderAsc(normalizedSlug);
+        var blocks = contentBlockDao.findPublished(normalizedSlug, resolved);
         var blockDtos = toBlockDtos(blocks);
 
-        contentDraftDao.findBySlugAndUserId(normalizedSlug, userId).ifPresent(draft -> {
+        contentDraftDao.findOwn(normalizedSlug, userId, resolved).ifPresent(draft -> {
             var draftValues = parseDraftPayload(draft.getPayload());
             for (BlockDto dto : blockDtos) {
                 var draftValue = draftValues.get(dto.getBlockPath());
@@ -75,14 +81,15 @@ public class ContentManager implements ContentService {
             logger.info("Resolved draft with {} block(s) for slug: {}", draftValues.size(), normalizedSlug);
         });
 
-        return new ContentResponseDto(normalizedSlug, blockDtos);
+        return new ContentResponseDto(normalizedSlug, resolved, blockDtos);
     }
 
 
     @Override
     @Transactional
-    public UpdatePageResponseDto updatePage(String userId, UpdatePageRequestDto request) {
+    public UpdatePageResponseDto updatePage(String userId, UpdatePageRequestDto request, String locale) {
         var normalizedSlug = SlugNormalizer.normalizeSlug(request.getSlug());
+        var resolved = localeResolver.requireForWrite(locale);
         logger.info("Publishing {} block(s) for slug: {} by user: {}",
                 request.getBlocks().size(), normalizedSlug, userId);
 
@@ -91,7 +98,7 @@ public class ContentManager implements ContentService {
                 .toList();
 
         var blocksByPath = contentBlockDao
-                .findBySlugAndBlockPathIn(normalizedSlug, paths)
+                .findForUpdate(normalizedSlug, paths, resolved)
                 .stream()
                 .collect(Collectors.toMap(ContentBlock::getBlockPath, Function.identity()));
 
@@ -123,23 +130,25 @@ public class ContentManager implements ContentService {
         }
 
         contentBlockDao.saveAll(toSave);
-        contentDraftDao.deleteBySlugAndUserId(normalizedSlug, userId);
+        contentDraftDao.deleteOwn(normalizedSlug, userId, resolved);
 
         return new UpdatePageResponseDto(updated, unchanged);
     }
 
     @Override
     @Transactional
-    public void saveDraft(String userId, UpdatePageRequestDto request) {
+    public void saveDraft(String userId, UpdatePageRequestDto request, String locale) {
         var normalizedSlug = SlugNormalizer.normalizeSlug(request.getSlug());
-        logger.info("Saving draft for slug: {} user: {}", normalizedSlug, userId);
+        var resolved = localeResolver.requireForWrite(locale);
+        logger.info("Saving draft for slug: {} locale: {} user: {}", normalizedSlug, resolved, userId);
 
         JsonNode payload = objectMapper.valueToTree(request.getBlocks());
 
-        var draft = contentDraftDao.findBySlugAndUserId(normalizedSlug, userId)
+        var draft = contentDraftDao.findOwn(normalizedSlug, userId, resolved)
                 .orElseGet(() -> ContentDraft.builder()
                         .slug(normalizedSlug)
                         .userId(userId)
+                        .locale(resolved)
                         .build());
 
         draft.setPayload(payload);
@@ -148,24 +157,30 @@ public class ContentManager implements ContentService {
 
     @Override
     @Transactional
-    public void deleteDraft(String userId, String slug) {
+    public void deleteDraft(String userId, String slug, String locale) {
         var normalizedSlug = SlugNormalizer.normalizeSlug(slug);
-        logger.info("Deleting draft for slug: {} user: {}", normalizedSlug, userId);
+        var resolved = localeResolver.requireForWrite(locale);
+        logger.info("Deleting draft for slug: {} locale: {} user: {}", normalizedSlug, resolved, userId);
 
-        contentDraftDao.deleteBySlugAndUserId(normalizedSlug, userId);
+        contentDraftDao.deleteOwn(normalizedSlug, userId, resolved);
     }
 
 
     @Override
     @Transactional
-    public SyncResultDto sync(List<SyncManifestRequestDto> manifests) {
-        logger.info("Sync started with {} manifest(s)", manifests.size());
+    public SyncResultDto sync(List<SyncManifestRequestDto> manifests, List<String> locales) {
+        var declared = localeResolver.replaceDeclared(locales);
+        logger.info("Sync started with {} manifest(s), locales={}", manifests.size(), declared);
 
-        var allBlocks = contentBlockDao.findAll();
+
+        var lanes = declared.isEmpty() ? Collections.<String>singletonList(null) : declared;
+
+        var allBlocks = new ArrayList<>(contentBlockDao.findAll());
+        adoptLegacyRows(allBlocks, declared);
 
         var blocksByKey = allBlocks.stream()
                 .collect(Collectors.toMap(
-                        b -> key(b.getSlug(), b.getBlockPath()),
+                        b -> key(b.getSlug(), b.getBlockPath(), b.getLocale()),
                         Function.identity()));
 
         var seenKeys = new HashSet<String>();
@@ -189,49 +204,54 @@ public class ContentManager implements ContentService {
                 var sortOrder = mb.getSortOrder() == null ? index : mb.getSortOrder();
                 index++;
 
-                var k = key(manifestSlug, blockPath);
-                seenKeys.add(k);
 
-                var existing = blocksByKey.get(k);
+                for (var lane : lanes) {
+                    var k = key(manifestSlug, blockPath, lane);
+                    seenKeys.add(k);
 
-                if (existing == null) {
-                    var block = ContentBlock.builder()
-                            .slug(manifestSlug)
-                            .blockPath(blockPath)
-                            .blockType(mb.getBlockType())
-                            .value(mb.getDefaultValue() == null ? objectMapper.nullNode() : mb.getDefaultValue())
-                            .itemSchema(mb.getItemSchema())
-                            .sortOrder(sortOrder)
-                            .updatedBy(CmsMessages.SYNCED_BY_DEPLOY_PIPELINE)
-                            .build();
-                    toSave.add(block);
-                    created++;
-                    continue;
-                }
+                    var existing = blocksByKey.get(k);
 
-                boolean changed = false;
+                    if (existing == null) {
 
-                if (existing.isArchived()) {
-                    existing.setArchived(false);
-                    existing.setArchivedAt(null);
-                    changed = true;
-                    restored++;
-                }
+                        var block = ContentBlock.builder()
+                                .slug(manifestSlug)
+                                .blockPath(blockPath)
+                                .locale(lane)
+                                .blockType(mb.getBlockType())
+                                .value(mb.getDefaultValue() == null ? objectMapper.nullNode() : mb.getDefaultValue())
+                                .itemSchema(mb.getItemSchema())
+                                .sortOrder(sortOrder)
+                                .updatedBy(CmsMessages.SYNCED_BY_DEPLOY_PIPELINE)
+                                .build();
+                        toSave.add(block);
+                        created++;
+                        continue;
+                    }
 
-                if (existing.getBlockType() != mb.getBlockType()
-                        || existing.getSortOrder() != sortOrder
-                        || !Objects.equals(existing.getItemSchema(), mb.getItemSchema())) {
-                    existing.setBlockType(mb.getBlockType());
-                    existing.setSortOrder(sortOrder);
-                    existing.setItemSchema(mb.getItemSchema());
-                    changed = true;
-                }
+                    boolean changed = false;
 
-                if (changed) {
-                    touch(existing, CmsMessages.SYNCED_BY_DEPLOY_PIPELINE);
-                    toSave.add(existing);
-                } else {
-                    unchanged++;
+                    if (existing.isArchived()) {
+                        existing.setArchived(false);
+                        existing.setArchivedAt(null);
+                        changed = true;
+                        restored++;
+                    }
+
+                    if (existing.getBlockType() != mb.getBlockType()
+                            || existing.getSortOrder() != sortOrder
+                            || !Objects.equals(existing.getItemSchema(), mb.getItemSchema())) {
+                        existing.setBlockType(mb.getBlockType());
+                        existing.setSortOrder(sortOrder);
+                        existing.setItemSchema(mb.getItemSchema());
+                        changed = true;
+                    }
+
+                    if (changed) {
+                        touch(existing, CmsMessages.SYNCED_BY_DEPLOY_PIPELINE);
+                        toSave.add(existing);
+                    } else {
+                        unchanged++;
+                    }
                 }
             }
 
@@ -242,7 +262,7 @@ public class ContentManager implements ContentService {
         var prunedSlugs = new TreeSet<String>();
 
         for (var block : allBlocks) {
-            if (seenKeys.contains(key(block.getSlug(), block.getBlockPath()))) continue;
+            if (seenKeys.contains(key(block.getSlug(), block.getBlockPath(), block.getLocale()))) continue;
             if (block.isArchived()) continue;
 
             block.setArchived(true);
@@ -270,6 +290,33 @@ public class ContentManager implements ContentService {
         logger.info("Sync finished: {} slug result(s), {} pruned slug(s)", results.size(), prunedSlugs.size());
 
         return new SyncResultDto(results, new ArrayList<>(prunedSlugs));
+    }
+
+
+    private void adoptLegacyRows(List<ContentBlock> blocks, List<String> declared) {
+        if (declared.isEmpty()) {
+            return;
+        }
+
+        var first = declared.get(0);
+        var taken = blocks.stream()
+                .filter(block -> first.equals(block.getLocale()))
+                .map(block -> key(block.getSlug(), block.getBlockPath(), first))
+                .collect(Collectors.toSet());
+
+        var adopted = new ArrayList<ContentBlock>();
+        for (var block : blocks) {
+            if (block.getLocale() != null) continue;
+            if (taken.contains(key(block.getSlug(), block.getBlockPath(), first))) continue;
+
+            block.setLocale(first);
+            adopted.add(block);
+        }
+
+        if (!adopted.isEmpty()) {
+            contentBlockDao.saveAll(adopted);
+            logger.info("Adopted {} pre-localization block(s) into locale {}", adopted.size(), first);
+        }
     }
 
 
@@ -302,7 +349,7 @@ public class ContentManager implements ContentService {
         return map;
     }
 
-    private String key(String slug, String blockPath) {
-        return slug + " " + blockPath;
+    private String key(String slug, String blockPath, String locale) {
+        return slug + "\u0000" + blockPath + "\u0000" + (locale == null ? "" : locale);
     }
 }

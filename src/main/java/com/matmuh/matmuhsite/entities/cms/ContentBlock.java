@@ -22,7 +22,7 @@ import java.util.UUID;
         name = "content_blocks",
         uniqueConstraints = @UniqueConstraint(
                 name = "uk_content_block_address",
-                columnNames = {"slug", "block_path"}
+                columnNames = {"slug", "block_path", "locale"}
         )
 )
 public class ContentBlock {
@@ -37,6 +37,10 @@ public class ContentBlock {
 
     @Column(name = "block_path", nullable = false)
     private String blockPath;
+
+
+    @Column(name = "locale", length = 16)
+    private String locale;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "block_type", length = 20, nullable = false)

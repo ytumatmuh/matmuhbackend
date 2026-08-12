@@ -8,6 +8,7 @@ import com.matmuh.matmuhsite.business.constants.CmsMessages;
 import com.matmuh.matmuhsite.business.constants.CollectionRegistry;
 import com.matmuh.matmuhsite.core.helpers.CollectionFilterParser;
 import com.matmuh.matmuhsite.core.helpers.CollectionSchemaValidator;
+import com.matmuh.matmuhsite.core.helpers.CmsLocaleResolver;
 import com.matmuh.matmuhsite.core.helpers.CollectionSortParser;
 import com.matmuh.matmuhsite.core.helpers.SlugGenerator;
 import com.matmuh.matmuhsite.core.helpers.SlugNormalizer;
@@ -19,6 +20,7 @@ import com.matmuh.matmuhsite.core.dtos.cms.response.ArchiveResultDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionItemDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionListDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.MyCollectionDto;
+import com.matmuh.matmuhsite.core.dtos.cms.response.TranslationRefDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.VirtualItemDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionSchema;
 import com.matmuh.matmuhsite.entities.cms.SlugSource;
@@ -40,6 +42,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -52,15 +55,18 @@ public class CmsCollectionManager implements CmsCollectionService {
     private final CollectionItemDao collectionItemDao;
     private final CollectionDraftDao collectionDraftDao;
     private final CollectionRegistry registry;
+    private final CmsLocaleResolver localeResolver;
     private final Map<String, CmsCollectionProvider> providers;
 
     public CmsCollectionManager(CollectionItemDao collectionItemDao,
                                 CollectionDraftDao collectionDraftDao,
                                 CollectionRegistry registry,
+                                CmsLocaleResolver localeResolver,
                                 List<CmsCollectionProvider> providers) {
         this.collectionItemDao = collectionItemDao;
         this.collectionDraftDao = collectionDraftDao;
         this.registry = registry;
+        this.localeResolver = localeResolver;
         this.providers = providers.stream()
                 .collect(Collectors.toMap(CmsCollectionProvider::collectionKey, provider -> provider));
     }
@@ -87,7 +93,7 @@ public class CmsCollectionManager implements CmsCollectionService {
     @Override
     @Transactional(readOnly = true)
     public CollectionListDto list(String collectionKey, String userId, Map<String, String> filters,
-                                  String sort, boolean archived, int offset, int limit) {
+                                  String sort, boolean archived, String locale, int offset, int limit) {
         var def = registry.resolve(collectionKey);
         var key = def.key();
 
@@ -100,6 +106,7 @@ public class CmsCollectionManager implements CmsCollectionService {
         var filterNode = CollectionFilterParser.build(def.schema(), filters);
         var filterJson = filterNode == null ? null : filterNode.toString();
         var parsedSort = CollectionSortParser.parse(def.schema(), sort);
+        var resolvedLocale = localeResolver.resolveForRead(locale);
 
         var provider = providers.get(key);
 
@@ -111,12 +118,12 @@ public class CmsCollectionManager implements CmsCollectionService {
             if (showArchived) {
                 return new CollectionListDto(List.of(), 0, offset, limit);
             }
-            var result = provider.list(filterNode, offset, limit);
+            var result = provider.list(filterNode, resolvedLocale, offset, limit);
             total = result.getTotal();
             itemDtos = new ArrayList<>(result.getItems());
         } else {
-            var items = collectionItemDao.searchByFilter(key, filterJson, parsedSort, showArchived, offset, limit);
-            total = collectionItemDao.countByFilter(key, filterJson, showArchived);
+            var items = collectionItemDao.searchByFilter(key, filterJson, parsedSort, showArchived, resolvedLocale, offset, limit);
+            total = collectionItemDao.countByFilter(key, filterJson, showArchived, resolvedLocale);
             itemDtos = items.stream().map(this::toDto).collect(Collectors.toCollection(ArrayList::new));
         }
 
@@ -125,10 +132,10 @@ public class CmsCollectionManager implements CmsCollectionService {
         if (userId != null) {
             for (var dto : itemDtos) {
                 dto.setCanEdit(true);
-                dto.setDraftData(resolveItemDraft(key, dto.getSlug(), userId, dto.getData()));
+                dto.setDraftData(resolveItemDraft(key, dto.getSlug(), userId, resolvedLocale, dto.getData()));
             }
             if (!showArchived && filterJson == null && offset == 0) {
-                result.setVirtualItems(pendingVirtualItems(key, userId));
+                result.setVirtualItems(pendingVirtualItems(key, userId, resolvedLocale));
             }
         }
 
@@ -193,35 +200,62 @@ public class CmsCollectionManager implements CmsCollectionService {
 
     @Override
     @Transactional(readOnly = true)
-    public CollectionItemDto getBySlug(String collectionKey, String slug, String userId) {
+    public CollectionItemDto getBySlug(String collectionKey, String slug, String userId, String locale) {
         var def = registry.resolve(collectionKey);
         var key = def.key();
         var normalizedSlug = SlugNormalizer.normalizeBlockPath(slug);
 
+        var resolvedLocale = localeResolver.resolveForRead(locale);
         var provider = providers.get(key);
-        var dto = provider != null
-                ? provider.getBySlug(normalizedSlug)
-                : toDto(collectionItemDao.findByCollectionKeyAndSlugAndArchivedFalse(key, normalizedSlug)
-                        .orElseThrow(() -> new ResourceNotFoundException(
-                                CmsMessages.COLLECTION_ITEM_NOT_FOUND + key + "/" + normalizedSlug)));
+
+        CollectionItemDto dto;
+        if (provider != null) {
+            dto = provider.getBySlug(normalizedSlug, resolvedLocale);
+        } else {
+            var item = collectionItemDao.findByCollectionKeyAndSlugAndArchivedFalse(key, normalizedSlug)
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            CmsMessages.COLLECTION_ITEM_NOT_FOUND + key + "/" + normalizedSlug));
+            dto = toDto(item);
+            dto.setTranslations(siblingsOf(item));
+        }
 
         if (userId != null) {
             dto.setCanEdit(true);
-            dto.setDraftData(resolveItemDraft(key, normalizedSlug, userId, dto.getData()));
+            dto.setDraftData(resolveItemDraft(key, normalizedSlug, userId, resolvedLocale, dto.getData()));
         }
         return dto;
+    }
+
+    /**
+     * Grubun diğer dillerdeki üyeleri. Slug'lar diller arasında farklı olduğu için
+     * (SEO'nun gerektirdiği bu) bağ slug'la değil translationGroupId ile kuruluyor.
+     */
+    private List<TranslationRefDto> siblingsOf(CollectionItem item) {
+        if (item.getTranslationGroupId() == null) {
+            return null;
+        }
+        var siblings = collectionItemDao
+                .findByCollectionKeyAndTranslationGroupId(item.getCollectionKey(), item.getTranslationGroupId())
+                .stream()
+                .filter(candidate -> !candidate.getId().equals(item.getId()))
+                .filter(candidate -> !candidate.isArchived())
+                .map(candidate -> new TranslationRefDto(candidate.getLocale(), candidate.getSlug()))
+                .toList();
+        return siblings.isEmpty() ? null : siblings;
     }
 
 
     @Override
     @Transactional
     public CollectionItemDto upsert(String collectionKey, String slug,
-                                    UpsertCollectionItemRequestDto request, String updatedBy) {
+                                    UpsertCollectionItemRequestDto request, String updatedBy,
+                                    String locale, UUID translationGroup) {
         var def = registry.resolve(collectionKey);
         var key = def.key();
         var normalizedSlug = SlugNormalizer.normalizeBlockPath(slug);
 
-        logger.info("Upserting collection item {}/{} by {}", key, normalizedSlug, updatedBy);
+        var resolvedLocale = localeResolver.requireForWrite(locale);
+        logger.info("Upserting collection item {}/{} locale={} by {}", key, normalizedSlug, resolvedLocale, updatedBy);
 
         var validated = CollectionSchemaValidator.validateAndStrip(def.schema(), request.getData());
 
@@ -230,8 +264,8 @@ public class CmsCollectionManager implements CmsCollectionService {
             if (!provider.existsBySlug(normalizedSlug) && def.slugSource() == SlugSource.AUTO_GENERATED) {
                 throw new CmsValidationException(CmsMessages.AUTO_GENERATED_USE_POST);
             }
-            var providedDto = provider.upsert(normalizedSlug, validated, request.getVersion());
-            deleteDrafts(key, normalizedSlug, updatedBy, false);
+            var providedDto = provider.upsert(normalizedSlug, validated, request.getVersion(), resolvedLocale);
+            deleteDrafts(key, normalizedSlug, updatedBy, resolvedLocale, false);
             providedDto.setCanEdit(true);
             return providedDto;
         }
@@ -246,6 +280,8 @@ public class CmsCollectionManager implements CmsCollectionService {
             item = CollectionItem.builder()
                     .collectionKey(key)
                     .slug(normalizedSlug)
+                    .locale(resolvedLocale)
+                    .translationGroupId(translationGroup != null ? translationGroup : UUID.randomUUID())
                     .data(validated)
                     .updatedBy(updatedBy)
                     .build();
@@ -264,10 +300,10 @@ public class CmsCollectionManager implements CmsCollectionService {
 
         var saved = collectionItemDao.save(item);
 
-        collectionDraftDao.findByCollectionKeyAndSlugAndUserIdAndForNewItemFalse(key, normalizedSlug, updatedBy)
+        collectionDraftDao.findOwnItemDraft(key, normalizedSlug, updatedBy, resolvedLocale)
                 .ifPresent(collectionDraftDao::delete);
         if (isCreate) {
-            collectionDraftDao.findByCollectionKeyAndUserIdAndForNewItemTrue(key, updatedBy)
+            collectionDraftDao.findOwnNewDraft(key, updatedBy, resolvedLocale)
                     .ifPresent(collectionDraftDao::delete);
         }
 
@@ -279,7 +315,8 @@ public class CmsCollectionManager implements CmsCollectionService {
     @Override
     @Transactional
     public CollectionItemDto createWithAutoSlug(String collectionKey,
-                                                CreateCollectionItemRequestDto request, String updatedBy) {
+                                                CreateCollectionItemRequestDto request, String updatedBy,
+                                                String locale, UUID translationGroup) {
         var def = registry.resolve(collectionKey);
         var key = def.key();
 
@@ -287,6 +324,7 @@ public class CmsCollectionManager implements CmsCollectionService {
             throw new CmsValidationException(CmsMessages.USER_DEFINED_USE_PUT);
         }
 
+        var resolvedLocale = localeResolver.requireForWrite(locale);
         var validated = CollectionSchemaValidator.validateAndStrip(def.schema(), request.getData());
 
         var source = validated.path(def.slugSourceField()).asText("");
@@ -296,8 +334,8 @@ public class CmsCollectionManager implements CmsCollectionService {
         }
         var provider = providers.get(key);
         if (provider != null) {
-            var providedDto = provider.create(validated);
-            deleteDrafts(key, null, updatedBy, true);
+            var providedDto = provider.create(validated, resolvedLocale);
+            deleteDrafts(key, null, updatedBy, resolvedLocale, true);
             providedDto.setCanEdit(true);
             logger.info("Created collection item {}/{} by {}", key, providedDto.getSlug(), updatedBy);
             return providedDto;
@@ -310,13 +348,15 @@ public class CmsCollectionManager implements CmsCollectionService {
         var item = CollectionItem.builder()
                 .collectionKey(key)
                 .slug(slug)
+                .locale(resolvedLocale)
+                .translationGroupId(translationGroup != null ? translationGroup : UUID.randomUUID())
                 .data(validated)
                 .updatedBy(updatedBy)
                 .build();
 
         var saved = collectionItemDao.save(item);
 
-        collectionDraftDao.findByCollectionKeyAndUserIdAndForNewItemTrue(key, updatedBy)
+        collectionDraftDao.findOwnNewDraft(key, updatedBy, resolvedLocale)
                 .ifPresent(collectionDraftDao::delete);
 
         var dto = toDto(saved);
@@ -326,19 +366,21 @@ public class CmsCollectionManager implements CmsCollectionService {
 
     @Override
     @Transactional
-    public void saveItemDraft(String collectionKey, String slug, String userId, SaveDraftRequestDto request) {
+    public void saveItemDraft(String collectionKey, String slug, String userId, SaveDraftRequestDto request, String locale) {
         var def = registry.resolve(collectionKey);
         var key = def.key();
         var normalizedSlug = SlugNormalizer.normalizeBlockPath(slug);
 
+        var resolvedLocale = localeResolver.requireForWrite(locale);
         var validated = CollectionSchemaValidator.validateAndStrip(def.schema(), request.getData(), true);
 
         var draft = collectionDraftDao
-                .findByCollectionKeyAndSlugAndUserIdAndForNewItemFalse(key, normalizedSlug, userId)
+                .findOwnItemDraft(key, normalizedSlug, userId, resolvedLocale)
                 .orElseGet(() -> CollectionDraft.builder()
                         .collectionKey(key)
                         .slug(normalizedSlug)
                         .userId(userId)
+                        .locale(resolvedLocale)
                         .build());
 
         draft.setPayload(validated);
@@ -347,10 +389,11 @@ public class CmsCollectionManager implements CmsCollectionService {
 
     @Override
     @Transactional
-    public void saveNewDraft(String collectionKey, String userId, SaveNewDraftRequestDto request) {
+    public void saveNewDraft(String collectionKey, String userId, SaveNewDraftRequestDto request, String locale) {
         var def = registry.resolve(collectionKey);
         var key = def.key();
 
+        var resolvedLocale = localeResolver.requireForWrite(locale);
         var validated = CollectionSchemaValidator.validateAndStrip(def.schema(), request.getData(), true);
 
         var slug = CollectionDraft.DEFAULT_SLUG;
@@ -369,10 +412,11 @@ public class CmsCollectionManager implements CmsCollectionService {
         }
 
         var draft = collectionDraftDao
-                .findByCollectionKeyAndUserIdAndForNewItemTrue(key, userId)
+                .findOwnNewDraft(key, userId, resolvedLocale)
                 .orElseGet(() -> CollectionDraft.builder()
                         .collectionKey(key)
                         .userId(userId)
+                        .locale(resolvedLocale)
                         .forNewItem(true)
                         .build());
 
@@ -383,41 +427,41 @@ public class CmsCollectionManager implements CmsCollectionService {
 
     @Override
     @Transactional
-    public void deleteItemDraft(String collectionKey, String slug, String userId) {
+    public void deleteItemDraft(String collectionKey, String slug, String userId, String locale) {
         var key = registry.resolve(collectionKey).key();
         var normalizedSlug = SlugNormalizer.normalizeBlockPath(slug);
 
         collectionDraftDao
-                .findByCollectionKeyAndSlugAndUserIdAndForNewItemFalse(key, normalizedSlug, userId)
+                .findOwnItemDraft(key, normalizedSlug, userId, localeResolver.requireForWrite(locale))
                 .ifPresent(collectionDraftDao::delete);
     }
 
     @Override
     @Transactional
-    public void deleteNewDraft(String collectionKey, String userId) {
+    public void deleteNewDraft(String collectionKey, String userId, String locale) {
         var key = registry.resolve(collectionKey).key();
 
         collectionDraftDao
-                .findByCollectionKeyAndUserIdAndForNewItemTrue(key, userId)
+                .findOwnNewDraft(key, userId, localeResolver.requireForWrite(locale))
                 .ifPresent(collectionDraftDao::delete);
     }
 
 
 
-    private void deleteDrafts(String collectionKey, String slug, String userId, boolean isCreate) {
+    private void deleteDrafts(String collectionKey, String slug, String userId, String locale, boolean isCreate) {
         if (slug != null) {
-            collectionDraftDao.findByCollectionKeyAndSlugAndUserIdAndForNewItemFalse(collectionKey, slug, userId)
+            collectionDraftDao.findOwnItemDraft(collectionKey, slug, userId, locale)
                     .ifPresent(collectionDraftDao::delete);
         }
         if (isCreate) {
-            collectionDraftDao.findByCollectionKeyAndUserIdAndForNewItemTrue(collectionKey, userId)
+            collectionDraftDao.findOwnNewDraft(collectionKey, userId, locale)
                     .ifPresent(collectionDraftDao::delete);
         }
     }
 
-    private JsonNode resolveItemDraft(String collectionKey, String slug, String userId, JsonNode publishedData) {
+    private JsonNode resolveItemDraft(String collectionKey, String slug, String userId, String locale, JsonNode publishedData) {
         return collectionDraftDao
-                .findByCollectionKeyAndSlugAndUserIdAndForNewItemFalse(collectionKey, slug, userId)
+                .findOwnItemDraft(collectionKey, slug, userId, locale)
                 .map(CollectionDraft::getPayload)
                 .filter(payload -> !payload.equals(publishedData))
                 .orElse(null);
@@ -425,8 +469,8 @@ public class CmsCollectionManager implements CmsCollectionService {
 
     // Henüz kaydedilmemiş yeni item taslağı gerçek bir satır değil, o yüzden `items` yerine
     // `virtualItems` altında duruyor. `data` boş: yazılmış tek şey taslağın kendisi.
-    private List<VirtualItemDto> pendingVirtualItems(String collectionKey, String userId) {
-        return collectionDraftDao.findByCollectionKeyAndUserIdAndForNewItemTrue(collectionKey, userId)
+    private List<VirtualItemDto> pendingVirtualItems(String collectionKey, String userId, String locale) {
+        return collectionDraftDao.findOwnNewDraft(collectionKey, userId, locale)
                 .filter(draft -> !isEffectivelyEmpty(draft.getPayload()))
                 .map(draft -> List.of(VirtualItemDto.pending(
                         collectionKey, draft.getSlug(), NODES.objectNode(), draft.getPayload())))
@@ -478,6 +522,8 @@ public class CmsCollectionManager implements CmsCollectionService {
                 null);
         dto.setCreatedAt(item.getCreatedAt());
         dto.setUpdatedAt(item.getUpdatedAt());
+        dto.setLocale(item.getLocale());
+        dto.setTranslationGroupId(item.getTranslationGroupId());
         if (item.isArchived()) {
             dto.setIsArchived(true);
             dto.setArchivedAt(item.getArchivedAt());

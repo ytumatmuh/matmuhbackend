@@ -44,7 +44,7 @@ public class InstructorCollectionProvider implements CmsCollectionProvider {
 
     @Override
     @Transactional(readOnly = true)
-    public CollectionListDto list(ObjectNode filters, int offset, int limit) {
+    public CollectionListDto list(ObjectNode filters, String locale, int offset, int limit) {
         var page = instructorDao.filter(
                 filterText(filters, InstructorCollectionSchema.FIELD_FIRST_NAME),
                 filterText(filters, InstructorCollectionSchema.FIELD_LAST_NAME),
@@ -62,7 +62,7 @@ public class InstructorCollectionProvider implements CmsCollectionProvider {
 
     @Override
     @Transactional(readOnly = true)
-    public CollectionItemDto getBySlug(String slug) {
+    public CollectionItemDto getBySlug(String slug, String locale) {
         return toItem(requireBySlug(slug));
     }
 
@@ -70,7 +70,7 @@ public class InstructorCollectionProvider implements CmsCollectionProvider {
 
     @Override
     @Transactional
-    public CollectionItemDto create(ObjectNode data) {
+    public CollectionItemDto create(ObjectNode data, String locale) {
         var request = convert(data, CreateInstructorRequestDto.class);
         validate(request);
         return toItem(instructorService.createInstructor(request));
@@ -81,7 +81,7 @@ public class InstructorCollectionProvider implements CmsCollectionProvider {
 
     @Override
     @Transactional
-    public CollectionItemDto upsert(String slug, ObjectNode data, Integer version) {
+    public CollectionItemDto upsert(String slug, ObjectNode data, Integer version, String locale) {
         var instructor = requireBySlug(slug);
 
         if (version != null && version != instructor.getVersion()){

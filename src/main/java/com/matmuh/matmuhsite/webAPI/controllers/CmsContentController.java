@@ -47,9 +47,11 @@ public class CmsContentController {
 
     @Operation(summary = "Public içerik", description = "Yayınlanmış blokları döner (anonim).")
     @GetMapping("/data")
-    public ContentResponseDto getData(@RequestParam String slug, HttpServletResponse response) {
+    public ContentResponseDto getData(@RequestParam String slug,
+                                     @RequestParam(required = false) String locale,
+                                     HttpServletResponse response) {
         CmsCacheHeaders.anonymous(response);
-        return contentService.getPublishedBySlug(slug);
+        return contentService.getPublishedBySlug(slug, locale);
     }
 
     @Operation(summary = "Public içerik (clientKey yolu)",
@@ -57,52 +59,59 @@ public class CmsContentController {
     @GetMapping("/public/{clientKey}/data")
     public ContentResponseDto getPublicData(@PathVariable String clientKey,
                                             @RequestParam String slug,
+                                            @RequestParam(required = false) String locale,
                                             HttpServletResponse response) {
         CmsCacheHeaders.anonymous(response);
-        return contentService.getPublishedBySlug(slug);
+        return contentService.getPublishedBySlug(slug, locale);
     }
 
     @Operation(summary = "İçerik",
             description = "Editör (ADMIN) için published + draftValue; anonim çağrıda sadece published döner.")
     @GetMapping("/content")
     public ContentResponseDto getContent(@RequestParam String slug,
+                                         @RequestParam(required = false) String locale,
                                          Authentication authentication,
                                          HttpServletResponse response) {
         if (isEditor(authentication)) {
             CmsCacheHeaders.editor(response);
-            return contentService.getBySlugForEditor(authentication.getName(), slug);
+            return contentService.getBySlugForEditor(authentication.getName(), slug, locale);
         }
         CmsCacheHeaders.anonymous(response);
-        return contentService.getPublishedBySlug(slug);
+        return contentService.getPublishedBySlug(slug, locale);
     }
 
     @Operation(summary = "Publish", description = "Blok değerlerini yayınlar, draft silinir; version uyuşmazsa 409 (ADMIN).")
     @PutMapping("/content")
     public UpdatePageResponseDto updatePage(@RequestBody @Valid UpdatePageRequestDto request,
+                                            @RequestParam(required = false) String locale,
                                             Authentication authentication) {
-        return contentService.updatePage(authentication.getName(), request);
+        return contentService.updatePage(authentication.getName(), request, locale);
     }
 
     @Operation(summary = "Draft kaydet", description = "Kullanıcı bazlı draft autosave (ADMIN).")
     @PutMapping("/draft")
     public ResponseEntity<Void> saveDraft(@RequestBody @Valid UpdatePageRequestDto request,
+                                          @RequestParam(required = false) String locale,
                                           Authentication authentication) {
-        contentService.saveDraft(authentication.getName(), request);
+        contentService.saveDraft(authentication.getName(), request, locale);
         return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "Draft sil",
             description = "Kullanıcının bu slug için tuttuğu draft'ı siler. Idempotent: draft yoksa da 204 döner.")
     @DeleteMapping("/draft")
-    public ResponseEntity<Void> deleteDraft(@RequestParam String slug, Authentication authentication) {
-        contentService.deleteDraft(authentication.getName(), slug);
+    public ResponseEntity<Void> deleteDraft(@RequestParam String slug,
+                                            @RequestParam(required = false) String locale,
+                                            Authentication authentication) {
+        contentService.deleteDraft(authentication.getName(), slug, locale);
         return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "Manifest sync", description = "cms-sync CLI manifestini reconcile eder (ADMIN).")
     @PostMapping("/sync")
-    public SyncResultDto sync(@RequestBody List<@Valid SyncManifestRequestDto> manifests) {
-        return contentService.sync(manifests);
+    public SyncResultDto sync(@RequestBody List<@Valid SyncManifestRequestDto> manifests,
+                              @RequestParam(required = false) List<String> locales) {
+        return contentService.sync(manifests, locales);
     }
 
     @Operation(summary = "Görsel yükle", description = "CMS görseli yükler, {data:{url}} döner (ADMIN).")
@@ -131,6 +140,7 @@ public class CmsContentController {
     private boolean isEditor(Authentication authentication) {
         return authentication != null && authentication.isAuthenticated()
                 && authentication.getAuthorities().stream()
-                .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
+                .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority())
+                        || "ROLE_EDITOR".equals(authority.getAuthority()));
     }
 }

@@ -8,7 +8,7 @@ import java.util.List;
 public interface CollectionItemDaoCustom {
 
     List<CollectionItem> searchByFilter(String collectionKey, String filterJson, CollectionSort sort,
-                                        boolean archived, int offset, int limit);
+                                        boolean archived, String locale, int offset, int limit);
 
-    long countByFilter(String collectionKey, String filterJson, boolean archived);
+    long countByFilter(String collectionKey, String filterJson, boolean archived, String locale);
 }

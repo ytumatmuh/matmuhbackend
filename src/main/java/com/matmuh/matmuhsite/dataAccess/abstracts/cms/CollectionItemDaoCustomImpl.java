@@ -15,7 +15,7 @@ public class CollectionItemDaoCustomImpl implements CollectionItemDaoCustom {
     @Override
     @SuppressWarnings("unchecked")
     public List<CollectionItem> searchByFilter(String collectionKey, String filterJson, CollectionSort sort,
-                                               boolean archived, int offset, int limit) {
+                                               boolean archived, String locale, int offset, int limit) {
         var sql = new StringBuilder("""
                 SELECT * FROM collection_items
                 WHERE collection_key = :collectionKey
@@ -24,6 +24,7 @@ public class CollectionItemDaoCustomImpl implements CollectionItemDaoCustom {
         if (filterJson != null) {
             sql.append(" AND data @> CAST(:filterJson AS jsonb)");
         }
+        sql.append(localeClause(locale));
         sql.append(orderBy(sort == null ? CollectionSort.DEFAULT : sort));
         sql.append(" OFFSET :offset LIMIT :limit");
 
@@ -38,11 +39,14 @@ public class CollectionItemDaoCustomImpl implements CollectionItemDaoCustom {
         if (sort != null && sort.isDataField()) {
             query.setParameter("sortField", sort.dataField());
         }
+        if (locale != null) {
+            query.setParameter("locale", locale);
+        }
         return query.getResultList();
     }
 
     @Override
-    public long countByFilter(String collectionKey, String filterJson, boolean archived) {
+    public long countByFilter(String collectionKey, String filterJson, boolean archived, String locale) {
         var sql = new StringBuilder("""
                 SELECT COUNT(*) FROM collection_items
                 WHERE collection_key = :collectionKey
@@ -51,6 +55,7 @@ public class CollectionItemDaoCustomImpl implements CollectionItemDaoCustom {
         if (filterJson != null) {
             sql.append(" AND data @> CAST(:filterJson AS jsonb)");
         }
+        sql.append(localeClause(locale));
 
         var query = entityManager.createNativeQuery(sql.toString())
                 .setParameter("collectionKey", collectionKey)
@@ -58,9 +63,17 @@ public class CollectionItemDaoCustomImpl implements CollectionItemDaoCustom {
         if (filterJson != null) {
             query.setParameter("filterJson", filterJson);
         }
+        if (locale != null) {
+            query.setParameter("locale", locale);
+        }
         return ((Number) query.getSingleResult()).longValue();
     }
 
+
+
+    private String localeClause(String locale) {
+        return locale == null ? "" : " AND locale = :locale";
+    }
 
     private String orderBy(CollectionSort sort) {
         var direction = sort.descending() ? "DESC" : "ASC";

@@ -10,15 +10,15 @@ import java.util.List;
 
 public interface ContentService {
 
-    ContentResponseDto getPublishedBySlug(String slug);
+    ContentResponseDto getPublishedBySlug(String slug, String locale);
 
-    ContentResponseDto getBySlugForEditor(String userId, String slug);
+    ContentResponseDto getBySlugForEditor(String userId, String slug, String locale);
 
-    UpdatePageResponseDto updatePage(String userId, UpdatePageRequestDto request);
+    UpdatePageResponseDto updatePage(String userId, UpdatePageRequestDto request, String locale);
 
-    void saveDraft(String userId, UpdatePageRequestDto request);
+    void saveDraft(String userId, UpdatePageRequestDto request, String locale);
 
-    void deleteDraft(String userId, String slug);
+    void deleteDraft(String userId, String slug, String locale);
 
-    SyncResultDto sync(List<SyncManifestRequestDto> manifests);
+    SyncResultDto sync(List<SyncManifestRequestDto> manifests, List<String> locales);
 }

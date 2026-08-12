@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -30,6 +31,12 @@ public class CollectionItemDto {
 
     private Boolean isArchived;
     private Instant archivedAt;
+
+    private String locale;
+    private UUID translationGroupId;
+
+
+    private List<TranslationRefDto> translations;
 
     public CollectionItemDto(UUID id, String collectionKey, String slug, JsonNode data, int version,
                              boolean canEdit, JsonNode draftData) {

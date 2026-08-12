@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.Map;
 
 @Tag(name = "CMS Collections", description = "inscribed CMS collection endpointleri")
@@ -33,7 +34,7 @@ public class CmsCollectionController {
     private static final int DEFAULT_LIMIT = 50;
     private static final int MAX_LIMIT = 100;
 
-    private static final Set<String> RESERVED_QUERY_KEYS = Set.of("offset", "limit", "sort", "archived");
+    private static final Set<String> RESERVED_QUERY_KEYS = Set.of("offset", "limit", "sort", "archived", "locale", "translationGroup");
 
     private final CmsCollectionService collectionService;
 
@@ -73,40 +74,46 @@ public class CmsCollectionController {
         limit = Math.max(1, Math.min(limit, MAX_LIMIT));
 
         var sort = queryParams.get("sort");
+        var locale = queryParams.get("locale");
         var archived = Boolean.parseBoolean(queryParams.get("archived"));
 
         var filters = new HashMap<>(queryParams);
         filters.keySet().removeAll(RESERVED_QUERY_KEYS);
 
-        return collectionService.list(key, editorUserId(authentication), filters, sort, archived, offset, limit);
+        return collectionService.list(key, editorUserId(authentication), filters, sort, archived, locale, offset, limit);
     }
 
     @Operation(summary = "Item getir", description = "Slug ile tek item döner.")
     @GetMapping("/{key}/{slug}")
     public CollectionItemDto getBySlug(@PathVariable String key,
                                        @PathVariable String slug,
+                                       @RequestParam(required = false) String locale,
                                        Authentication authentication,
                                        HttpServletResponse response) {
         requireReadAccess(key, authentication, response);
-        return collectionService.getBySlug(key, slug, editorUserId(authentication));
+        return collectionService.getBySlug(key, slug, editorUserId(authentication), locale);
     }
 
     @Operation(summary = "Item oluştur", description = "Auto-slug ile yeni item (ADMIN).")
     @PostMapping("/{key}")
     @ResponseStatus(HttpStatus.CREATED)
     public CollectionItemDto create(@PathVariable String key,
+                                    @RequestParam(required = false) String locale,
+                                    @RequestParam(required = false) UUID translationGroup,
                                     @RequestBody @Valid CreateCollectionItemRequestDto request,
                                     Authentication authentication) {
-        return collectionService.createWithAutoSlug(key, request, authentication.getName());
+        return collectionService.createWithAutoSlug(key, request, authentication.getName(), locale, translationGroup);
     }
 
     @Operation(summary = "Item upsert", description = "Slug ile item oluşturur/günceller; version ile optimistic concurrency (ADMIN).")
     @PutMapping("/{key}/{slug}")
     public CollectionItemDto upsert(@PathVariable String key,
                                     @PathVariable String slug,
+                                    @RequestParam(required = false) String locale,
+                                    @RequestParam(required = false) UUID translationGroup,
                                     @RequestBody @Valid UpsertCollectionItemRequestDto request,
                                     Authentication authentication) {
-        return collectionService.upsert(key, slug, request, authentication.getName());
+        return collectionService.upsert(key, slug, request, authentication.getName(), locale, translationGroup);
     }
 
     @Operation(summary = "Item draft", description = "Item draftını kaydeder (ADMIN).")
@@ -114,9 +121,10 @@ public class CmsCollectionController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void saveItemDraft(@PathVariable String key,
                               @PathVariable String slug,
+                              @RequestParam(required = false) String locale,
                               @RequestBody @Valid SaveDraftRequestDto request,
                               Authentication authentication) {
-        collectionService.saveItemDraft(key, slug, authentication.getName(), request);
+        collectionService.saveItemDraft(key, slug, authentication.getName(), request, locale);
     }
 
     @Operation(summary = "Item arşivle",
@@ -144,25 +152,29 @@ public class CmsCollectionController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteItemDraft(@PathVariable String key,
                                 @PathVariable String slug,
+                                @RequestParam(required = false) String locale,
                                 Authentication authentication) {
-        collectionService.deleteItemDraft(key, slug, authentication.getName());
+        collectionService.deleteItemDraft(key, slug, authentication.getName(), locale);
     }
 
     @Operation(summary = "Yeni item draftı", description = "Henüz yaratılmamış item için draft (ADMIN).")
     @PostMapping("/{key}/drafts")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void saveNewDraft(@PathVariable String key,
+                             @RequestParam(required = false) String locale,
                              @RequestBody @Valid SaveNewDraftRequestDto request,
                              Authentication authentication) {
-        collectionService.saveNewDraft(key, authentication.getName(), request);
+        collectionService.saveNewDraft(key, authentication.getName(), request, locale);
     }
 
     @Operation(summary = "Yeni item draftını sil",
             description = "Henüz yaratılmamış item için tutulan draft'ı siler. Idempotent: draft yoksa da 204 döner.")
     @DeleteMapping("/{key}/drafts")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteNewDraft(@PathVariable String key, Authentication authentication) {
-        collectionService.deleteNewDraft(key, authentication.getName());
+    public void deleteNewDraft(@PathVariable String key,
+                               @RequestParam(required = false) String locale,
+                               Authentication authentication) {
+        collectionService.deleteNewDraft(key, authentication.getName(), locale);
     }
 
 

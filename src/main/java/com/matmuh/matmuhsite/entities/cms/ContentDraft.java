@@ -21,7 +21,7 @@ import java.util.UUID;
         name = "content_drafts",
         uniqueConstraints = @UniqueConstraint(
                 name = "uk_content_draft_owner",
-                columnNames = {"slug", "user_id"}
+                columnNames = {"slug", "user_id", "locale"}
         )
 )
 public class ContentDraft {
@@ -37,6 +37,9 @@ public class ContentDraft {
 
     @Column(name = "user_id", length = 100, nullable = false)
     private String userId;
+
+    @Column(name = "locale", length = 16)
+    private String locale;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "payload", columnDefinition = "jsonb", nullable = false)

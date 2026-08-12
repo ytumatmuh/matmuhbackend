@@ -21,7 +21,7 @@ import java.util.UUID;
         name = "collection_drafts",
         uniqueConstraints = @UniqueConstraint(
                 name = "uk_collection_draft_owner",
-                columnNames = {"collection_key", "slug", "user_id", "is_new"}
+                columnNames = {"collection_key", "slug", "user_id", "is_new", "locale"}
         )
 )
 public class CollectionDraft {
@@ -43,6 +43,10 @@ public class CollectionDraft {
 
     @Column(name = "user_id", length = 100, nullable = false)
     private String userId;
+
+
+    @Column(name = "locale", length = 16)
+    private String locale;
 
     @Column(name = "is_new", nullable = false)
     @Builder.Default

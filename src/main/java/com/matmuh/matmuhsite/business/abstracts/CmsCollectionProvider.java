@@ -8,13 +8,13 @@ public interface CmsCollectionProvider {
 
     String collectionKey();
 
-    CollectionListDto list(ObjectNode filters, int offset, int limit);
+    CollectionListDto list(ObjectNode filters, String locale, int offset, int limit);
 
-    CollectionItemDto getBySlug(String slug);
+    CollectionItemDto getBySlug(String slug, String locale);
 
-    CollectionItemDto create(ObjectNode data);
+    CollectionItemDto create(ObjectNode data, String locale);
 
-    CollectionItemDto upsert(String slug, ObjectNode data, Integer version);
+    CollectionItemDto upsert(String slug, ObjectNode data, Integer version, String locale);
 
     boolean existsBySlug(String slug);
 }
