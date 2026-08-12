@@ -3,6 +3,7 @@ package com.matmuh.matmuhsite.core.dtos.lectureOfferings.request;
 import com.matmuh.matmuhsite.business.constants.LectureOfferingMessages;
 import com.matmuh.matmuhsite.core.validation.NullOrNotBlank;
 import com.matmuh.matmuhsite.core.validation.AcademicYear;
+import com.matmuh.matmuhsite.entities.InstructionLanguage;
 import com.matmuh.matmuhsite.entities.Semester;
 import jakarta.validation.constraints.Min;
 import lombok.AllArgsConstructor;
@@ -28,4 +29,6 @@ public class UpdateLectureOfferingRequestDto {
 
     @Min(value = 1, message = LectureOfferingMessages.GROUP_NUMBER_MIN)
     private Integer groupNumber;
+
+    private InstructionLanguage language;
 }

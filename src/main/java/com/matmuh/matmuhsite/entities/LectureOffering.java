@@ -33,6 +33,11 @@ public class LectureOffering extends BaseEntity{
     @Column(name = "group_number")
     private int groupNumber;
 
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "language", length = 20)
+    private InstructionLanguage language;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "lecture_id")
     private Lecture lecture;

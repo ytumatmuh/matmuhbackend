@@ -4,6 +4,7 @@ import com.matmuh.matmuhsite.core.dtos.examStatistic.request.SaveExamStatisticRe
 import com.matmuh.matmuhsite.core.dtos.gradeDistribution.request.SaveGradeResultRequestDto;
 import com.matmuh.matmuhsite.entities.ExamPeriod;
 import com.matmuh.matmuhsite.entities.ExamType;
+import com.matmuh.matmuhsite.entities.InstructionLanguage;
 import com.matmuh.matmuhsite.entities.Semester;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -47,6 +48,8 @@ public class ImportOfferingsRequestDto {
 
         @NotNull(message = "{import.instructor.not.null}")
         private UUID instructorId;
+
+        private InstructionLanguage language;
 
         @Valid
         private List<GradeResultEntry> gradeResults;

@@ -4,6 +4,7 @@ import com.matmuh.matmuhsite.core.dtos.examStatistic.response.ExamStatisticDto;
 import com.matmuh.matmuhsite.core.dtos.gradeDistribution.response.GradeResultDto;
 import com.matmuh.matmuhsite.core.dtos.instructor.response.InstructorDto;
 import com.matmuh.matmuhsite.core.dtos.lecture.response.LectureDto;
+import com.matmuh.matmuhsite.entities.InstructionLanguage;
 import com.matmuh.matmuhsite.entities.Semester;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -26,6 +27,8 @@ public class LectureOfferingDto {
     private Semester semester;
 
     private int groupNumber;
+
+    private InstructionLanguage language;
 
     private LectureDto lecture;
 

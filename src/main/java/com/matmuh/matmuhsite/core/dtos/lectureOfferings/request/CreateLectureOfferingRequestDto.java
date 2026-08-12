@@ -1,6 +1,7 @@
 package com.matmuh.matmuhsite.core.dtos.lectureOfferings.request;
 
 import com.matmuh.matmuhsite.core.validation.AcademicYear;
+import com.matmuh.matmuhsite.entities.InstructionLanguage;
 import com.matmuh.matmuhsite.entities.Semester;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -28,5 +29,7 @@ public class CreateLectureOfferingRequestDto {
     private Semester semester;
 
     private Integer groupNumber;
+
+    private InstructionLanguage language;
 
 }

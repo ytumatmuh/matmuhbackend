@@ -59,6 +59,7 @@ public class LectureOfferingManager implements LectureOfferingService {
         lectureOffering.setAcademicYear(request.getAcademicYear());
         lectureOffering.setSemester(request.getSemester());
         lectureOffering.setGroupNumber(request.getGroupNumber() == null ? 1 : request.getGroupNumber());
+        lectureOffering.setLanguage(request.getLanguage());
 
         LectureOffering savedOffering = lectureOfferingDao.save(lectureOffering);
         logger.info("Lecture offering created with ID: {}", savedOffering.getId());
@@ -85,6 +86,9 @@ public class LectureOfferingManager implements LectureOfferingService {
         }
         if (request.getGroupNumber() != null) {
             offering.setGroupNumber(request.getGroupNumber());
+        if (request.getLanguage() != null) {
+            offering.setLanguage(request.getLanguage());
+        }
         }
 
         return lectureOfferingMapper.toLectureOfferingDto(lectureOfferingDao.save(offering));

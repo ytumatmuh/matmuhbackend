@@ -62,6 +62,9 @@ public class LectureOfferingImportRowWriter {
         });
 
         offering.setInstructor(instructor);
+        if (row.getLanguage() != null) {
+            offering.setLanguage(row.getLanguage());
+        }
 
         applyGradeResults(offering, row.getGradeResults());
         applyExamStatistics(offering, row.getExamStatistics());
