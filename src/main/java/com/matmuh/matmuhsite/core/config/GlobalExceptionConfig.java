@@ -44,6 +44,11 @@ public class GlobalExceptionConfig {
         return error(exception.getMessage(), HttpStatus.CONFLICT);
     }
 
+    @ExceptionHandler(ArchivedException.class)
+    public ResponseEntity<ErrorResult> handleArchived(ArchivedException exception) {
+        return error(exception.getMessage(), HttpStatus.CONFLICT);
+    }
+
     @ExceptionHandler(BusinessRuleException.class)
     public ResponseEntity<ErrorResult> handleBusinessRule(BusinessRuleException exception) {
         return error(exception.getMessage(), HttpStatus.BAD_REQUEST);

@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -19,6 +20,20 @@ public interface LectureOfferingDao extends JpaRepository<LectureOffering, UUID>
     Optional<LectureOffering> findWithDetailsById(UUID id);
 
     List<LectureOffering> findByLectureId(UUID lectureId);
+
+
+    @EntityGraph(attributePaths = {"gradeResults", "gradeResults.gradeDistributions", "examStatistics"})
+    Optional<LectureOffering> findByLectureIdAndAcademicYearAndSemesterAndGroupNumber(
+            UUID lectureId, String academicYear, Semester semester, int groupNumber);
+
+
+    @Query("""
+            SELECT o.lecture.id, o.academicYear, o.semester
+            FROM LectureOffering o
+            WHERE o.lecture.id IN :lectureIds
+              AND (SIZE(o.gradeResults) > 0 OR SIZE(o.examStatistics) > 0)
+            """)
+    List<Object[]> findTermsWithStatistics(@Param("lectureIds") Collection<UUID> lectureIds);
 
     @EntityGraph(attributePaths = {"lecture", "instructor", "gradeResults", "gradeResults.gradeDistributions", "examStatistics"})
     @Query("""

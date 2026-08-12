@@ -4,6 +4,7 @@ import com.matmuh.matmuhsite.core.dtos.cms.request.CreateCollectionItemRequestDt
 import com.matmuh.matmuhsite.core.dtos.cms.request.SaveDraftRequestDto;
 import com.matmuh.matmuhsite.core.dtos.cms.request.SaveNewDraftRequestDto;
 import com.matmuh.matmuhsite.core.dtos.cms.request.UpsertCollectionItemRequestDto;
+import com.matmuh.matmuhsite.core.dtos.cms.response.ArchiveResultDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionItemDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionListDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.MyCollectionDto;
@@ -20,7 +21,8 @@ public interface CmsCollectionService {
 
     List<MyCollectionDto> getMyCollections();
 
-    CollectionListDto list(String collectionKey, String userId, Map<String, String> filters, int offset, int limit);
+    CollectionListDto list(String collectionKey, String userId, Map<String, String> filters,
+                           String sort, boolean archived, int offset, int limit);
 
     CollectionItemDto getBySlug(String collectionKey, String slug, String userId);
 
@@ -31,6 +33,10 @@ public interface CmsCollectionService {
     void saveItemDraft(String collectionKey, String slug, String userId, SaveDraftRequestDto request);
 
     void saveNewDraft(String collectionKey, String userId, SaveNewDraftRequestDto request);
+
+    ArchiveResultDto archive(String collectionKey, String slug, Integer version, String updatedBy);
+
+    CollectionItemDto restore(String collectionKey, String slug, String updatedBy);
 
     void deleteItemDraft(String collectionKey, String slug, String userId);
 

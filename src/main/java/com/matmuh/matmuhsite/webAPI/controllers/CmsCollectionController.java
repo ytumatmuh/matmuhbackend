@@ -8,6 +8,7 @@ import com.matmuh.matmuhsite.core.dtos.cms.request.CreateCollectionItemRequestDt
 import com.matmuh.matmuhsite.core.dtos.cms.request.SaveDraftRequestDto;
 import com.matmuh.matmuhsite.core.dtos.cms.request.SaveNewDraftRequestDto;
 import com.matmuh.matmuhsite.core.dtos.cms.request.UpsertCollectionItemRequestDto;
+import com.matmuh.matmuhsite.core.dtos.cms.response.ArchiveResultDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionItemDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionListDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.MyCollectionDto;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.Map;
 
 @Tag(name = "CMS Collections", description = "inscribed CMS collection endpointleri")
@@ -30,6 +32,8 @@ public class CmsCollectionController {
 
     private static final int DEFAULT_LIMIT = 50;
     private static final int MAX_LIMIT = 100;
+
+    private static final Set<String> RESERVED_QUERY_KEYS = Set.of("offset", "limit", "sort", "archived");
 
     private final CmsCollectionService collectionService;
 
@@ -52,7 +56,10 @@ public class CmsCollectionController {
         return collectionService.getSchema(key);
     }
 
-    @Operation(summary = "Listele", description = "Sayfalı + filtreli collection item listesi.")
+    @Operation(summary = "Listele",
+            description = "Sayfalı, sıralı ve filtreli collection item listesi. "
+                    + "sort=alan:asc|desc (slug, createdAt, updatedAt veya şemada sortable alanlar). "
+                    + "archived=true arşivi listeler, sadece editör için.")
     @GetMapping("/{key}")
     public CollectionListDto list(@PathVariable String key,
                                   @RequestParam Map<String, String> queryParams,
@@ -65,11 +72,13 @@ public class CmsCollectionController {
         offset = Math.max(0, offset);
         limit = Math.max(1, Math.min(limit, MAX_LIMIT));
 
-        var filters = new HashMap<>(queryParams);
-        filters.remove("offset");
-        filters.remove("limit");
+        var sort = queryParams.get("sort");
+        var archived = Boolean.parseBoolean(queryParams.get("archived"));
 
-        return collectionService.list(key, editorUserId(authentication), filters, offset, limit);
+        var filters = new HashMap<>(queryParams);
+        filters.keySet().removeAll(RESERVED_QUERY_KEYS);
+
+        return collectionService.list(key, editorUserId(authentication), filters, sort, archived, offset, limit);
     }
 
     @Operation(summary = "Item getir", description = "Slug ile tek item döner.")
@@ -108,6 +117,25 @@ public class CmsCollectionController {
                               @RequestBody @Valid SaveDraftRequestDto request,
                               Authentication authentication) {
         collectionService.saveItemDraft(key, slug, authentication.getName(), request);
+    }
+
+    @Operation(summary = "Item arşivle",
+            description = "Item'ı arşivler; kalıcı silme yok, slug rezerve kalır. "
+                    + "Sürüm tüketilmez: aynı numara arşivler, geri yükler ve sonrasında yayınlar.")
+    @DeleteMapping("/{key}/{slug}")
+    public ArchiveResultDto archive(@PathVariable String key,
+                                    @PathVariable String slug,
+                                    @RequestParam(required = false) Integer version,
+                                    Authentication authentication) {
+        return collectionService.archive(key, slug, version, authentication.getName());
+    }
+
+    @Operation(summary = "Item geri yükle", description = "Arşivlenmiş item'ı geri yükler.")
+    @PostMapping("/{key}/{slug}/restore")
+    public CollectionItemDto restore(@PathVariable String key,
+                                     @PathVariable String slug,
+                                     Authentication authentication) {
+        return collectionService.restore(key, slug, authentication.getName());
     }
 
     @Operation(summary = "Item draftını sil",

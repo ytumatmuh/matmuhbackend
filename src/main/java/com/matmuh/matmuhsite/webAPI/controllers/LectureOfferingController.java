@@ -2,11 +2,14 @@ package com.matmuh.matmuhsite.webAPI.controllers;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import com.matmuh.matmuhsite.business.abstracts.LectureOfferingImportService;
 import com.matmuh.matmuhsite.business.abstracts.LectureOfferingService;
 import com.matmuh.matmuhsite.business.constants.LectureOfferingMessages;
 import com.matmuh.matmuhsite.core.dtos.examStatistic.request.SaveExamStatisticRequestDto;
 import com.matmuh.matmuhsite.core.dtos.gradeDistribution.request.SaveGradeResultRequestDto;
+import com.matmuh.matmuhsite.core.dtos.lectureOfferings.request.ImportOfferingsRequestDto;
 import com.matmuh.matmuhsite.core.dtos.lectureOfferings.request.UpdateLectureOfferingRequestDto;
+import com.matmuh.matmuhsite.core.dtos.lectureOfferings.response.ImportResultDto;
 import com.matmuh.matmuhsite.core.dtos.lectureOfferings.response.LectureOfferingDto;
 import com.matmuh.matmuhsite.core.helpers.MessageResolver;
 import com.matmuh.matmuhsite.core.utilities.results.DataResult;
@@ -28,11 +31,25 @@ import java.util.UUID;
 public class LectureOfferingController {
 
     private final LectureOfferingService lectureOfferingService;
+    private final LectureOfferingImportService lectureOfferingImportService;
     private final MessageResolver messageResolver;
 
-    public LectureOfferingController(LectureOfferingService lectureOfferingService, MessageResolver messageResolver) {
+    public LectureOfferingController(LectureOfferingService lectureOfferingService,
+                                     LectureOfferingImportService lectureOfferingImportService,
+                                     MessageResolver messageResolver) {
         this.lectureOfferingService = lectureOfferingService;
+        this.lectureOfferingImportService = lectureOfferingImportService;
         this.messageResolver = messageResolver;
+    }
+
+    @Operation(summary = "Toplu içe aktarma",
+            description = "Ders açılışlarını harf sonuçları ve sınav istatistikleriyle birlikte toplu yazar (ADMIN). "
+                    + "Upsert anahtarı (ders kodu, akademik yıl, dönem, şube no); aynı dörtlü ikinci kez gelirse üzerine yazılır. "
+                    + "Her satır kendi işleminde koşar: bozuk bir satır diğerlerini geri almaz, sonuç satır bazında raporlanır.")
+    @PostMapping("/import")
+    public ResponseEntity<DataResult<ImportResultDto>> importOfferings(@Valid @RequestBody ImportOfferingsRequestDto request) {
+        var result = lectureOfferingImportService.importOfferings(request);
+        return ResponseEntity.ok(new SuccessDataResult<>(result, messageResolver.resolve(LectureOfferingMessages.OFFERING_FETCHED_SUCCESSFULLY), HttpStatus.OK));
     }
 
     @Operation(summary = "Offering getir",

@@ -12,6 +12,7 @@ public class CmsMessages {
     public static final String COLLECTION_NOT_FOUND = "Collection not found: ";
     public static final String COLLECTION_ITEM_NOT_FOUND = "Collection item not found: ";
     public static final String VERSION_CONFLICT = "Version conflict: item was modified by someone else.";
+    public static final String COLLECTION_NOT_ARCHIVABLE = "Collection is provider-backed and cannot be archived: ";
     public static final String AUTO_GENERATED_USE_POST = "This collection uses auto-generated slugs; use POST to create items.";
     public static final String USER_DEFINED_USE_PUT = "This collection uses user-defined slugs; use PUT to create items.";
     public static final String SLUG_SOURCE_FIELD_MISSING = "Cannot generate slug: source field is missing or empty.";

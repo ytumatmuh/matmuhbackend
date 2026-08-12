@@ -1,6 +1,7 @@
 package com.matmuh.matmuhsite.core.exceptionHandlers;
 
 import com.matmuh.matmuhsite.core.dtos.cms.response.ProblemDetailsDto;
+import com.matmuh.matmuhsite.core.exceptions.ArchivedException;
 import com.matmuh.matmuhsite.core.exceptions.CmsValidationException;
 import com.matmuh.matmuhsite.core.exceptions.ConcurrencyConflictException;
 import com.matmuh.matmuhsite.core.exceptions.ResourceAlreadyExistsException;
@@ -66,6 +67,17 @@ public class CmsExceptionHandler {
     @ExceptionHandler(ConcurrencyConflictException.class)
     public ResponseEntity<ProblemDetailsDto> handleConflict(ConcurrencyConflictException exception, HttpServletRequest request) {
         return problem(HttpStatus.CONFLICT, "Conflict", messageResolver.resolve(exception.getMessage()), request);
+    }
+
+
+    @ExceptionHandler(ArchivedException.class)
+    public ResponseEntity<ProblemDetailsDto> handleArchived(ArchivedException exception, HttpServletRequest request) {
+        var body = problem(HttpStatus.CONFLICT, "Conflict", exception.getMessage(), request).getBody();
+        body.setReason("archived");
+        body.setVersion(exception.getVersion());
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .body(body);
     }
 
     @ExceptionHandler(Exception.class)

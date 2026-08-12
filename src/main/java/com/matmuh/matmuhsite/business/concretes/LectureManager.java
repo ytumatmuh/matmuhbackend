@@ -17,6 +17,8 @@ import com.matmuh.matmuhsite.core.exceptions.ResourceNotFoundException;
 import com.matmuh.matmuhsite.core.mappers.LectureMapper;
 import com.matmuh.matmuhsite.core.mappers.LectureNoteMapper;
 import com.matmuh.matmuhsite.dataAccess.abstracts.LectureDao;
+import com.matmuh.matmuhsite.dataAccess.abstracts.LectureNoteDao;
+import com.matmuh.matmuhsite.dataAccess.abstracts.LectureOfferingDao;
 import com.matmuh.matmuhsite.entities.Lecture;
 import com.matmuh.matmuhsite.core.dtos.lecture.response.LectureStatisticsDto;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,8 +27,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class LectureManager implements LectureService {
@@ -39,12 +47,46 @@ public class LectureManager implements LectureService {
     private final LectureNoteService lectureNoteService;
     private final LectureNoteMapper lectureNoteMapper;
 
+    private final LectureNoteDao lectureNoteDao;
+    private final LectureOfferingDao lectureOfferingDao;
 
-    public LectureManager(LectureDao lectureDao, LectureMapper lectureMapper, LectureNoteService lectureNoteService, LectureNoteMapper lectureNoteMapper) {
+
+    public LectureManager(LectureDao lectureDao, LectureMapper lectureMapper, LectureNoteService lectureNoteService,
+                          LectureNoteMapper lectureNoteMapper, LectureNoteDao lectureNoteDao,
+                          LectureOfferingDao lectureOfferingDao) {
         this.lectureDao = lectureDao;
         this.lectureMapper = lectureMapper;
         this.lectureNoteService = lectureNoteService;
         this.lectureNoteMapper = lectureNoteMapper;
+        this.lectureNoteDao = lectureNoteDao;
+        this.lectureOfferingDao = lectureOfferingDao;
+    }
+
+
+    private void applyBadgeCounts(List<LectureDto> lectures) {
+        if (lectures.isEmpty()) {
+            return;
+        }
+
+        var ids = lectures.stream().map(LectureDto::getId).filter(Objects::nonNull).toList();
+        if (ids.isEmpty()) {
+            return;
+        }
+
+        Map<UUID, Long> noteCounts = lectureNoteDao.countApprovedByLectureIds(ids).stream()
+                .collect(Collectors.toMap(row -> (UUID) row[0], row -> ((Number) row[1]).longValue()));
+
+
+        Map<UUID, Set<String>> terms = new HashMap<>();
+        for (var row : lectureOfferingDao.findTermsWithStatistics(ids)) {
+            terms.computeIfAbsent((UUID) row[0], key -> new HashSet<>())
+                    .add(row[1] + "|" + row[2]);
+        }
+
+        for (var dto : lectures) {
+            dto.setNoteCount(noteCounts.getOrDefault(dto.getId(), 0L));
+            dto.setStatisticsTermCount(terms.getOrDefault(dto.getId(), Set.of()).size());
+        }
     }
 
     @Override
@@ -52,7 +94,7 @@ public class LectureManager implements LectureService {
         logger.info("Creating lecture with name: {}", createLectureRequestDto.getName());
 
 
-        //check if lecture with the code exists
+
         boolean exists = lectureDao.existsByCode(createLectureRequestDto.getCode());
         if (exists) {
             logger.error("Lecture creation failed: Lecture with code {} already exists.", createLectureRequestDto.getCode());
@@ -100,7 +142,24 @@ public class LectureManager implements LectureService {
             return new ResourceNotFoundException(LectureMessages.LECTURE_NOT_FOUND);
         });
 
-        return lectureMapper.toDto(lecture);
+        var dto = lectureMapper.toDto(lecture);
+        applyBadgeCounts(List.of(dto));
+        return dto;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public LectureDto getLectureByCode(String code) {
+        logger.info("Retrieving lecture with code: {}", code);
+
+        var lecture = lectureDao.findWithDetailsByCode(code).orElseThrow(() -> {
+            logger.error("Lecture with code {} not found.", code);
+            return new ResourceNotFoundException(LectureMessages.LECTURE_NOT_FOUND);
+        });
+
+        var dto = lectureMapper.toDto(lecture);
+        applyBadgeCounts(List.of(dto));
+        return dto;
     }
 
     @Override
@@ -168,7 +227,9 @@ public class LectureManager implements LectureService {
 
         logger.info("Retrieved {} lectures", page.getTotalElements());
 
-        return PageDto.of(page, lectureMapper::toDto);
+        var result = PageDto.of(page, lectureMapper::toDto);
+        applyBadgeCounts(result.getContent());
+        return result;
     }
 
     @Override

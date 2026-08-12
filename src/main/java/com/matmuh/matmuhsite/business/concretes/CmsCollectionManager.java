@@ -8,17 +8,21 @@ import com.matmuh.matmuhsite.business.constants.CmsMessages;
 import com.matmuh.matmuhsite.business.constants.CollectionRegistry;
 import com.matmuh.matmuhsite.core.helpers.CollectionFilterParser;
 import com.matmuh.matmuhsite.core.helpers.CollectionSchemaValidator;
+import com.matmuh.matmuhsite.core.helpers.CollectionSortParser;
 import com.matmuh.matmuhsite.core.helpers.SlugGenerator;
 import com.matmuh.matmuhsite.core.helpers.SlugNormalizer;
 import com.matmuh.matmuhsite.core.dtos.cms.request.CreateCollectionItemRequestDto;
 import com.matmuh.matmuhsite.core.dtos.cms.request.SaveDraftRequestDto;
 import com.matmuh.matmuhsite.core.dtos.cms.request.SaveNewDraftRequestDto;
 import com.matmuh.matmuhsite.core.dtos.cms.request.UpsertCollectionItemRequestDto;
+import com.matmuh.matmuhsite.core.dtos.cms.response.ArchiveResultDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionItemDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionListDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.MyCollectionDto;
+import com.matmuh.matmuhsite.core.dtos.cms.response.VirtualItemDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionSchema;
 import com.matmuh.matmuhsite.entities.cms.SlugSource;
+import com.matmuh.matmuhsite.core.exceptions.ArchivedException;
 import com.matmuh.matmuhsite.core.exceptions.ResourceNotFoundException;
 import com.matmuh.matmuhsite.core.exceptions.CmsValidationException;
 import com.matmuh.matmuhsite.core.exceptions.ConcurrencyConflictException;
@@ -31,17 +35,15 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
 public class CmsCollectionManager implements CmsCollectionService {
-
-    private static final UUID EMPTY_UUID = new UUID(0, 0);
 
     private static final JsonNodeFactory NODES = JsonNodeFactory.instance;
 
@@ -84,16 +86,20 @@ public class CmsCollectionManager implements CmsCollectionService {
 
     @Override
     @Transactional(readOnly = true)
-    public CollectionListDto list(String collectionKey, String userId,
-                                  Map<String, String> filters, int offset, int limit) {
+    public CollectionListDto list(String collectionKey, String userId, Map<String, String> filters,
+                                  String sort, boolean archived, int offset, int limit) {
         var def = registry.resolve(collectionKey);
         var key = def.key();
 
-        logger.info("Listing collection {} filters={} offset={} limit={} editor={}",
-                key, filters == null ? Set.of() : filters.keySet(), offset, limit, userId != null);
+
+        var showArchived = archived && userId != null;
+
+        logger.info("Listing collection {} filters={} sort={} archived={} offset={} limit={} editor={}",
+                key, filters == null ? Set.of() : filters.keySet(), sort, showArchived, offset, limit, userId != null);
 
         var filterNode = CollectionFilterParser.build(def.schema(), filters);
         var filterJson = filterNode == null ? null : filterNode.toString();
+        var parsedSort = CollectionSortParser.parse(def.schema(), sort);
 
         var provider = providers.get(key);
 
@@ -101,26 +107,88 @@ public class CmsCollectionManager implements CmsCollectionService {
         List<CollectionItemDto> itemDtos;
 
         if (provider != null) {
+
+            if (showArchived) {
+                return new CollectionListDto(List.of(), 0, offset, limit);
+            }
             var result = provider.list(filterNode, offset, limit);
             total = result.getTotal();
             itemDtos = new ArrayList<>(result.getItems());
         } else {
-            var items = collectionItemDao.searchByFilter(key, filterJson, offset, limit);
-            total = collectionItemDao.countByFilter(key, filterJson);
+            var items = collectionItemDao.searchByFilter(key, filterJson, parsedSort, showArchived, offset, limit);
+            total = collectionItemDao.countByFilter(key, filterJson, showArchived);
             itemDtos = items.stream().map(this::toDto).collect(Collectors.toCollection(ArrayList::new));
         }
+
+        var result = new CollectionListDto(itemDtos, total, offset, limit);
 
         if (userId != null) {
             for (var dto : itemDtos) {
                 dto.setCanEdit(true);
                 dto.setDraftData(resolveItemDraft(key, dto.getSlug(), userId, dto.getData()));
             }
-            if (filterJson == null && offset == 0) {
-                appendNewItemDraftRow(key, userId, itemDtos);
+            if (!showArchived && filterJson == null && offset == 0) {
+                result.setVirtualItems(pendingVirtualItems(key, userId));
             }
         }
 
-        return new CollectionListDto(itemDtos, total, offset, limit);
+        return result;
+    }
+
+    @Override
+    @Transactional
+    public ArchiveResultDto archive(String collectionKey, String slug, Integer version, String updatedBy) {
+        var item = requireOwnItem(collectionKey, slug);
+
+        logger.info("Archiving collection item {}/{} by {}", item.getCollectionKey(), item.getSlug(), updatedBy);
+
+        if (version != null && version != item.getVersion()) {
+            throw new ConcurrencyConflictException(CmsMessages.VERSION_CONFLICT);
+        }
+
+        if (!item.isArchived()) {
+            item.setArchived(true);
+            item.setArchivedAt(Instant.now());
+            item.setUpdatedBy(updatedBy);
+            collectionItemDao.save(item);
+        }
+
+        // Sürüm bilerek artmıyor: içerik değişmedi. Aynı numara arşivliyor, geri yüklüyor
+        // ve sonrasında yayınlamaya da yetiyor.
+        return new ArchiveResultDto(item.getCollectionKey(), item.getSlug(), item.getVersion());
+    }
+
+    @Override
+    @Transactional
+    public CollectionItemDto restore(String collectionKey, String slug, String updatedBy) {
+        var item = requireOwnItem(collectionKey, slug);
+
+        logger.info("Restoring collection item {}/{} by {}", item.getCollectionKey(), item.getSlug(), updatedBy);
+
+        if (item.isArchived()) {
+            item.setArchived(false);
+            item.setArchivedAt(null);
+            item.setUpdatedBy(updatedBy);
+            collectionItemDao.save(item);
+        }
+
+        var dto = toDto(item);
+        dto.setCanEdit(true);
+        return dto;
+    }
+
+    private CollectionItem requireOwnItem(String collectionKey, String slug) {
+        var def = registry.resolve(collectionKey);
+        var key = def.key();
+        var normalizedSlug = SlugNormalizer.normalizeBlockPath(slug);
+
+        if (providers.containsKey(key)) {
+            throw new CmsValidationException(CmsMessages.COLLECTION_NOT_ARCHIVABLE + key);
+        }
+
+        return collectionItemDao.findByCollectionKeyAndSlug(key, normalizedSlug)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        CmsMessages.COLLECTION_ITEM_NOT_FOUND + key + "/" + normalizedSlug));
     }
 
     @Override
@@ -182,12 +250,13 @@ public class CmsCollectionManager implements CmsCollectionService {
                     .updatedBy(updatedBy)
                     .build();
         } else {
+            // Arşivlenmiş kaydı sessizce diriltmek yerine reddediyoruz: editörün yapması
+            // gereken şey önce geri yüklemek, sürüm çakışması gibi birleştirme ekranı değil.
+            if (item.isArchived()) {
+                throw new ArchivedException(key + "/" + normalizedSlug, item.getVersion());
+            }
             if (request.getVersion() != null && request.getVersion() != item.getVersion()) {
                 throw new ConcurrencyConflictException(CmsMessages.VERSION_CONFLICT);
-            }
-            if (item.isArchived()) {
-                item.setArchived(false);
-                item.setArchivedAt(null);
             }
             item.setData(validated);
             touch(item, updatedBy);
@@ -354,15 +423,14 @@ public class CmsCollectionManager implements CmsCollectionService {
                 .orElse(null);
     }
 
-    private void appendNewItemDraftRow(String collectionKey, String userId, List<CollectionItemDto> itemDtos) {
-        collectionDraftDao.findByCollectionKeyAndUserIdAndForNewItemTrue(collectionKey, userId)
+    // Henüz kaydedilmemiş yeni item taslağı gerçek bir satır değil, o yüzden `items` yerine
+    // `virtualItems` altında duruyor. `data` boş: yazılmış tek şey taslağın kendisi.
+    private List<VirtualItemDto> pendingVirtualItems(String collectionKey, String userId) {
+        return collectionDraftDao.findByCollectionKeyAndUserIdAndForNewItemTrue(collectionKey, userId)
                 .filter(draft -> !isEffectivelyEmpty(draft.getPayload()))
-                .ifPresent(draft -> {
-                    var row = new CollectionItemDto(
-                            EMPTY_UUID, collectionKey, draft.getSlug(),
-                            NODES.objectNode(), 0, true, draft.getPayload());
-                    itemDtos.add(row);
-                });
+                .map(draft -> List.of(VirtualItemDto.pending(
+                        collectionKey, draft.getSlug(), NODES.objectNode(), draft.getPayload())))
+                .orElse(null);
     }
 
     private boolean isEffectivelyEmpty(JsonNode node) {
@@ -400,7 +468,7 @@ public class CmsCollectionManager implements CmsCollectionService {
     }
 
     private CollectionItemDto toDto(CollectionItem item) {
-        return new CollectionItemDto(
+        var dto = new CollectionItemDto(
                 item.getId(),
                 item.getCollectionKey(),
                 item.getSlug(),
@@ -408,5 +476,12 @@ public class CmsCollectionManager implements CmsCollectionService {
                 item.getVersion(),
                 false,
                 null);
+        dto.setCreatedAt(item.getCreatedAt());
+        dto.setUpdatedAt(item.getUpdatedAt());
+        if (item.isArchived()) {
+            dto.setIsArchived(true);
+            dto.setArchivedAt(item.getArchivedAt());
+        }
+        return dto;
     }
 }

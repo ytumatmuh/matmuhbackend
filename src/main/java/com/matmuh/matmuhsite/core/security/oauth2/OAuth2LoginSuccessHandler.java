@@ -3,7 +3,6 @@ package com.matmuh.matmuhsite.core.security.oauth2;
 import com.matmuh.matmuhsite.business.abstracts.RefreshTokenService;
 import com.matmuh.matmuhsite.business.abstracts.UserService;
 import com.matmuh.matmuhsite.core.dtos.user.response.UserDto;
-import com.matmuh.matmuhsite.core.exceptions.EmailDoesntFromYildizException;
 import com.matmuh.matmuhsite.core.exceptions.ResourceNotFoundException;
 import com.matmuh.matmuhsite.core.helpers.AuthCookieFactory;
 import com.matmuh.matmuhsite.core.properties.FrontendProperties;
@@ -79,11 +78,16 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         String tenantId = oAuth2User.getAttribute("tid");
 
 
+
         if (!allowedTenantId.equals(tenantId)) {
-            throw new EmailDoesntFromYildizException("Hatalı organizasyon girişi!");
+            logger.warn("Hatalı organizasyon girişi: tid={}", tenantId);
+            redirectWithError(request, response, "tenant");
+            return;
         }
         if (email == null || !email.endsWith("@std.yildiz.edu.tr")) {
-            throw new EmailDoesntFromYildizException("Sadece Yıldız Teknik Üniversitesi öğrencileri giriş yapabilir!");
+            logger.warn("Öğrenci olmayan e-posta ile giriş denemesi: {}", email);
+            redirectWithError(request, response, "email");
+            return;
         }
 
 
@@ -94,7 +98,8 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
 
         if (department == null){
             logger.warn("Yetkisiz bölüm girişi saptandı: {}", rawDepartment);
-            throw new RuntimeException("Hatalı bölüm girişi! Sadece Matematik Mühendisliği öğrencileri giriş yapabilir.");
+            redirectWithError(request, response, "department");
+            return;
         }
 
         String firstName = name;
@@ -135,19 +140,40 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         response.addHeader("Set-Cookie", cookieFactory.access(tokens.getToken(), jwtService.getTokenValiditySeconds()));
         response.addHeader("Set-Cookie", cookieFactory.refresh(tokens.getRefreshToken()));
 
-        var session = request.getSession(false);
-        String target = frontendProperties.getCallbackUrl();
-        if (session != null) {
-            var stored = session.getAttribute(FrontendCallbackCapturingResolver.SESSION_KEY);
-            if (stored instanceof String requested && frontendProperties.isAllowedCallback(requested)) {
-                target = requested;
-            }
-            session.invalidate();
-        }
-        SecurityContextHolder.clearContext();
+        String target = resolveTarget(request);
+        endSession(request);
 
         logger.info("Oturum çerezleri set edildi, frontend'e yönlendiriliyor.");
         getRedirectStrategy().sendRedirect(request, response, target);
+    }
+
+    private String resolveTarget(HttpServletRequest request) {
+        var session = request.getSession(false);
+        if (session != null) {
+            var stored = session.getAttribute(FrontendCallbackCapturingResolver.SESSION_KEY);
+            if (stored instanceof String requested && frontendProperties.isAllowedCallback(requested)) {
+                return requested;
+            }
+        }
+        return frontendProperties.getCallbackUrl();
+    }
+
+    private void endSession(HttpServletRequest request) {
+        var session = request.getSession(false);
+        if (session != null) {
+            session.invalidate();
+        }
+        SecurityContextHolder.clearContext();
+    }
+
+    private void redirectWithError(HttpServletRequest request, HttpServletResponse response, String code)
+            throws IOException {
+        var target = resolveTarget(request);
+        endSession(request);
+
+        var separator = target.contains("?") ? "&" : "?";
+        getRedirectStrategy().sendRedirect(request, response,
+                target + separator + "error=" + URLEncoder.encode(code, StandardCharsets.UTF_8));
     }
 
     private String normalizeDepartment(String rawDepartment){

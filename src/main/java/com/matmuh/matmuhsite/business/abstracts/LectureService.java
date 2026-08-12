@@ -25,6 +25,8 @@ public interface LectureService {
 
     LectureDto getLectureById(UUID lectureId);
 
+    LectureDto getLectureByCode(String code);
+
     List<LectureNoteDto> getLectureNotes(UUID lectureId);
 
     LectureDto updateLecture(UUID lectureId, UpdateLectureRequestDto updateLectureRequestDto);

@@ -49,4 +49,9 @@ public class LectureDto {
 
     private List<InstructorDto> instructors = new ArrayList<>();
 
+
+    private long noteCount;
+
+    private long statisticsTermCount;
+
 }

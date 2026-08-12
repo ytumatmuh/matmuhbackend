@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.Instant;
 import java.util.UUID;
 
 @Getter
@@ -21,6 +22,23 @@ public class CollectionItemDto {
     private JsonNode data;
     private int version;
 
+    private Instant createdAt;
+    private Instant updatedAt;
+
     private boolean canEdit;
     private JsonNode draftData;
+
+    private Boolean isArchived;
+    private Instant archivedAt;
+
+    public CollectionItemDto(UUID id, String collectionKey, String slug, JsonNode data, int version,
+                             boolean canEdit, JsonNode draftData) {
+        this.id = id;
+        this.collectionKey = collectionKey;
+        this.slug = slug;
+        this.data = data;
+        this.version = version;
+        this.canEdit = canEdit;
+        this.draftData = draftData;
+    }
 }

@@ -26,6 +26,8 @@ public class CreateInstructorRequestDto {
 
     private String academicTitle;
 
+    private String rawName;
+
     @Email(message = InstructorMessages.EMAIL_INVALID)
     private String email;
 

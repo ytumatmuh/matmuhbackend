@@ -94,6 +94,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/lecture-notes/**").hasRole("ADMIN")
 
                         .requestMatchers(HttpMethod.GET, "/api/lecture-offerings/**").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/lecture-offerings/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/lecture-offerings/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/api/lecture-offerings/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/lecture-offerings/**").hasRole("ADMIN")

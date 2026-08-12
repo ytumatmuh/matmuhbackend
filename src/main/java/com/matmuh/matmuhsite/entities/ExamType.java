@@ -6,5 +6,8 @@ public enum ExamType {
     MIDTERM_1_MAKEUP,
     MIDTERM_2_MAKEUP,
     FINAL,
-    RESIT
+    RESIT,
+    QUIZ,
+    ASSIGNMENT,
+    PROJECT
 }

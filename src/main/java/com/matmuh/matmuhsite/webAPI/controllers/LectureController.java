@@ -70,6 +70,14 @@ public class LectureController {
         return ResponseEntity.ok(new SuccessDataResult<>(lectures, messageResolver.resolve(LectureNoteMessages.LECTURES_FETCH_SUCCESS), HttpStatus.OK));
     }
 
+    @Operation(summary = "Ders getir (kod ile)",
+            description = "OBS ders kodu ile tek ders döner (ör. MTM1501). Frontend rotaları kod üzerinden çalıştığı için var.")
+    @GetMapping("/by-code/{code}")
+    public ResponseEntity<DataResult<LectureDto>> getLectureByCode(@PathVariable String code) {
+        var lecture = lectureService.getLectureByCode(code);
+        return ResponseEntity.ok(new SuccessDataResult<>(lecture, messageResolver.resolve(LectureMessages.LECTURE_FETCHED_SUCCESSFULLY), HttpStatus.OK));
+    }
+
     @Operation(summary = "Ders getir", description = "ID ile tek ders döner.")
     @GetMapping("/{id}")
     public ResponseEntity<DataResult<LectureDto>> getLectureById(@PathVariable UUID id) {

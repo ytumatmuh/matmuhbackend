@@ -21,6 +21,8 @@ public class InstructorDto {
 
     private String academicTitle;
 
+    private String rawName;
+
     private String email;
 
     private String avesisLink;

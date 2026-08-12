@@ -33,6 +33,15 @@ public interface LectureDao extends JpaRepository<Lecture, UUID> {
     })
     Optional<Lecture> findById(UUID id);
 
+    @EntityGraph(attributePaths = {
+            "offerings",
+            "offerings.instructor",
+            "offerings.gradeResults",
+            "offerings.gradeResults.gradeDistributions",
+            "offerings.examStatistics"
+    })
+    Optional<Lecture> findWithDetailsByCode(String code);
+
     @Query("""
             SELECT l FROM Lecture l
             WHERE (:term IS NULL OR l.term = :term)
