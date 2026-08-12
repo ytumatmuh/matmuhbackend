@@ -15,8 +15,10 @@ import javax.crypto.SecretKey;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class JwtService {
@@ -34,15 +36,24 @@ public class JwtService {
     public String generateToken(User user){
         Map<String, Object> claims = new HashMap<>();
 
+        var authorities = user.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList());
+
         claims.put("firstName", user.getFirstName());
         claims.put("lastName", user.getLastName());
+        claims.put("name", fullName(user));
         claims.put("email", user.getEmail());
         claims.put("department", user.getDepartment());
-        claims.put("authorities", user.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.toList()));
+        claims.put("authorities", authorities);
 
         return createToken(claims, user.getUsername());
+    }
+
+    private String fullName(User user) {
+        return Stream.of(user.getFirstName(), user.getLastName())
+                .filter(part -> part != null && !part.isBlank())
+                .collect(Collectors.joining(" "));
     }
 
     public Boolean validateToken(String token, UserDetails userDetails){

@@ -31,4 +31,8 @@ public interface CmsCollectionService {
     void saveItemDraft(String collectionKey, String slug, String userId, SaveDraftRequestDto request);
 
     void saveNewDraft(String collectionKey, String userId, SaveNewDraftRequestDto request);
+
+    void deleteItemDraft(String collectionKey, String slug, String userId);
+
+    void deleteNewDraft(String collectionKey, String userId);
 }

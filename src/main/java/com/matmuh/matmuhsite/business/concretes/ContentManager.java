@@ -146,6 +146,15 @@ public class ContentManager implements ContentService {
         contentDraftDao.save(draft);
     }
 
+    @Override
+    @Transactional
+    public void deleteDraft(String userId, String slug) {
+        var normalizedSlug = SlugNormalizer.normalizeSlug(slug);
+        logger.info("Deleting draft for slug: {} user: {}", normalizedSlug, userId);
+
+        contentDraftDao.deleteBySlugAndUserId(normalizedSlug, userId);
+    }
+
 
     @Override
     @Transactional

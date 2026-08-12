@@ -91,6 +91,14 @@ public class CmsContentController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "Draft sil",
+            description = "Kullanıcının bu slug için tuttuğu draft'ı siler. Idempotent: draft yoksa da 204 döner.")
+    @DeleteMapping("/draft")
+    public ResponseEntity<Void> deleteDraft(@RequestParam String slug, Authentication authentication) {
+        contentService.deleteDraft(authentication.getName(), slug);
+        return ResponseEntity.noContent().build();
+    }
+
     @Operation(summary = "Manifest sync", description = "cms-sync CLI manifestini reconcile eder (ADMIN).")
     @PostMapping("/sync")
     public SyncResultDto sync(@RequestBody List<@Valid SyncManifestRequestDto> manifests) {

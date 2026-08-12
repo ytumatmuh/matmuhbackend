@@ -18,5 +18,7 @@ public interface ContentService {
 
     void saveDraft(String userId, UpdatePageRequestDto request);
 
+    void deleteDraft(String userId, String slug);
+
     SyncResultDto sync(List<SyncManifestRequestDto> manifests);
 }

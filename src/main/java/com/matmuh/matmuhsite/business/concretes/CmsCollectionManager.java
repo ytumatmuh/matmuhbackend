@@ -312,6 +312,27 @@ public class CmsCollectionManager implements CmsCollectionService {
         collectionDraftDao.save(draft);
     }
 
+    @Override
+    @Transactional
+    public void deleteItemDraft(String collectionKey, String slug, String userId) {
+        var key = registry.resolve(collectionKey).key();
+        var normalizedSlug = SlugNormalizer.normalizeBlockPath(slug);
+
+        collectionDraftDao
+                .findByCollectionKeyAndSlugAndUserIdAndForNewItemFalse(key, normalizedSlug, userId)
+                .ifPresent(collectionDraftDao::delete);
+    }
+
+    @Override
+    @Transactional
+    public void deleteNewDraft(String collectionKey, String userId) {
+        var key = registry.resolve(collectionKey).key();
+
+        collectionDraftDao
+                .findByCollectionKeyAndUserIdAndForNewItemTrue(key, userId)
+                .ifPresent(collectionDraftDao::delete);
+    }
+
 
 
     private void deleteDrafts(String collectionKey, String slug, String userId, boolean isCreate) {

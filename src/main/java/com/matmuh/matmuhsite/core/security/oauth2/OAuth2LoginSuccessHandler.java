@@ -5,7 +5,7 @@ import com.matmuh.matmuhsite.business.abstracts.UserService;
 import com.matmuh.matmuhsite.core.dtos.user.response.UserDto;
 import com.matmuh.matmuhsite.core.exceptions.EmailDoesntFromYildizException;
 import com.matmuh.matmuhsite.core.exceptions.ResourceNotFoundException;
-import com.matmuh.matmuhsite.core.properties.CookieProperties;
+import com.matmuh.matmuhsite.core.helpers.AuthCookieFactory;
 import com.matmuh.matmuhsite.core.properties.FrontendProperties;
 import com.matmuh.matmuhsite.core.security.JwtService;
 import com.matmuh.matmuhsite.entities.AuthProvider;
@@ -44,26 +44,23 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
 
     private final RefreshTokenService refreshTokenService;
 
-    private final CookieProperties cookieProperties;
+    private final AuthCookieFactory cookieFactory;
 
     @org.springframework.beans.factory.annotation.Value("${app.oauth2.allowed-tenant-id}")
     private String allowedTenantId;
 
     private final FrontendProperties frontendProperties;
 
-    @org.springframework.beans.factory.annotation.Value("${jwt.refresh-validity-days:30}")
-    private long refreshValidityDays;
-
     private Logger logger = LoggerFactory.getLogger(OAuth2LoginSuccessHandler.class);
 
     public OAuth2LoginSuccessHandler(JwtService jwtService, UserService userService, OAuth2AuthorizedClientService authorizedClientService, RefreshTokenService refreshTokenService,
-                                     CookieProperties cookieProperties,
+                                     AuthCookieFactory cookieFactory,
                                      FrontendProperties frontendProperties) {
         this.jwtService = jwtService;
         this.userService = userService;
         this.authorizedClientService = authorizedClientService;
         this.refreshTokenService = refreshTokenService;
-        this.cookieProperties = cookieProperties;
+        this.cookieFactory = cookieFactory;
         this.frontendProperties = frontendProperties;
     }
 
@@ -135,9 +132,8 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
 
         var tokens = refreshTokenService.issueTokens(account);
 
-        response.addHeader("Set-Cookie", buildCookie("jwt", tokens.getToken(), "/", jwtService.getTokenValiditySeconds()));
-        response.addHeader("Set-Cookie", buildCookie("refresh_token", tokens.getRefreshToken(),
-                "/api/auth", refreshValidityDays * 24 * 60 * 60));
+        response.addHeader("Set-Cookie", cookieFactory.access(tokens.getToken(), jwtService.getTokenValiditySeconds()));
+        response.addHeader("Set-Cookie", cookieFactory.refresh(tokens.getRefreshToken()));
 
         var session = request.getSession(false);
         String target = frontendProperties.getCallbackUrl();
@@ -150,25 +146,8 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         }
         SecurityContextHolder.clearContext();
 
-
-        if (!target.equals(frontendProperties.getCallbackUrl())) {
-            target = target
-                    + "#accessToken=" + URLEncoder.encode(tokens.getToken(), StandardCharsets.UTF_8)
-                    + "&refreshToken=" + URLEncoder.encode(tokens.getRefreshToken(), StandardCharsets.UTF_8);
-            logger.info("Frontend callback devrediliyor (token fragment ile).");
-        }
-
         logger.info("Oturum çerezleri set edildi, frontend'e yönlendiriliyor.");
         getRedirectStrategy().sendRedirect(request, response, target);
-    }
-
-    private String buildCookie(String name, String value, String path, long maxAgeSeconds) {
-        return name + "=" + value
-                + "; Path=" + path
-                + "; HttpOnly"
-                + (cookieProperties.isSecure() ? "; Secure" : "")
-                + "; SameSite=" + cookieProperties.getSameSite()
-                + "; Max-Age=" + maxAgeSeconds;
     }
 
     private String normalizeDepartment(String rawDepartment){

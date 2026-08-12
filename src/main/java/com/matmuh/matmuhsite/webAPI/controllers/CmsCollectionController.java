@@ -110,6 +110,16 @@ public class CmsCollectionController {
         collectionService.saveItemDraft(key, slug, authentication.getName(), request);
     }
 
+    @Operation(summary = "Item draftını sil",
+            description = "Item draftını siler. Idempotent: draft yoksa da 204 döner.")
+    @DeleteMapping("/{key}/{slug}/draft")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteItemDraft(@PathVariable String key,
+                                @PathVariable String slug,
+                                Authentication authentication) {
+        collectionService.deleteItemDraft(key, slug, authentication.getName());
+    }
+
     @Operation(summary = "Yeni item draftı", description = "Henüz yaratılmamış item için draft (ADMIN).")
     @PostMapping("/{key}/drafts")
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -117,6 +127,14 @@ public class CmsCollectionController {
                              @RequestBody @Valid SaveNewDraftRequestDto request,
                              Authentication authentication) {
         collectionService.saveNewDraft(key, authentication.getName(), request);
+    }
+
+    @Operation(summary = "Yeni item draftını sil",
+            description = "Henüz yaratılmamış item için tutulan draft'ı siler. Idempotent: draft yoksa da 204 döner.")
+    @DeleteMapping("/{key}/drafts")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteNewDraft(@PathVariable String key, Authentication authentication) {
+        collectionService.deleteNewDraft(key, authentication.getName());
     }
 
 

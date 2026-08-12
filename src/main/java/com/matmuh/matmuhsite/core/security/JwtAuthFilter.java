@@ -1,6 +1,7 @@
 package com.matmuh.matmuhsite.core.security;
 
 import com.matmuh.matmuhsite.business.abstracts.UserService;
+import com.matmuh.matmuhsite.core.helpers.AuthCookieFactory;
 import com.matmuh.matmuhsite.core.helpers.OriginValidator;
 import com.matmuh.matmuhsite.core.properties.CookieProperties;
 import com.matmuh.matmuhsite.entities.User;
@@ -102,7 +103,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         if (request.getCookies() != null) {
             for (Cookie cookie : request.getCookies()) {
-                if ("jwt".equals(cookie.getName())) {
+                if (AuthCookieFactory.ACCESS_COOKIE.equals(cookie.getName())) {
                     logger.debug("Token found in HttpOnly Cookie");
                     return cookie.getValue();
                 }
