@@ -66,11 +66,14 @@ public class AuthController {
                 .build();
     }
 
-    @Operation(summary = "Giriş yap", description = "E-posta ve şifre ile giriş yapar; access token, refresh token ve access token ömrünü (saniye) döner.")
+    @Operation(summary = "Giriş yap",
+            description = "E-posta ve şifre ile giriş yapar. Çerez basmaz; access ve refresh token gövdede döner. "
+                    + "Tarayıcı dışı istemciler ve farklı origin'den çalışan geliştirme ortamları için.")
     @PostMapping("/login")
-    public ResponseEntity<DataResult<AuthLoginResponseDto>> login(@RequestBody AuthLoginRequestDto authLoginRequestDto) {
+    public ResponseEntity<AccessTokenResponseDto> login(@RequestBody AuthLoginRequestDto authLoginRequestDto) {
         var result = authService.login(authLoginRequestDto);
-        return ResponseEntity.status(HttpStatus.OK).body(new SuccessDataResult<>(result, messageResolver.resolve(AuthMessages.LOGIN_SUCCESS), HttpStatus.OK));
+        return ResponseEntity.ok(new AccessTokenResponseDto(
+                result.getToken(), result.getExpiresIn(), result.getRefreshToken()));
     }
 
     @Operation(summary = "Oturumu yenile",
