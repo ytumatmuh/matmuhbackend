@@ -1,0 +1,30 @@
+package com.matmuh.matmuhsite.business.constants;
+
+import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionSchema;
+import com.matmuh.matmuhsite.core.dtos.cms.response.FieldDefinition;
+import com.matmuh.matmuhsite.entities.cms.FieldType;
+
+import java.util.List;
+
+public final class AnnouncementCollectionSchema {
+
+    private AnnouncementCollectionSchema() {}
+
+    public static final String KEY = "announcements";
+    public static final String SLUG_SOURCE_FIELD = "title";
+
+    public static final CollectionSchema SCHEMA = new CollectionSchema(List.of(
+            FieldDefinition.readOnly("id", FieldType.SHORT_TEXT, "ID"),
+            FieldDefinition.readOnly("slug", FieldType.SHORT_TEXT, "Slug"),
+            FieldDefinition.required(SLUG_SOURCE_FIELD, FieldType.SHORT_TEXT, "Başlık")
+                    .withHelp("Slug bu başlıktan üretilir. Çeviri kendi başlığından kendi slug'ını alır."),
+            FieldDefinition.of("summary", FieldType.LONG_TEXT, "Özet"),
+            FieldDefinition.of("body", FieldType.RICH_TEXT, "İçerik"),
+            FieldDefinition.of("coverImage", FieldType.IMAGE, "Kapak görseli"),
+            FieldDefinition.of("publishedAt", FieldType.DATE, "Yayın tarihi")
+                    .asFilterable()
+                    .asSortable(),
+            FieldDefinition.of("featured", FieldType.BOOL, "Öne çıkan").asFilterable(),
+            FieldDefinition.of("tags", FieldType.STRING_ARRAY, "Etiketler").asFilterable()
+    ));
+}

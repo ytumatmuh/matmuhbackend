@@ -37,7 +37,21 @@ public class CollectionRegistry {
                     InstructorCollectionSchema.SLUG_SOURCE_FIELD,
                     true,
                     false
-            )
+            ),
+            new CollectionDefinition(
+                    AnnouncementCollectionSchema.KEY,
+                    AnnouncementCollectionSchema.SCHEMA,
+                    SlugSource.AUTO_GENERATED,
+                    AnnouncementCollectionSchema.SLUG_SOURCE_FIELD,
+                    true,
+                    true),
+            new CollectionDefinition(
+                    NewsCollectionSchema.KEY,
+                    NewsCollectionSchema.SCHEMA,
+                    SlugSource.AUTO_GENERATED,
+                    NewsCollectionSchema.SLUG_SOURCE_FIELD,
+                    true,
+                    true)
     );
 
     private final Map<String, CollectionDefinition> byKey =
