@@ -13,6 +13,7 @@ import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionItemDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionListDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.MyCollectionDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionSchema;
+import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionSchemaResponseDto;
 import com.matmuh.matmuhsite.core.exceptions.PermissionDeniedException;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -50,7 +51,7 @@ public class CmsCollectionController {
 
     @Operation(summary = "Şema", description = "Collection şemasını döner.")
     @GetMapping("/{key}/schema")
-    public CollectionSchema getSchema(@PathVariable String key,
+    public CollectionSchemaResponseDto getSchema(@PathVariable String key,
                                       Authentication authentication,
                                       HttpServletResponse response) {
         requireReadAccess(key, authentication, response);

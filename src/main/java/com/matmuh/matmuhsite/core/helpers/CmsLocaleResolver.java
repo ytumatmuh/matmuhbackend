@@ -24,6 +24,11 @@ public class CmsLocaleResolver {
         this.cmsLocaleDao = cmsLocaleDao;
     }
 
+
+    public static String normalize(String code) {
+        return code == null ? null : code.trim().toLowerCase(java.util.Locale.ROOT);
+    }
+
     public List<String> declared() {
         return cmsLocaleDao.findAllByOrderByPositionAsc().stream().map(CmsLocale::getCode).toList();
     }
@@ -46,7 +51,7 @@ public class CmsLocaleResolver {
         if (requested == null || requested.isBlank()) {
             return locales.get(0);
         }
-        var normalized = requested.trim().toLowerCase();
+        var normalized = normalize(requested);
         return locales.contains(normalized) ? normalized : locales.get(0);
     }
 
@@ -61,11 +66,12 @@ public class CmsLocaleResolver {
             return null;
         }
 
+
         if (requested == null || requested.isBlank()) {
-            return locales.get(0);
+            throw new CmsValidationException(CmsMessages.LOCALE_REQUIRED_FOR_WRITE + String.join(", ", locales));
         }
 
-        var normalized = requested.trim().toLowerCase();
+        var normalized = normalize(requested);
         if (!locales.contains(normalized)) {
             throw new CmsValidationException(CmsMessages.LOCALE_NOT_DECLARED + requested);
         }
@@ -80,7 +86,7 @@ public class CmsLocaleResolver {
         }
 
         var normalized = locales.stream()
-                .map(code -> code == null ? "" : code.trim().toLowerCase())
+                .map(code -> code == null ? "" : normalize(code))
                 .filter(code -> !code.isEmpty())
                 .distinct()
                 .toList();

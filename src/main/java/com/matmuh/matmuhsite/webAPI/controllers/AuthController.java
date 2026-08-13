@@ -90,8 +90,10 @@ public class AuthController {
             body.setRefreshToken(result.getRefreshToken());
         }
 
+
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookieFactory.refresh(result.getRefreshToken()))
+                .header(HttpHeaders.SET_COOKIE, cookieFactory.access(result.getToken(), result.getExpiresIn()))
                 .body(body);
     }
 

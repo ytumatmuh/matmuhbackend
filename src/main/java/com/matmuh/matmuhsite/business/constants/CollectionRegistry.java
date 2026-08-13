@@ -18,7 +18,8 @@ public class CollectionRegistry {
             CollectionSchema schema,
             SlugSource slugSource,
             String slugSourceField,
-            boolean allowAnonymousRead
+            boolean allowAnonymousRead,
+            boolean localized
     ) {}
 
     private static final List<CollectionDefinition> DEFINITIONS = List.of(
@@ -27,13 +28,15 @@ public class CollectionRegistry {
                     LectureCollectionSchema.SCHEMA,
                     SlugSource.AUTO_GENERATED,
                     LectureCollectionSchema.SLUG_SOURCE_FIELD,
-                    true),
+                    true,
+                    false),
             new CollectionDefinition(
                     InstructorCollectionSchema.KEY,
                     InstructorCollectionSchema.SCHEMA,
                     SlugSource.AUTO_GENERATED,
                     InstructorCollectionSchema.SLUG_SOURCE_FIELD,
-                    true
+                    true,
+                    false
             )
     );
 

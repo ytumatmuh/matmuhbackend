@@ -9,6 +9,7 @@ import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionItemDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionListDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.MyCollectionDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionSchema;
+import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionSchemaResponseDto;
 
 import java.util.List;
 import java.util.Map;
@@ -18,7 +19,7 @@ public interface CmsCollectionService {
 
     boolean allowsAnonymousRead(String collectionKey);
 
-    CollectionSchema getSchema(String collectionKey);
+    CollectionSchemaResponseDto getSchema(String collectionKey);
 
     List<MyCollectionDto> getMyCollections();
 

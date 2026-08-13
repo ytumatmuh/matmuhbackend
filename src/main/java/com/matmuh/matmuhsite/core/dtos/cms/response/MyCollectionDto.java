@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -16,4 +18,6 @@ public class MyCollectionDto {
     private CollectionSchema schema;
     private boolean canCreate;
     private SlugSource slugSource;
+
+    private List<String> locales;
 }

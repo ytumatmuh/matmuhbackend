@@ -23,6 +23,7 @@ import com.matmuh.matmuhsite.core.dtos.cms.response.MyCollectionDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.TranslationRefDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.VirtualItemDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionSchema;
+import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionSchemaResponseDto;
 import com.matmuh.matmuhsite.entities.cms.SlugSource;
 import com.matmuh.matmuhsite.core.exceptions.ArchivedException;
 import com.matmuh.matmuhsite.core.exceptions.ResourceNotFoundException;
@@ -41,6 +42,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -79,14 +81,20 @@ public class CmsCollectionManager implements CmsCollectionService {
     }
 
     @Override
-    public CollectionSchema getSchema(String collectionKey) {
-        return registry.resolve(collectionKey).schema();
+    public CollectionSchemaResponseDto getSchema(String collectionKey) {
+        var def = registry.resolve(collectionKey);
+        return new CollectionSchemaResponseDto(def.key(), def.schema(), def.slugSource(), localesOf(def));
+    }
+
+
+    private List<String> localesOf(CollectionRegistry.CollectionDefinition def) {
+        return def.localized() ? localeResolver.declared() : List.of();
     }
 
     @Override
     public List<MyCollectionDto> getMyCollections() {
         return registry.all().stream()
-                .map(def -> new MyCollectionDto(def.key(), def.schema(), true, def.slugSource()))
+                .map(def -> new MyCollectionDto(def.key(), def.schema(), true, def.slugSource(), localesOf(def)))
                 .collect(Collectors.toList());
     }
 
@@ -128,6 +136,10 @@ public class CmsCollectionManager implements CmsCollectionService {
         }
 
         var result = new CollectionListDto(itemDtos, total, offset, limit);
+
+        if (provider == null) {
+            applyTranslations(key, itemDtos);
+        }
 
         if (userId != null) {
             for (var dto : itemDtos) {
@@ -184,6 +196,13 @@ public class CmsCollectionManager implements CmsCollectionService {
         return dto;
     }
 
+
+    private String localeOfItem(String collectionKey, String slug, String requested) {
+        return collectionItemDao.findByCollectionKeyAndSlug(collectionKey, slug)
+                .map(CollectionItem::getLocale)
+                .orElseGet(() -> localeResolver.resolveForRead(requested));
+    }
+
     private CollectionItem requireOwnItem(String collectionKey, String slug) {
         var def = registry.resolve(collectionKey);
         var key = def.key();
@@ -212,9 +231,10 @@ public class CmsCollectionManager implements CmsCollectionService {
         if (provider != null) {
             dto = provider.getBySlug(normalizedSlug, resolvedLocale);
         } else {
-            var item = collectionItemDao.findByCollectionKeyAndSlugAndArchivedFalse(key, normalizedSlug)
+            var found = collectionItemDao.findByCollectionKeyAndSlugAndArchivedFalse(key, normalizedSlug)
                     .orElseThrow(() -> new ResourceNotFoundException(
                             CmsMessages.COLLECTION_ITEM_NOT_FOUND + key + "/" + normalizedSlug));
+            var item = resolveLocaleSibling(found, locale);
             dto = toDto(item);
             dto.setTranslations(siblingsOf(item));
         }
@@ -226,10 +246,59 @@ public class CmsCollectionManager implements CmsCollectionService {
         return dto;
     }
 
-    /**
-     * Grubun diğer dillerdeki üyeleri. Slug'lar diller arasında farklı olduğu için
-     * (SEO'nun gerektirdiği bu) bağ slug'la değil translationGroupId ile kuruluyor.
-     */
+
+    private CollectionItem resolveLocaleSibling(CollectionItem item, String requested) {
+        if (requested == null || requested.isBlank() || item.getTranslationGroupId() == null) {
+            return item;
+        }
+
+        var normalized = CmsLocaleResolver.normalize(requested);
+        if (normalized.equals(item.getLocale())) {
+            return item;
+        }
+
+        return collectionItemDao
+                .findByCollectionKeyAndTranslationGroupId(item.getCollectionKey(), item.getTranslationGroupId())
+                .stream()
+                .filter(sibling -> !sibling.isArchived())
+                .filter(sibling -> normalized.equals(sibling.getLocale()))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        CmsMessages.COLLECTION_ITEM_NOT_FOUND + item.getCollectionKey()
+                                + "/" + item.getSlug() + " (" + normalized + ")"));
+    }
+
+
+    private void applyTranslations(String collectionKey, List<CollectionItemDto> dtos) {
+        var groupIds = dtos.stream()
+                .map(CollectionItemDto::getTranslationGroupId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+        if (groupIds.isEmpty()) {
+            return;
+        }
+
+        var byGroup = collectionItemDao
+                .findByCollectionKeyAndTranslationGroupIdIn(collectionKey, groupIds)
+                .stream()
+                .filter(item -> !item.isArchived())
+                .collect(Collectors.groupingBy(CollectionItem::getTranslationGroupId));
+
+        for (var dto : dtos) {
+            var group = byGroup.get(dto.getTranslationGroupId());
+            if (group == null) continue;
+
+            var siblings = group.stream()
+                    .filter(sibling -> !sibling.getId().equals(dto.getId()))
+                    .map(sibling -> new TranslationRefDto(sibling.getLocale(), sibling.getSlug()))
+                    .toList();
+            if (!siblings.isEmpty()) {
+                dto.setTranslations(siblings);
+            }
+        }
+    }
+
     private List<TranslationRefDto> siblingsOf(CollectionItem item) {
         if (item.getTranslationGroupId() == null) {
             return null;
@@ -254,8 +323,7 @@ public class CmsCollectionManager implements CmsCollectionService {
         var key = def.key();
         var normalizedSlug = SlugNormalizer.normalizeBlockPath(slug);
 
-        var resolvedLocale = localeResolver.requireForWrite(locale);
-        logger.info("Upserting collection item {}/{} locale={} by {}", key, normalizedSlug, resolvedLocale, updatedBy);
+        logger.info("Upserting collection item {}/{} by {}", key, normalizedSlug, updatedBy);
 
         var validated = CollectionSchemaValidator.validateAndStrip(def.schema(), request.getData());
 
@@ -264,6 +332,7 @@ public class CmsCollectionManager implements CmsCollectionService {
             if (!provider.existsBySlug(normalizedSlug) && def.slugSource() == SlugSource.AUTO_GENERATED) {
                 throw new CmsValidationException(CmsMessages.AUTO_GENERATED_USE_POST);
             }
+            var resolvedLocale = localeResolver.resolveForRead(locale);
             var providedDto = provider.upsert(normalizedSlug, validated, request.getVersion(), resolvedLocale);
             deleteDrafts(key, normalizedSlug, updatedBy, resolvedLocale, false);
             providedDto.setCanEdit(true);
@@ -272,6 +341,11 @@ public class CmsCollectionManager implements CmsCollectionService {
 
         var item = collectionItemDao.findByCollectionKeyAndSlug(key, normalizedSlug).orElse(null);
         var isCreate = item == null;
+
+
+        var resolvedLocale = isCreate
+                ? localeResolver.requireForWrite(locale)
+                : item.getLocale();
 
         if (isCreate) {
             if (def.slugSource() == SlugSource.AUTO_GENERATED) {
@@ -308,6 +382,7 @@ public class CmsCollectionManager implements CmsCollectionService {
         }
 
         var dto = toDto(saved);
+        dto.setTranslations(siblingsOf(saved));
         dto.setCanEdit(true);
         return dto;
     }
@@ -371,7 +446,7 @@ public class CmsCollectionManager implements CmsCollectionService {
         var key = def.key();
         var normalizedSlug = SlugNormalizer.normalizeBlockPath(slug);
 
-        var resolvedLocale = localeResolver.requireForWrite(locale);
+        var resolvedLocale = localeOfItem(key, normalizedSlug, locale);
         var validated = CollectionSchemaValidator.validateAndStrip(def.schema(), request.getData(), true);
 
         var draft = collectionDraftDao
@@ -432,7 +507,7 @@ public class CmsCollectionManager implements CmsCollectionService {
         var normalizedSlug = SlugNormalizer.normalizeBlockPath(slug);
 
         collectionDraftDao
-                .findOwnItemDraft(key, normalizedSlug, userId, localeResolver.requireForWrite(locale))
+                .findOwnItemDraft(key, normalizedSlug, userId, localeOfItem(key, normalizedSlug, locale))
                 .ifPresent(collectionDraftDao::delete);
     }
 
