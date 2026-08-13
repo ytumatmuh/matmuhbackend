@@ -4,6 +4,7 @@ import com.matmuh.matmuhsite.business.abstracts.UserService;
 import com.matmuh.matmuhsite.core.exceptionHandlers.CustomAccessDeniedHandler;
 import com.matmuh.matmuhsite.core.exceptionHandlers.CustomAuthenticationEntryPointHandler;
 import com.matmuh.matmuhsite.core.security.JwtAuthFilter;
+import com.matmuh.matmuhsite.core.security.ServiceKeyAuthFilter;
 import com.matmuh.matmuhsite.core.security.oauth2.OAuth2LoginSuccessHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,6 +28,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
+    private final ServiceKeyAuthFilter serviceKeyAuthFilter;
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
     private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
@@ -36,6 +38,7 @@ public class SecurityConfig {
 
     public SecurityConfig(
             JwtAuthFilter jwtAuthFilter,
+            ServiceKeyAuthFilter serviceKeyAuthFilter,
             UserService userService,
             PasswordEncoder passwordEncoder,
             OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler,
@@ -43,6 +46,7 @@ public class SecurityConfig {
             CustomAuthenticationEntryPointHandler customAuthenticationEntryPointHandler,
             OAuth2AuthorizationRequestResolver authorizationRequestResolver) {
         this.jwtAuthFilter = jwtAuthFilter;
+        this.serviceKeyAuthFilter = serviceKeyAuthFilter;
         this.userService = userService;
         this.passwordEncoder = passwordEncoder;
         this.oAuth2LoginSuccessHandler = oAuth2LoginSuccessHandler;
@@ -70,11 +74,16 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/uploads/files/**").authenticated()
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
 
+                        .requestMatchers("/api/service-keys/**").hasRole("ADMIN")
+
                         .requestMatchers(HttpMethod.GET, "/api/cms/data").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/cms/collections/me").hasAnyRole("ADMIN", "EDITOR")
                         .requestMatchers(HttpMethod.GET, "/api/cms/collections/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/cms/content", "/api/cms/public/*/data").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/cms/sync").hasRole("ADMIN")
+                        // Sync'i insan token'ı çalıştıramaz: yetenek yalnız servis anahtarlarında var.
+                        // Bir geliştiricinin lokalinden bayat manifest'le prod'u uzlaştırması
+                        // bu yüzden yapısal olarak kapalı.
+                        .requestMatchers(HttpMethod.POST, "/api/cms/sync").hasRole("SCHEMA_SYNC")
                         .requestMatchers(HttpMethod.PUT, "/api/cms/content", "/api/cms/draft").hasAnyRole("ADMIN", "EDITOR")
                         .requestMatchers(HttpMethod.DELETE, "/api/cms/draft").hasAnyRole("ADMIN", "EDITOR")
                         .requestMatchers(HttpMethod.POST, "/api/cms/media").hasAnyRole("ADMIN", "EDITOR")
@@ -119,7 +128,8 @@ public class SecurityConfig {
                         .sessionFixation().migrateSession()
                 )
                 .authenticationProvider(authenticationProvider())
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(serviceKeyAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(jwtAuthFilter, ServiceKeyAuthFilter.class)
                 .oauth2Login(oauth2 -> oauth2
                         .authorizationEndpoint(endpoint -> endpoint
                                 .baseUri("/api/oauth2/microsoft")

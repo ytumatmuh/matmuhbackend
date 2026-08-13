@@ -3,6 +3,7 @@ package com.matmuh.matmuhsite.core.security;
 import com.matmuh.matmuhsite.business.abstracts.UserService;
 import com.matmuh.matmuhsite.core.helpers.AuthCookieFactory;
 import com.matmuh.matmuhsite.core.helpers.OriginValidator;
+import com.matmuh.matmuhsite.core.helpers.ServiceKeyFormat;
 import com.matmuh.matmuhsite.core.properties.CookieProperties;
 import com.matmuh.matmuhsite.entities.User;
 import jakarta.servlet.FilterChain;
@@ -93,8 +94,13 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private String extractToken(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            var token = authHeader.substring(7);
+            // Servis anahtarını JWT olarak ayrıştırmaya çalışmıyoruz; onu önceki filtre çözdü.
+            if (ServiceKeyFormat.looksLikeServiceKey(token)) {
+                return null;
+            }
             logger.debug("Token found in Authorization header");
-            return authHeader.substring(7);
+            return token;
         }
 
         if (!isSafeMethod(request.getMethod()) && !isCookieWriteAllowed(request)) {
