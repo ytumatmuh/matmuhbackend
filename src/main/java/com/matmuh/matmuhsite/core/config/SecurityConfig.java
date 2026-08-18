@@ -72,9 +72,15 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/login", "/api/auth/refresh", "/api/auth/logout").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/uploads/images/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/uploads/files/**").authenticated()
-                        .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/api/swagger-ui.html", "/api/swagger-ui/**", "/api/v3/api-docs/**").permitAll()
 
                         .requestMatchers("/api/service-keys/**").hasRole("ADMIN")
+                        .requestMatchers("/api/calendar-admin/**").hasRole("ADMIN")
+
+
+                        .requestMatchers(HttpMethod.GET, "/api/calendar/me").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/calendar").permitAll()
+                        .requestMatchers("/api/enrollments/**").authenticated()
 
                         .requestMatchers(HttpMethod.GET, "/api/cms/data").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/cms/collections/me").hasAnyRole("ADMIN", "EDITOR")
