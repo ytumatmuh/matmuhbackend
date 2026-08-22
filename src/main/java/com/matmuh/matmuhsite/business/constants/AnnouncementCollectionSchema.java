@@ -26,6 +26,13 @@ public final class AnnouncementCollectionSchema {
                             FieldDefinition.required("image", FieldType.IMAGE, "Görsel"),
                             FieldDefinition.of("caption", FieldType.SHORT_TEXT, "Açıklama")))
                     .withHelp("Ek fotoğraflar. Yazı içine gömülen görseller içerik editöründen eklenir, buraya konmaz."),
+            FieldDefinition.of("attachments", FieldType.OBJECT_ARRAY, "Ekler")
+                    .withItemFields(List.of(
+                            FieldDefinition.required("url", FieldType.URL, "Dosya bağlantısı"),
+                            FieldDefinition.required("name", FieldType.SHORT_TEXT, "Dosya adı"),
+                            FieldDefinition.of("type", FieldType.SHORT_TEXT, "Dosya türü"),
+                            FieldDefinition.of("size", FieldType.NUMBER, "Boyut (bayt)")))
+                    .withHelp("Dosyalar POST /api/cms/media ile yüklenir, dönen url buraya yazılır."),
             FieldDefinition.of("publishedAt", FieldType.DATE, "Yayın tarihi")
                     .asFilterable()
                     .asSortable(),

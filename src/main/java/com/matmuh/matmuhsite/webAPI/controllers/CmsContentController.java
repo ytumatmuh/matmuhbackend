@@ -114,7 +114,7 @@ public class CmsContentController {
         return contentService.sync(manifests, locales);
     }
 
-    @Operation(summary = "Görsel yükle", description = "CMS görseli yükler, {data:{url}} döner (ADMIN).")
+    @Operation(summary = "Medya yükle", description = "CMS görseli veya duyuru/haber eki yükler, {data:{url}} döner. Yüklenen dosya herkese açık okunabilir (ADMIN).")
     @PostMapping("/media")
     public UploadResponseDto upload(@RequestParam("file") MultipartFile file) {
         if (file.isEmpty()) {
