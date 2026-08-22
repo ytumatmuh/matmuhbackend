@@ -6,29 +6,24 @@ import com.matmuh.matmuhsite.core.dtos.lectureNote.response.LectureNoteDto;
 import com.matmuh.matmuhsite.core.dtos.lectureNote.response.LectureNoteWithLectureDto;
 import com.matmuh.matmuhsite.entities.File;
 import com.matmuh.matmuhsite.entities.LectureNote;
+import com.matmuh.matmuhsite.core.helpers.StorageUrlResolver;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 
 @Mapper(componentModel = "spring")
 public abstract class LectureNoteMapper {
 
-    @Value("${app.storage.domain}")
-   protected String storageDomain;
+    @Autowired
+    protected StorageUrlResolver storageUrlResolver;
 
     @Named("addDomainToUrl")
     protected String generateFullUrl(String key) {
-        if (key == null || key.isEmpty()) {
-            return null;
-        }
-        if (key.startsWith("http")) {
-            return key;
-        }
-        return storageDomain + "/" + key;
+        return storageUrlResolver.urlFor(key);
     }
 
     @Mapping(target = "file", expression = "java(toFileEntity(fileDto))")

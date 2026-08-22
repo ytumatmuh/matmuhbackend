@@ -88,15 +88,14 @@ jwt:
 
 storage:
   type: ${STORAGE_TYPE:local}
+  bucket: ${STORAGE_BUCKET:}
+  region: ${STORAGE_REGION:eu-central-1}
+  access-key: ${STORAGE_ACCESS_KEY:}
+  secret-key: ${STORAGE_SECRET_KEY:}
+  endpoint: ${STORAGE_ENDPOINT:}
+  signed-url-minutes: ${STORAGE_SIGNED_URL_MINUTES:15}
   local:
     path: ${STORAGE_LOCAL_PATH:uploads}
-
-r2:
-  endpoint: ${R2_ENDPOINT:}
-  publicUrl: ${R2_PUBLIC_URL:}
-  accessKey: ${R2_ACCESS_KEY:}
-  secretKey: ${R2_SECRET_KEY:}
-  bucketName: ${R2_BUCKET_NAME:}
 
 app:
   storage:

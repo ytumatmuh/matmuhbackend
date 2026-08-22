@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.UUID;
 
 @Service
 @ConditionalOnProperty(name = "storage.type", havingValue = "local", matchIfMissing = true)
@@ -28,9 +27,7 @@ public class LocalStorageService implements StorageService {
 
     @Override
     public String uploadFile(byte[] fileBytes, String originalFileName, String contentType, FolderType folderType) {
-        String sanitizedName = originalFileName == null ? "file" : originalFileName.replaceAll("\\s+", "_");
-        String folder = folderType == FolderType.IMAGE ? "images" : "files";
-        String key = folder + "/" + UUID.randomUUID() + "-" + sanitizedName;
+        String key = StorageKeys.newKey(folderType, originalFileName);
 
         try {
             Path target = rootPath.resolve(key).normalize();

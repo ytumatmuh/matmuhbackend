@@ -13,9 +13,9 @@ import com.matmuh.matmuhsite.core.dtos.cms.response.SyncResultDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.UpdatePageResponseDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.UploadResponseDto;
 import com.matmuh.matmuhsite.core.exceptions.CmsValidationException;
+import com.matmuh.matmuhsite.core.helpers.StorageUrlResolver;
 import com.matmuh.matmuhsite.core.utilities.storage.StorageService;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Value;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -35,14 +35,15 @@ public class CmsContentController {
 
     private final ContentService contentService;
     private final StorageService storageService;
+    private final StorageUrlResolver storageUrlResolver;
 
-    @Value("${app.storage.domain}")
-    private String storageDomain;
 
     public CmsContentController(ContentService contentService,
-                                StorageService storageService) {
+                                StorageService storageService,
+                                StorageUrlResolver storageUrlResolver) {
         this.contentService = contentService;
         this.storageService = storageService;
+        this.storageUrlResolver = storageUrlResolver;
     }
 
     @Operation(summary = "Public içerik", description = "Yayınlanmış blokları döner (anonim).")
@@ -130,7 +131,7 @@ public class CmsContentController {
                     file.getOriginalFilename(),
                     file.getContentType(),
                     FolderType.IMAGE);
-            var url = storageDomain + "/" + key;
+            var url = storageUrlResolver.urlFor(key);
             return UploadResponseDto.of(url);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
