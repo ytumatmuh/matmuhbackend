@@ -91,6 +91,10 @@ public class CmsCollectionManager implements CmsCollectionService {
         return def.localized() ? localeResolver.declared() : List.of();
     }
 
+    private String writeLocale(CollectionRegistry.CollectionDefinition def, String locale) {
+        return def.localized() ? localeResolver.requireForWrite(locale) : null;
+    }
+
     @Override
     public List<MyCollectionDto> getMyCollections() {
         return registry.all().stream()
@@ -344,7 +348,7 @@ public class CmsCollectionManager implements CmsCollectionService {
 
 
         var resolvedLocale = isCreate
-                ? localeResolver.requireForWrite(locale)
+                ? writeLocale(def, locale)
                 : item.getLocale();
 
         if (isCreate) {
@@ -399,7 +403,7 @@ public class CmsCollectionManager implements CmsCollectionService {
             throw new CmsValidationException(CmsMessages.USER_DEFINED_USE_PUT);
         }
 
-        var resolvedLocale = localeResolver.requireForWrite(locale);
+        var resolvedLocale = writeLocale(def, locale);
         var validated = CollectionSchemaValidator.validateAndStrip(def.schema(), request.getData());
 
         var source = validated.path(def.slugSourceField()).asText("");
@@ -468,7 +472,7 @@ public class CmsCollectionManager implements CmsCollectionService {
         var def = registry.resolve(collectionKey);
         var key = def.key();
 
-        var resolvedLocale = localeResolver.requireForWrite(locale);
+        var resolvedLocale = writeLocale(def, locale);
         var validated = CollectionSchemaValidator.validateAndStrip(def.schema(), request.getData(), true);
 
         var slug = CollectionDraft.DEFAULT_SLUG;
@@ -514,10 +518,11 @@ public class CmsCollectionManager implements CmsCollectionService {
     @Override
     @Transactional
     public void deleteNewDraft(String collectionKey, String userId, String locale) {
-        var key = registry.resolve(collectionKey).key();
+        var def = registry.resolve(collectionKey);
+        var key = def.key();
 
         collectionDraftDao
-                .findOwnNewDraft(key, userId, localeResolver.requireForWrite(locale))
+                .findOwnNewDraft(key, userId, writeLocale(def, locale))
                 .ifPresent(collectionDraftDao::delete);
     }
 
