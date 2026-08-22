@@ -143,7 +143,15 @@ public class LectureController {
     }
 
     @Operation(summary = "Derse not yükle",
-            description = "Multipart dosya ile ders notu yükler; not admin onayına düşer. Opsiyonel lectureOfferingId ile hoca/dönem bağlanır.")
+            description = "Multipart dosya ile ders notu yükler; not admin onayına düşer. Opsiyonel lectureOfferingId ile hoca/dönem bağlanır. "
+                    + "data parçası JSON, file parçası dosyadır.",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    content = @io.swagger.v3.oas.annotations.media.Content(
+                            mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
+                            encoding = {
+                                    @io.swagger.v3.oas.annotations.media.Encoding(name = "data", contentType = MediaType.APPLICATION_JSON_VALUE),
+                                    @io.swagger.v3.oas.annotations.media.Encoding(name = "file", contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+                            })))
     @PostMapping(value = "/{id}/notes", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<DataResult<LectureNoteDto>> addNoteToLecture(@PathVariable UUID id,
                                                                        @RequestPart("data") LectureNoteCreateRequestDto lectureNoteCreateRequestDto,
