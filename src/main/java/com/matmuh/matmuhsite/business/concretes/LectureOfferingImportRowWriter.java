@@ -1,11 +1,11 @@
 package com.matmuh.matmuhsite.business.concretes;
 
 import com.matmuh.matmuhsite.business.constants.LectureMessages;
-import com.matmuh.matmuhsite.business.constants.InstructorMessages;
+import com.matmuh.matmuhsite.business.constants.StaffMessages;
 import com.matmuh.matmuhsite.core.dtos.lectureOfferings.request.ImportOfferingsRequestDto;
 import com.matmuh.matmuhsite.core.exceptions.BusinessRuleException;
 import com.matmuh.matmuhsite.core.exceptions.ResourceNotFoundException;
-import com.matmuh.matmuhsite.dataAccess.abstracts.InstructorDao;
+import com.matmuh.matmuhsite.dataAccess.abstracts.StaffDao;
 import com.matmuh.matmuhsite.dataAccess.abstracts.LectureDao;
 import com.matmuh.matmuhsite.dataAccess.abstracts.LectureOfferingDao;
 import com.matmuh.matmuhsite.entities.ExamStatistic;
@@ -28,13 +28,13 @@ public class LectureOfferingImportRowWriter {
     }
 
     private final LectureDao lectureDao;
-    private final InstructorDao instructorDao;
+    private final StaffDao staffDao;
     private final LectureOfferingDao lectureOfferingDao;
 
-    public LectureOfferingImportRowWriter(LectureDao lectureDao, InstructorDao instructorDao,
+    public LectureOfferingImportRowWriter(LectureDao lectureDao, StaffDao staffDao,
                                           LectureOfferingDao lectureOfferingDao) {
         this.lectureDao = lectureDao;
-        this.instructorDao = instructorDao;
+        this.staffDao = staffDao;
         this.lectureOfferingDao = lectureOfferingDao;
     }
 
@@ -44,9 +44,14 @@ public class LectureOfferingImportRowWriter {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         LectureMessages.LECTURE_NOT_FOUND + " (" + row.getLectureCode() + ")"));
 
-        var instructor = instructorDao.findById(row.getInstructorId())
+        var staff = staffDao.findById(row.getStaffId())
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        InstructorMessages.INSTRUCTOR_NOT_FOUND + " (" + row.getInstructorId() + ")"));
+                        StaffMessages.STAFF_NOT_FOUND + " (" + row.getStaffId() + ")"));
+
+        var groups = staff.getGroups();
+        if (groups != null && !groups.isEmpty() && groups.stream().noneMatch(com.matmuh.matmuhsite.entities.StaffGroup::canTeach)) {
+            throw new com.matmuh.matmuhsite.core.exceptions.BusinessRuleException(StaffMessages.STAFF_CANNOT_TEACH);
+        }
 
         var existing = lectureOfferingDao.findByLectureIdAndAcademicYearAndSemesterAndGroupNumber(
                 lecture.getId(), row.getAcademicYear(), row.getSemester(), row.getGroupNumber());
@@ -61,7 +66,7 @@ public class LectureOfferingImportRowWriter {
             return fresh;
         });
 
-        offering.setInstructor(instructor);
+        offering.setStaff(staff);
         if (row.getLanguage() != null) {
             offering.setLanguage(row.getLanguage());
         }

@@ -2,7 +2,7 @@ package com.matmuh.matmuhsite.core.dtos.lectureOfferings.response;
 
 import com.matmuh.matmuhsite.core.dtos.examStatistic.response.ExamStatisticDto;
 import com.matmuh.matmuhsite.core.dtos.gradeDistribution.response.GradeResultDto;
-import com.matmuh.matmuhsite.core.dtos.instructor.response.InstructorDto;
+import com.matmuh.matmuhsite.core.dtos.staff.response.StaffDto;
 import com.matmuh.matmuhsite.entities.InstructionLanguage;
 import com.matmuh.matmuhsite.entities.Semester;
 import lombok.*;
@@ -27,7 +27,7 @@ public class OfferingStatisticsDto {
 
     private Semester semester;
 
-    private InstructorDto instructor;
+    private StaffDto staff;
 
     private GradeResultDto finalResult;
 

@@ -46,8 +46,8 @@ public class ImportOfferingsRequestDto {
         @NotNull(message = "{import.group.number.not.null}")
         private Integer groupNumber;
 
-        @NotNull(message = "{import.instructor.not.null}")
-        private UUID instructorId;
+        @NotNull(message = "{import.staff.not.null}")
+        private UUID staffId;
 
         private InstructionLanguage language;
 

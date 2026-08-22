@@ -17,7 +17,7 @@ public final class LectureCollectionSchema {
     public static final String FIELD_SEMESTER = "semester";
     public static final String FIELD_CODE = "code";
 
-    private static final List<FieldDefinition> INSTRUCTOR_FIELDS = List.of(
+    private static final List<FieldDefinition> STAFF_FIELDS = List.of(
             FieldDefinition.of("firstName", FieldType.SHORT_TEXT, "Ad"),
             FieldDefinition.of("lastName", FieldType.SHORT_TEXT, "Soyad"),
             FieldDefinition.of("academicTitle", FieldType.SHORT_TEXT, "Unvan"),
@@ -46,9 +46,9 @@ public final class LectureCollectionSchema {
             FieldDefinition.of("ects", FieldType.NUMBER, "AKTS"),
             FieldDefinition.of("bolognaLink", FieldType.URL, "Bologna sayfası"),
             FieldDefinition.of("notesLink", FieldType.URL, "Not bağlantısı"),
-            FieldDefinition.of("instructors", FieldType.OBJECT_ARRAY, "Akademisyenler")
+            FieldDefinition.of("staff", FieldType.OBJECT_ARRAY, "Personel")
                     .asReadOnly()
-                    .withItemFields(INSTRUCTOR_FIELDS)
-                    .withHelp("Akademisyen ataması dönem kayıtlarından gelir, buradan düzenlenemez.")
+                    .withItemFields(STAFF_FIELDS)
+                    .withHelp("Personel ataması dönem kayıtlarından gelir, buradan düzenlenemez.")
     ));
 }

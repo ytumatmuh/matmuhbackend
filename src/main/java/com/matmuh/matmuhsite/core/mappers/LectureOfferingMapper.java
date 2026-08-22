@@ -10,7 +10,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.springframework.beans.factory.annotation.Autowired;
 
-@Mapper(componentModel = "spring", uses = {InstructorMapper.class, GradeMapper.class})
+@Mapper(componentModel = "spring", uses = {StaffMapper.class, GradeMapper.class})
 public abstract class LectureOfferingMapper {
 
     @Autowired

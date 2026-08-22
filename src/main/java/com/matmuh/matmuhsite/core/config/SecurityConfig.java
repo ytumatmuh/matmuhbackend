@@ -116,12 +116,12 @@ public class SecurityConfig {
 
                         .requestMatchers(HttpMethod.GET, "/api/academic-years").permitAll()
 
-                        .requestMatchers(HttpMethod.GET,  "/api/instructors/{id}/notes").authenticated()
-                        .requestMatchers(HttpMethod.GET,  "/api/instructors/{id}/offerings").authenticated()
-                        .requestMatchers(HttpMethod.GET,  "/api/instructors/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/instructors").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PATCH, "/api/instructors/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/instructors/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET,  "/api/staff/{id}/notes").authenticated()
+                        .requestMatchers(HttpMethod.GET,  "/api/staff/{id}/offerings").authenticated()
+                        .requestMatchers(HttpMethod.GET,  "/api/staff/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/staff").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/staff/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/staff/**").hasRole("ADMIN")
 
                         .anyRequest().authenticated()
                 )

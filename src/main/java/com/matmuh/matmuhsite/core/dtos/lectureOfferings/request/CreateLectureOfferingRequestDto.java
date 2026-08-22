@@ -18,8 +18,8 @@ import java.util.UUID;
 @NoArgsConstructor
 public class CreateLectureOfferingRequestDto {
 
-    @NotNull(message = "{offering.instructor.id.not.null}")
-    private UUID instructorId;
+    @NotNull(message = "{offering.staff.id.not.null}")
+    private UUID staffId;
 
     @NotBlank(message = "{offering.academic.year.not.blank}")
     @AcademicYear

@@ -43,8 +43,8 @@ public class LectureOffering extends BaseEntity{
     private Lecture lecture;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "instructor_id")
-    private Instructor instructor;
+    @JoinColumn(name = "staff_id")
+    private Staff staff;
 
     @OneToMany(mappedBy = "lectureOffering", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default

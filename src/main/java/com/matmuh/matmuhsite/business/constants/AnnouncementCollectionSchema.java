@@ -21,6 +21,11 @@ public final class AnnouncementCollectionSchema {
             FieldDefinition.of("summary", FieldType.LONG_TEXT, "Özet"),
             FieldDefinition.of("body", FieldType.RICH_TEXT, "İçerik"),
             FieldDefinition.of("coverImage", FieldType.IMAGE, "Kapak görseli"),
+            FieldDefinition.of("gallery", FieldType.OBJECT_ARRAY, "Galeri")
+                    .withItemFields(List.of(
+                            FieldDefinition.required("image", FieldType.IMAGE, "Görsel"),
+                            FieldDefinition.of("caption", FieldType.SHORT_TEXT, "Açıklama")))
+                    .withHelp("Ek fotoğraflar. Yazı içine gömülen görseller içerik editöründen eklenir, buraya konmaz."),
             FieldDefinition.of("publishedAt", FieldType.DATE, "Yayın tarihi")
                     .asFilterable()
                     .asSortable(),

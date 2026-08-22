@@ -32,11 +32,11 @@ public interface LectureNoteDao extends JpaRepository<LectureNote, UUID> {
     @Query("""
             SELECT n FROM LectureNote n
             LEFT JOIN n.lectureOffering o
-            LEFT JOIN o.instructor i
+            LEFT JOIN o.staff i
             WHERE (:approved IS NULL OR n.isApproved = :approved)
               AND (:lectureId IS NULL OR n.lecture.id = :lectureId)
               AND (:offeringId IS NULL OR o.id = :offeringId)
-              AND (:instructorId IS NULL OR i.id = :instructorId)
+              AND (:staffId IS NULL OR i.id = :staffId)
               AND (CAST(:search AS String) IS NULL
                    OR LOWER(n.title) LIKE LOWER(CONCAT('%', CAST(:search AS String), '%'))
                    OR LOWER(n.description) LIKE LOWER(CONCAT('%', CAST(:search AS String), '%')))
@@ -44,7 +44,7 @@ public interface LectureNoteDao extends JpaRepository<LectureNote, UUID> {
     Page<LectureNote> search(@Param("approved") Boolean approved,
                              @Param("lectureId") UUID lectureId,
                              @Param("offeringId") UUID offeringId,
-                             @Param("instructorId") UUID instructorId,
+                             @Param("staffId") UUID staffId,
                              @Param("search") String search,
                              Pageable pageable);
 }

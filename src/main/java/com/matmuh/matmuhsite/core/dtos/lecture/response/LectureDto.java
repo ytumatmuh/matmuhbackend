@@ -1,6 +1,6 @@
 package com.matmuh.matmuhsite.core.dtos.lecture.response;
 
-import com.matmuh.matmuhsite.core.dtos.instructor.response.InstructorDto;
+import com.matmuh.matmuhsite.core.dtos.staff.response.StaffDto;
 import com.matmuh.matmuhsite.entities.Semester;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -47,7 +47,7 @@ public class LectureDto {
 
     private String notesLink;
 
-    private List<InstructorDto> instructors = new ArrayList<>();
+    private List<StaffDto> staff = new ArrayList<>();
 
 
     private long noteCount;

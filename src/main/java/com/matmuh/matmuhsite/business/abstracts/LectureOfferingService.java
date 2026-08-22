@@ -33,7 +33,7 @@ public interface LectureOfferingService {
 
     List<LectureOfferingDto> getOfferingsByLecture(UUID lectureId);
 
-    List<LectureOfferingDto> getOfferingsByInstructor(UUID instructorId, String academicYear, Semester semester);
+    List<LectureOfferingDto> getOfferingsByStaff(UUID staffId, String academicYear, Semester semester);
 
     LectureOffering getOfferingReferenceById(UUID offeringId);
 

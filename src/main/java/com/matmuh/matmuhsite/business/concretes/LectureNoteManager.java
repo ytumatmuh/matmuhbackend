@@ -112,10 +112,10 @@ public class LectureNoteManager implements LectureNoteService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageDto<LectureNoteWithLectureDto> getAllNotes(Boolean approved, UUID lectureId, UUID lectureOfferingId, UUID instructorId, String search, Pageable pageable) {
-        logger.info("Getting lecture notes approved={} lectureId={} offeringId={} instructorId={} search={} page={}", approved, lectureId, lectureOfferingId, instructorId, search, pageable.getPageNumber());
+    public PageDto<LectureNoteWithLectureDto> getAllNotes(Boolean approved, UUID lectureId, UUID lectureOfferingId, UUID staffId, String search, Pageable pageable) {
+        logger.info("Getting lecture notes approved={} lectureId={} offeringId={} staffId={} search={} page={}", approved, lectureId, lectureOfferingId, staffId, search, pageable.getPageNumber());
 
-        var page = lectureNoteDao.search(approved, lectureId, lectureOfferingId, instructorId,
+        var page = lectureNoteDao.search(approved, lectureId, lectureOfferingId, staffId,
                 search == null || search.isBlank() ? null : search.trim(), pageable);
 
         return PageDto.of(page, lectureNoteMapper::toLectureNoteWithLectureDto);

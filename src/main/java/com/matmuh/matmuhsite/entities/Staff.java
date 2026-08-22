@@ -1,12 +1,15 @@
 package com.matmuh.matmuhsite.entities;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 import lombok.*;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Getter
@@ -14,11 +17,11 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@SQLDelete(sql = "UPDATE instructors SET is_deleted = true WHERE id = ?")
+@SQLDelete(sql = "UPDATE staff SET is_deleted = true WHERE id = ?")
 @SQLRestriction("is_deleted = false")
 @Entity
-@Table(name = "instructors")
-public class Instructor extends BaseEntity{
+@Table(name = "staff")
+public class Staff extends BaseEntity{
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -33,6 +36,20 @@ public class Instructor extends BaseEntity{
 
     @Column(name = "academic_title")
     private String academicTitle;
+
+    @ElementCollection(targetClass = StaffGroup.class, fetch = FetchType.EAGER)
+    @CollectionTable(name = "staff_groups", joinColumns = @JoinColumn(name = "staff_id"))
+    @Column(name = "staff_group", nullable = false)
+    @Enumerated(EnumType.STRING)
+    @BatchSize(size = 50)
+    @Builder.Default
+    private Set<StaffGroup> groups = new LinkedHashSet<>();
+
+    @Column(name = "role")
+    private String role;
+
+    @Column(name = "phone")
+    private String phone;
 
 
     @Column(name = "raw_name")
@@ -54,7 +71,7 @@ public class Instructor extends BaseEntity{
     @Column(name = "office")
     private String office;
 
-    @OneToMany(mappedBy = "instructor", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "staff", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<LectureOffering> offerings = new ArrayList<>();
 

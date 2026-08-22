@@ -1,23 +1,26 @@
 package com.matmuh.matmuhsite.business.concretes;
 
 import com.matmuh.matmuhsite.business.abstracts.CmsCollectionProvider;
-import com.matmuh.matmuhsite.business.abstracts.InstructorService;
+import com.matmuh.matmuhsite.business.abstracts.StaffService;
 import com.matmuh.matmuhsite.business.constants.CmsMessages;
-import com.matmuh.matmuhsite.business.constants.InstructorCollectionSchema;
+import com.matmuh.matmuhsite.business.constants.StaffCollectionSchema;
 import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionItemDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionListDto;
-import com.matmuh.matmuhsite.core.dtos.instructor.request.CreateInstructorRequestDto;
-import com.matmuh.matmuhsite.core.dtos.instructor.request.UpdateInstructorRequestDto;
-import com.matmuh.matmuhsite.core.dtos.instructor.response.InstructorDto;
+import com.matmuh.matmuhsite.core.dtos.staff.request.CreateStaffRequestDto;
+import com.matmuh.matmuhsite.core.dtos.staff.request.UpdateStaffRequestDto;
+import com.matmuh.matmuhsite.core.dtos.staff.response.StaffDto;
 import com.matmuh.matmuhsite.core.exceptions.CmsValidationException;
 import com.matmuh.matmuhsite.core.exceptions.ConcurrencyConflictException;
 import com.matmuh.matmuhsite.core.exceptions.ResourceNotFoundException;
 import com.matmuh.matmuhsite.core.helpers.OffsetPageable;
-import com.matmuh.matmuhsite.core.mappers.InstructorMapper;
-import com.matmuh.matmuhsite.dataAccess.abstracts.InstructorDao;
-import com.matmuh.matmuhsite.entities.Instructor;
+import com.matmuh.matmuhsite.core.mappers.StaffMapper;
+import com.matmuh.matmuhsite.dataAccess.abstracts.StaffDao;
+import com.matmuh.matmuhsite.entities.Staff;
+import com.matmuh.matmuhsite.entities.StaffGroup;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
+
+import java.util.Locale;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import jakarta.validation.Validator;
@@ -26,30 +29,31 @@ import tools.jackson.databind.node.ObjectNode;
 
 @Service
 @RequiredArgsConstructor
-public class InstructorCollectionProvider implements CmsCollectionProvider {
+public class StaffCollectionProvider implements CmsCollectionProvider {
 
     private static final Sort DEFAULT_SORT = Sort.by(Sort.Direction.ASC, "lastName");
 
-    private final InstructorService instructorService;
-    private final InstructorDao instructorDao;
-    private final InstructorMapper instructorMapper;
+    private final StaffService staffService;
+    private final StaffDao staffDao;
+    private final StaffMapper staffMapper;
     private final JsonMapper objectMapper;
     private final Validator validator;
 
 
     @Override
     public String collectionKey() {
-        return InstructorCollectionSchema.KEY;
+        return StaffCollectionSchema.KEY;
     }
 
     @Override
     @Transactional(readOnly = true)
     public CollectionListDto list(ObjectNode filters, String locale, int offset, int limit) {
-        var page = instructorDao.filter(
-                filterText(filters, InstructorCollectionSchema.FIELD_FIRST_NAME),
-                filterText(filters, InstructorCollectionSchema.FIELD_LAST_NAME),
-                filterText(filters, InstructorCollectionSchema.FIELD_EMAIL),
-                filterText(filters, InstructorCollectionSchema.FIELD_AVESIS_LINK),
+        var page = staffDao.filter(
+                filterText(filters, StaffCollectionSchema.FIELD_FIRST_NAME),
+                filterText(filters, StaffCollectionSchema.FIELD_LAST_NAME),
+                filterText(filters, StaffCollectionSchema.FIELD_EMAIL),
+                filterText(filters, StaffCollectionSchema.FIELD_AVESIS_LINK),
+                filterGroup(filters),
                 OffsetPageable.of(offset, limit, DEFAULT_SORT));
 
 
@@ -71,9 +75,9 @@ public class InstructorCollectionProvider implements CmsCollectionProvider {
     @Override
     @Transactional
     public CollectionItemDto create(ObjectNode data, String locale) {
-        var request = convert(data, CreateInstructorRequestDto.class);
+        var request = convert(data, CreateStaffRequestDto.class);
         validate(request);
-        return toItem(instructorService.createInstructor(request));
+        return toItem(staffService.createStaff(request));
     }
 
 
@@ -82,21 +86,21 @@ public class InstructorCollectionProvider implements CmsCollectionProvider {
     @Override
     @Transactional
     public CollectionItemDto upsert(String slug, ObjectNode data, Integer version, String locale) {
-        var instructor = requireBySlug(slug);
+        var staff = requireBySlug(slug);
 
-        if (version != null && version != instructor.getVersion()){
+        if (version != null && version != staff.getVersion()){
             throw new ConcurrencyConflictException(CmsMessages.VERSION_CONFLICT);
         }
 
-        var request = convert(data, UpdateInstructorRequestDto.class);
+        var request = convert(data, UpdateStaffRequestDto.class);
         validate(request);
-        return toItem(instructorService.updateInstructor(instructor.getId(), request));
+        return toItem(staffService.updateStaff(staff.getId(), request));
     }
 
     @Override
     @Transactional(readOnly = true)
     public boolean existsBySlug(String slug) {
-        return instructorDao.existsBySlug(slug);
+        return staffDao.existsBySlug(slug);
 
     }
 
@@ -127,31 +131,49 @@ public class InstructorCollectionProvider implements CmsCollectionProvider {
         return node == null || node.isNull() ? null : node.asString();
     }
 
-    private CollectionItemDto toItem(Instructor instructor) {
-        return toItem(instructorMapper.toInstructorDto(instructor), instructor.getVersion());
+    private StaffGroup filterGroup(ObjectNode filters) {
+        var node = filters == null ? null : filters.get(StaffCollectionSchema.FIELD_GROUPS);
+        if (node == null || node.isNull()) {
+            return null;
+        }
+
+        var text = node.isArray() ? (node.size() == 0 ? null : node.get(0).asString()) : node.asString();
+        if (text == null || text.isBlank()) {
+            return null;
+        }
+
+        try {
+            return StaffGroup.valueOf(text.trim().toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException e) {
+            throw new CmsValidationException("Field '" + StaffCollectionSchema.FIELD_GROUPS + "': invalid value '" + text + "'.");
+        }
     }
 
-    private CollectionItemDto toItem(InstructorDto instructor) {
-        var version = instructorDao.findBySlug(instructor.getSlug()).map(Instructor::getVersion).orElse(0);
-        return toItem(instructor, version);
+    private CollectionItemDto toItem(Staff staff) {
+        return toItem(staffMapper.toStaffDto(staff), staff.getVersion());
+    }
+
+    private CollectionItemDto toItem(StaffDto staff) {
+        var version = staffDao.findBySlug(staff.getSlug()).map(Staff::getVersion).orElse(0);
+        return toItem(staff, version);
     }
 
 
 
-    private CollectionItemDto toItem(InstructorDto instructor, int version) {
+    private CollectionItemDto toItem(StaffDto staff, int version) {
         var item = new CollectionItemDto();
-        item.setId(instructor.getId());
-        item.setCollectionKey(InstructorCollectionSchema.KEY);
-        item.setSlug(instructor.getSlug());
-        item.setData(objectMapper.valueToTree(instructor));
+        item.setId(staff.getId());
+        item.setCollectionKey(StaffCollectionSchema.KEY);
+        item.setSlug(staff.getSlug());
+        item.setData(objectMapper.valueToTree(staff));
         item.setVersion(version);
         return item;
     }
 
-    private Instructor requireBySlug(String slug) {
-        return instructorDao.findBySlug(slug)
+    private Staff requireBySlug(String slug) {
+        return staffDao.findBySlug(slug)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        CmsMessages.COLLECTION_ITEM_NOT_FOUND + InstructorCollectionSchema.KEY + "/" + slug
+                        CmsMessages.COLLECTION_ITEM_NOT_FOUND + StaffCollectionSchema.KEY + "/" + slug
                 ));
 
 

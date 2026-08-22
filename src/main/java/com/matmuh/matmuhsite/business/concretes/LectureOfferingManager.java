@@ -1,9 +1,10 @@
 package com.matmuh.matmuhsite.business.concretes;
 
-import com.matmuh.matmuhsite.business.abstracts.InstructorService;
+import com.matmuh.matmuhsite.business.abstracts.StaffService;
 import com.matmuh.matmuhsite.business.abstracts.LectureOfferingService;
 import com.matmuh.matmuhsite.business.abstracts.LectureService;
 import com.matmuh.matmuhsite.business.constants.LectureOfferingMessages;
+import com.matmuh.matmuhsite.business.constants.StaffMessages;
 import com.matmuh.matmuhsite.core.dtos.examStatistic.request.SaveExamStatisticRequestDto;
 import com.matmuh.matmuhsite.core.dtos.gradeDistribution.request.SaveGradeResultRequestDto;
 import com.matmuh.matmuhsite.core.dtos.lectureOfferings.request.CreateLectureOfferingRequestDto;
@@ -20,6 +21,7 @@ import com.matmuh.matmuhsite.entities.GradeDistribution;
 import com.matmuh.matmuhsite.entities.GradeResult;
 import com.matmuh.matmuhsite.entities.LectureOffering;
 import com.matmuh.matmuhsite.entities.Semester;
+import com.matmuh.matmuhsite.entities.StaffGroup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -35,13 +37,13 @@ public class LectureOfferingManager implements LectureOfferingService {
     private final Logger logger = LoggerFactory.getLogger(LectureOfferingManager.class);
     private final LectureOfferingDao lectureOfferingDao;
     private final LectureService lectureService;
-    private final InstructorService instructorService;
+    private final StaffService staffService;
     private final LectureOfferingMapper lectureOfferingMapper;
 
-    public LectureOfferingManager(LectureOfferingDao lectureOfferingDao, LectureService lectureService, InstructorService instructorService, LectureOfferingMapper lectureOfferingMapper) {
+    public LectureOfferingManager(LectureOfferingDao lectureOfferingDao, LectureService lectureService, StaffService staffService, LectureOfferingMapper lectureOfferingMapper) {
         this.lectureOfferingDao = lectureOfferingDao;
         this.lectureService = lectureService;
-        this.instructorService = instructorService;
+        this.staffService = staffService;
         this.lectureOfferingMapper = lectureOfferingMapper;
     }
 
@@ -51,11 +53,12 @@ public class LectureOfferingManager implements LectureOfferingService {
         logger.info("Creating lecture offering for lecture ID: {}", lectureId);
 
         var lecture = lectureService.getLectureById(lectureId);
-        var instructor = instructorService.getInstructorById(request.getInstructorId());
+        var staff = staffService.getStaffById(request.getStaffId());
+        requireTeachingStaff(staff);
 
         LectureOffering lectureOffering = new LectureOffering();
         lectureOffering.setLecture(lectureService.getLectureReferenceById(lecture.getId()));
-        lectureOffering.setInstructor(instructorService.getInstructorReferenceById(instructor.getId()));
+        lectureOffering.setStaff(staffService.getStaffReferenceById(staff.getId()));
         lectureOffering.setAcademicYear(request.getAcademicYear());
         lectureOffering.setSemester(request.getSemester());
         lectureOffering.setGroupNumber(request.getGroupNumber() == null ? 1 : request.getGroupNumber());
@@ -74,9 +77,10 @@ public class LectureOfferingManager implements LectureOfferingService {
 
         LectureOffering offering = findOffering(offeringId);
 
-        if (request.getInstructorId() != null) {
-            var instructor = instructorService.getInstructorById(request.getInstructorId());
-            offering.setInstructor(instructorService.getInstructorReferenceById(instructor.getId()));
+        if (request.getStaffId() != null) {
+            var staff = staffService.getStaffById(request.getStaffId());
+            requireTeachingStaff(staff);
+            offering.setStaff(staffService.getStaffReferenceById(staff.getId()));
         }
         if (request.getAcademicYear() != null) {
             offering.setAcademicYear(request.getAcademicYear());
@@ -233,10 +237,10 @@ public class LectureOfferingManager implements LectureOfferingService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<LectureOfferingDto> getOfferingsByInstructor(UUID instructorId, String academicYear, Semester semester) {
-        instructorService.getInstructorById(instructorId);
+    public List<LectureOfferingDto> getOfferingsByStaff(UUID staffId, String academicYear, Semester semester) {
+        staffService.getStaffById(staffId);
 
-        return lectureOfferingDao.findByInstructor(instructorId, academicYear, semester).stream()
+        return lectureOfferingDao.findByStaff(staffId, academicYear, semester).stream()
                 .map(lectureOfferingMapper::toLectureOfferingDto)
                 .collect(Collectors.toList());
     }
@@ -244,6 +248,13 @@ public class LectureOfferingManager implements LectureOfferingService {
     @Override
     public LectureOffering getOfferingReferenceById(UUID offeringId) {
         return lectureOfferingDao.getReferenceById(offeringId);
+    }
+
+    private void requireTeachingStaff(com.matmuh.matmuhsite.core.dtos.staff.response.StaffDto staff) {
+        var groups = staff.getGroups();
+        if (groups != null && !groups.isEmpty() && groups.stream().noneMatch(StaffGroup::canTeach)) {
+            throw new BusinessRuleException(StaffMessages.STAFF_CANNOT_TEACH);
+        }
     }
 
     private LectureOffering findOffering(UUID offeringId) {

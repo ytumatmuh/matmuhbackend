@@ -26,7 +26,7 @@ public interface LectureDao extends JpaRepository<Lecture, UUID> {
 
     @EntityGraph(attributePaths = {
             "offerings",
-            "offerings.instructor",
+            "offerings.staff",
             "offerings.gradeResults",
             "offerings.gradeResults.gradeDistributions",
             "offerings.examStatistics"
@@ -35,7 +35,7 @@ public interface LectureDao extends JpaRepository<Lecture, UUID> {
 
     @EntityGraph(attributePaths = {
             "offerings",
-            "offerings.instructor",
+            "offerings.staff",
             "offerings.gradeResults",
             "offerings.gradeResults.gradeDistributions",
             "offerings.examStatistics"

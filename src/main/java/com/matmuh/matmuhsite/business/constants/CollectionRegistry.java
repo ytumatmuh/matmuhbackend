@@ -31,10 +31,10 @@ public class CollectionRegistry {
                     true,
                     false),
             new CollectionDefinition(
-                    InstructorCollectionSchema.KEY,
-                    InstructorCollectionSchema.SCHEMA,
+                    StaffCollectionSchema.KEY,
+                    StaffCollectionSchema.SCHEMA,
                     SlugSource.AUTO_GENERATED,
-                    InstructorCollectionSchema.SLUG_SOURCE_FIELD,
+                    StaffCollectionSchema.SLUG_SOURCE_FIELD,
                     true,
                     false
             ),

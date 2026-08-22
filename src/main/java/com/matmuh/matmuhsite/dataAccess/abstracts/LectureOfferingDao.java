@@ -35,15 +35,15 @@ public interface LectureOfferingDao extends JpaRepository<LectureOffering, UUID>
             """)
     List<Object[]> findTermsWithStatistics(@Param("lectureIds") Collection<UUID> lectureIds);
 
-    @EntityGraph(attributePaths = {"lecture", "instructor", "gradeResults", "gradeResults.gradeDistributions", "examStatistics"})
+    @EntityGraph(attributePaths = {"lecture", "staff", "gradeResults", "gradeResults.gradeDistributions", "examStatistics"})
     @Query("""
             SELECT o FROM LectureOffering o
-            WHERE o.instructor.id = :instructorId
+            WHERE o.staff.id = :staffId
               AND (CAST(:academicYear AS String) IS NULL OR o.academicYear = CAST(:academicYear AS String))
               AND (:semester IS NULL OR o.semester = :semester)
             ORDER BY o.academicYear DESC, o.semester ASC
             """)
-    List<LectureOffering> findByInstructor(@Param("instructorId") UUID instructorId,
+    List<LectureOffering> findByStaff(@Param("staffId") UUID staffId,
                                            @Param("academicYear") String academicYear,
                                            @Param("semester") Semester semester);
 

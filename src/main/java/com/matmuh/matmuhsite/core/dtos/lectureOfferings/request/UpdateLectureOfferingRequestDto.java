@@ -19,7 +19,7 @@ import java.util.UUID;
 @NoArgsConstructor
 public class UpdateLectureOfferingRequestDto {
 
-    private UUID instructorId;
+    private UUID staffId;
 
     @NullOrNotBlank(message = LectureOfferingMessages.ACADEMIC_YEAR_NOT_BLANK_IF_PRESENT)
     @AcademicYear
