@@ -23,8 +23,12 @@ import java.util.stream.Stream;
 @Service
 public class JwtService {
 
+    private static final int MIN_KEY_BYTES = 64;
+
     @Value("${jwt.secret}")
     private String SECRET;
+
+    private SecretKey signKey;
 
     @Value("${jwt.access-validity-seconds:3600}")
     private long tokenValiditySeconds;
@@ -91,8 +95,29 @@ public class JwtService {
         return result;
     }
     private SecretKey getSignKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(SECRET);
-        return Keys.hmacShaKeyFor(keyBytes);
+        return signKey;
+    }
+
+    @jakarta.annotation.PostConstruct
+    void initSignKey() {
+        if (SECRET == null || SECRET.isBlank()) {
+            throw new IllegalStateException("JWT_SECRET tanımlı değil.");
+        }
+
+        byte[] keyBytes;
+        try {
+            keyBytes = Decoders.BASE64.decode(SECRET.trim());
+        } catch (RuntimeException e) {
+            keyBytes = SECRET.trim().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        }
+
+        if (keyBytes.length < MIN_KEY_BYTES) {
+            throw new IllegalStateException(
+                    "JWT_SECRET çok kısa: HS512 en az " + MIN_KEY_BYTES + " bayt anahtar ister, "
+                            + keyBytes.length + " bayt verildi. Üretmek için: openssl rand -base64 96");
+        }
+
+        this.signKey = Keys.hmacShaKeyFor(keyBytes);
     }
 }
 

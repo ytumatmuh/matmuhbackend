@@ -21,6 +21,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.header.writers.CacheControlHeadersWriter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
@@ -73,6 +74,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/uploads/images/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/uploads/files/**").authenticated()
                         .requestMatchers("/api/swagger-ui.html", "/api/swagger-ui/**", "/api/v3/api-docs/**").permitAll()
+                        .requestMatchers("/cdn/**").permitAll()
 
                         .requestMatchers("/api/service-keys/**").hasRole("ADMIN")
                         .requestMatchers("/api/calendar-admin/**").hasRole("ADMIN")
@@ -124,6 +126,14 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/staff/**").hasRole("ADMIN")
 
                         .anyRequest().authenticated()
+                )
+                .headers(x -> x
+                        .cacheControl(cache -> cache.disable())
+                        .addHeaderWriter((request, response) -> {
+                            if (!request.getRequestURI().startsWith("/cdn/")) {
+                                new CacheControlHeadersWriter().writeHeaders(request, response);
+                            }
+                        })
                 )
                 .exceptionHandling(x -> x
                         .accessDeniedHandler(customAccessDeniedHandler)

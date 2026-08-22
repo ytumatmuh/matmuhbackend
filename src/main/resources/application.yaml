@@ -100,6 +100,7 @@ storage:
 app:
   storage:
     domain: ${STORAGE_DOMAIN:http://localhost:9001/api/uploads}
+    cdn-origin: ${CDN_ORIGIN:}
   frontend:
     callback-url: ${FRONTEND_CALLBACK_URL:http://localhost:3000/auth/callback}
     allowed-callbacks: ${FRONTEND_ALLOWED_CALLBACKS:}
