@@ -89,7 +89,7 @@ public class ContentManager implements ContentService {
     @Transactional
     public UpdatePageResponseDto updatePage(String userId, UpdatePageRequestDto request, String locale) {
         var normalizedSlug = SlugNormalizer.normalizeSlug(request.getSlug());
-        var resolved = localeResolver.resolveForWrite(locale);
+        var resolved = localeResolver.requireForWrite(locale);
         logger.info("Publishing {} block(s) for slug: {} by user: {}",
                 request.getBlocks().size(), normalizedSlug, userId);
 
@@ -139,7 +139,7 @@ public class ContentManager implements ContentService {
     @Transactional
     public void saveDraft(String userId, UpdatePageRequestDto request, String locale) {
         var normalizedSlug = SlugNormalizer.normalizeSlug(request.getSlug());
-        var resolved = localeResolver.resolveForWrite(locale);
+        var resolved = localeResolver.requireForWrite(locale);
         logger.info("Saving draft for slug: {} locale: {} user: {}", normalizedSlug, resolved, userId);
 
         JsonNode payload = objectMapper.valueToTree(request.getBlocks());
@@ -159,7 +159,7 @@ public class ContentManager implements ContentService {
     @Transactional
     public void deleteDraft(String userId, String slug, String locale) {
         var normalizedSlug = SlugNormalizer.normalizeSlug(slug);
-        var resolved = localeResolver.resolveForWrite(locale);
+        var resolved = localeResolver.requireForWrite(locale);
         logger.info("Deleting draft for slug: {} locale: {} user: {}", normalizedSlug, resolved, userId);
 
         contentDraftDao.deleteOwn(normalizedSlug, userId, resolved);

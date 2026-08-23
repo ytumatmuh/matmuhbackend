@@ -84,7 +84,8 @@ public class CmsCollectionManager implements CmsCollectionService {
     @Override
     public CollectionSchemaResponseDto getSchema(String collectionKey) {
         var def = registry.resolve(collectionKey);
-        return new CollectionSchemaResponseDto(def.key(), def.schema(), def.slugSource(), localesOf(def));
+        return new CollectionSchemaResponseDto(def.key(), def.schema(), def.slugSource(),
+                def.slugSource() == SlugSource.USER_DEFINED, localesOf(def));
     }
 
 
@@ -100,7 +101,7 @@ public class CmsCollectionManager implements CmsCollectionService {
     }
 
     private String writeLocale(CollectionRegistry.CollectionDefinition def, String locale) {
-        return def.localized() ? localeResolver.resolveForWrite(locale) : null;
+        return def.localized() ? localeResolver.requireForWrite(locale, def.key()) : null;
     }
 
     @Override
@@ -563,7 +564,8 @@ public class CmsCollectionManager implements CmsCollectionService {
         return collectionDraftDao.findOwnNewDraft(collectionKey, userId, locale)
                 .filter(draft -> !isEffectivelyEmpty(draft.getPayload()))
                 .map(draft -> List.of(VirtualItemDto.pending(
-                        collectionKey, draft.getSlug(), NODES.objectNode(), draft.getPayload())))
+                        collectionKey, NODES.objectNode(), draft.getPayload(),
+                        draft.getLocale(), null, draft.getUpdatedAt())))
                 .orElse(null);
     }
 

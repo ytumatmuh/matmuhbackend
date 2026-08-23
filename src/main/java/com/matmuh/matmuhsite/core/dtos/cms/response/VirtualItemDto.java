@@ -7,6 +7,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.Instant;
+import java.util.UUID;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -24,15 +27,23 @@ public class VirtualItemDto {
 
     private String slug;
     private JsonNode draftData;
+    private String locale;
+    private UUID translationGroupId;
+    private Instant updatedAt;
+    private Boolean isArchived;
 
-    public static VirtualItemDto pending(String collectionKey, String slug, JsonNode data, JsonNode draftData) {
+
+    public static VirtualItemDto pending(String collectionKey, JsonNode data, JsonNode draftData,
+                                         String locale, UUID translationGroupId, Instant updatedAt) {
         var dto = new VirtualItemDto();
         dto.collectionKey = collectionKey;
         dto.origin = ORIGIN_PENDING;
         dto.data = data;
         dto.canEdit = true;
-        dto.slug = slug;
         dto.draftData = draftData;
+        dto.locale = locale;
+        dto.translationGroupId = translationGroupId;
+        dto.updatedAt = updatedAt;
         return dto;
     }
 }

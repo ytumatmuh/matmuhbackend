@@ -56,7 +56,11 @@ public class CmsLocaleResolver {
     }
 
 
-    public String resolveForWrite(String requested) {
+    public String requireForWrite(String requested) {
+        return requireForWrite(requested, null);
+    }
+
+    public String requireForWrite(String requested, String collectionKey) {
         var locales = declared();
 
         if (locales.isEmpty()) {
@@ -68,7 +72,9 @@ public class CmsLocaleResolver {
 
 
         if (requested == null || requested.isBlank()) {
-            return locales.get(0);
+            var scope = collectionKey == null ? "" : " Collection: " + collectionKey + ".";
+            throw new CmsValidationException(
+                    CmsMessages.LOCALE_REQUIRED_FOR_WRITE + String.join(", ", locales) + "." + scope);
         }
 
         var normalized = normalize(requested);
