@@ -22,6 +22,8 @@ public final class ErrorCodes {
 	public static final String ENDPOINT_NOT_FOUND = "ENDPOINT_NOT_FOUND";
 	public static final String VALIDATION_FAILED = "VALIDATION_FAILED";
 	public static final String DATA_CONFLICT = "DATA_CONFLICT";
+	public static final String VALUE_NOT_ALLOWED = "VALUE_NOT_ALLOWED";
+	public static final String REFERENCED_RECORD = "REFERENCED_RECORD";
 	public static final String VERSION_CONFLICT = "VERSION_CONFLICT";
 	public static final String UNEXPECTED = "UNEXPECTED";
 }

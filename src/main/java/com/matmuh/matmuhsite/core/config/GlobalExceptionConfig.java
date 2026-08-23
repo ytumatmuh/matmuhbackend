@@ -26,10 +26,14 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
+import java.sql.SQLException;
 import java.util.List;
 
 @RestControllerAdvice
 public class GlobalExceptionConfig {
+
+    private static final String CHECK_VIOLATION = "23514";
+    private static final String FOREIGN_KEY_VIOLATION = "23503";
 
     private final Logger logger = LoggerFactory.getLogger(GlobalExceptionConfig.class);
 
@@ -151,17 +155,44 @@ public class GlobalExceptionConfig {
         return errorMessage(summarize(details), HttpStatus.BAD_REQUEST, ErrorCodes.VALIDATION_FAILED, details);
     }
 
+
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ErrorResult> handleDataIntegrity(DataIntegrityViolationException exception) {
         if (exception.getCause() instanceof ConstraintViolationException constraint) {
-            logger.warn("Constraint violation: {}", constraint.getConstraintName());
+            var name = constraint.getConstraintName();
+            var state = sqlState(exception);
+
+            if (CHECK_VIOLATION.equals(state)) {
+                logger.warn("Check constraint violation: {}", name);
+                var message = messageResolver.resolve("error.value.not.allowed");
+                return errorMessage(message, HttpStatus.BAD_REQUEST, ErrorCodes.VALUE_NOT_ALLOWED,
+                        List.of(new ErrorDetail(name, message)));
+            }
+
+            if (FOREIGN_KEY_VIOLATION.equals(state)) {
+                logger.warn("Foreign key violation: {}", name);
+                var message = messageResolver.resolve("error.reference.invalid");
+                return errorMessage(message, HttpStatus.CONFLICT, ErrorCodes.REFERENCED_RECORD,
+                        List.of(new ErrorDetail(name, message)));
+            }
+
+            logger.warn("Constraint violation: {} (SQLState {})", name, state);
             var message = messageResolver.resolve("error.data.conflict");
             return errorMessage(message, HttpStatus.CONFLICT, ErrorCodes.DATA_CONFLICT,
-                    List.of(new ErrorDetail(constraint.getConstraintName(), message)));
+                    List.of(new ErrorDetail(name, message)));
         }
 
         logger.error("Data access failure", exception);
         return error("error.unexpected", HttpStatus.INTERNAL_SERVER_ERROR, ErrorCodes.UNEXPECTED);
+    }
+
+    private String sqlState(Throwable throwable) {
+        for (var cause = throwable; cause != null; cause = cause.getCause()) {
+            if (cause instanceof SQLException sqlException) {
+                return sqlException.getSQLState();
+            }
+        }
+        return null;
     }
 
     @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
