@@ -110,7 +110,9 @@ public class LectureOfferingImportRowWriter {
 
             gradeResult.getGradeDistributions().clear();
             for (var detail : request.getGrades()) {
-                if (detail.getMinScore().compareTo(detail.getMaxScore()) > 0) {
+
+                if (detail.getMinScore() != null && detail.getMaxScore() != null
+                        && detail.getMinScore().compareTo(detail.getMaxScore()) > 0) {
                     throw new BusinessRuleException(LectureOfferingMessages.GRADE_RANGE_INVALID);
                 }
                 var grade = new GradeDistribution();

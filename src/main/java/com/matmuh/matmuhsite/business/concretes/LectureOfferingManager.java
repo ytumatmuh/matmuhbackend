@@ -102,12 +102,12 @@ public class LectureOfferingManager implements LectureOfferingService {
         }
         if (request.getGroupNumber() != null) {
             offering.setGroupNumber(request.getGroupNumber());
+        }
         if (request.getLanguage() != null) {
             offering.setLanguage(request.getLanguage());
         }
         if (request.getExamWeights() != null) {
             offering.setExamWeights(toExamWeights(request.getExamWeights()));
-        }
         }
 
         return lectureOfferingMapper.toLectureOfferingDto(lectureOfferingDao.save(offering));
@@ -151,7 +151,9 @@ public class LectureOfferingManager implements LectureOfferingService {
 
         gradeResult.getGradeDistributions().clear();
         request.getGrades().forEach(gradeDetail -> {
-            if (gradeDetail.getMinScore().compareTo(gradeDetail.getMaxScore()) > 0) {
+
+            if (gradeDetail.getMinScore() != null && gradeDetail.getMaxScore() != null
+                    && gradeDetail.getMinScore().compareTo(gradeDetail.getMaxScore()) > 0) {
                 throw new BusinessRuleException(LectureOfferingMessages.GRADE_RANGE_INVALID);
             }
             GradeDistribution grade = new GradeDistribution();

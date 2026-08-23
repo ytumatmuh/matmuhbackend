@@ -50,17 +50,21 @@ public class SaveGradeResultRequestDto {
         @NotBlank(message = "{grade.letter.not.blank}")
         private String letterGrade;
 
-        @NotNull(message = "{grade.min.score.not.null}")
         @DecimalMin(value = "0", message = "{grade.score.range}")
         @DecimalMax(value = "100", message = "{grade.score.range}")
         private BigDecimal minScore;
 
-        @NotNull(message = "{grade.max.score.not.null}")
         @DecimalMin(value = "0", message = "{grade.score.range}")
         @DecimalMax(value = "100", message = "{grade.score.range}")
         private BigDecimal maxScore;
 
         @Min(value = 0, message = "{grade.student.count.min}")
         private int studentCount;
+
+
+        @AssertTrue(message = "{grade.score.order}")
+        public boolean isScoreRangeOrdered() {
+            return minScore == null || maxScore == null || minScore.compareTo(maxScore) <= 0;
+        }
     }
 }
