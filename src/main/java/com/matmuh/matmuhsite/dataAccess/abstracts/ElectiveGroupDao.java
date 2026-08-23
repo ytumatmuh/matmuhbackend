@@ -47,6 +47,14 @@ public interface ElectiveGroupDao extends JpaRepository<ElectiveGroup, UUID> {
                                @Param("search") String search,
                                Pageable pageable);
 
+    @Query("""
+            SELECT o.id, COUNT(g)
+            FROM ElectiveGroup g JOIN g.options o
+            WHERE o.id IN :lectureIds
+            GROUP BY o.id
+            """)
+    List<Object[]> countByLectureIds(@Param("lectureIds") List<UUID> lectureIds);
+
     @Query("SELECT g FROM ElectiveGroup g JOIN g.options o WHERE o.id = :lectureId")
     List<ElectiveGroup> findByOptionLectureId(@Param("lectureId") UUID lectureId);
 }

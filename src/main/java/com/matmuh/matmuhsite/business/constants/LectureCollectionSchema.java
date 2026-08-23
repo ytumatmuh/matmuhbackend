@@ -3,6 +3,8 @@ package com.matmuh.matmuhsite.business.constants;
 import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionSchema;
 import com.matmuh.matmuhsite.core.dtos.cms.response.FieldDefinition;
 import com.matmuh.matmuhsite.entities.DegreeLevel;
+import com.matmuh.matmuhsite.entities.LectureCategory;
+import com.matmuh.matmuhsite.entities.LectureType;
 import com.matmuh.matmuhsite.entities.cms.FieldType;
 
 import java.util.Arrays;
@@ -19,6 +21,19 @@ public final class LectureCollectionSchema {
     public static final String FIELD_SEMESTER = "semester";
     public static final String FIELD_CODE = "code";
     public static final String FIELD_DEGREE_LEVELS = "degreeLevels";
+    public static final String FIELD_TYPE = "type";
+    public static final String FIELD_CATEGORY = "category";
+
+    private static final String[] TYPE_OPTIONS =
+            Arrays.stream(LectureType.values()).map(Enum::name).toArray(String[]::new);
+
+    private static final String[] CATEGORY_OPTIONS =
+            Arrays.stream(LectureCategory.values()).map(Enum::name).toArray(String[]::new);
+
+    private static final List<FieldDefinition> SYLLABUS_FIELDS = List.of(
+            FieldDefinition.required("week", FieldType.NUMBER, "Hafta"),
+            FieldDefinition.required("topic", FieldType.SHORT_TEXT, "Konu")
+    );
 
     private static final String[] DEGREE_LEVEL_OPTIONS =
             Arrays.stream(DegreeLevel.values()).map(Enum::name).toArray(String[]::new);
@@ -45,11 +60,28 @@ public final class LectureCollectionSchema {
                     .withOptions(DEGREE_LEVEL_OPTIONS)
                     .asFilterable()
                     .withHelp("Bir ders birden fazla programda okutulabilir; lisansüstü seçmeli havuzu hem yüksek lisansta hem doktorada geçerlidir. Boş bırakılırsa ders kodundan türetilir."),
+            FieldDefinition.of(FIELD_TYPE, FieldType.SHORT_TEXT, "Ders türü")
+                    .withOptions(TYPE_OPTIONS)
+                    .asFilterable()
+                    .withHelp("Müfredatta zorunlu ve seçmeli bloklarını ayırmak için kullanılır. Bir ders seçmeli bir slota eklendiğinde boşsa otomatik ELECTIVE olur."),
+            FieldDefinition.of(FIELD_CATEGORY, FieldType.SHORT_TEXT, "Ders kategorisi")
+                    .withOptions(CATEGORY_OPTIONS)
+                    .asFilterable()
+                    .withHelp("YÖK ders kategorisi; kategori bazlı kredi dağılımı buradan çıkarılır."),
             FieldDefinition.of(FIELD_TERM, FieldType.NUMBER, "Yarıyıl").asFilterable(),
             FieldDefinition.of(FIELD_SEMESTER, FieldType.SHORT_TEXT, "Dönem")
                     .asFilterable()
                     .withOptions("FALL", "SPRING", "SUMMER"),
-            FieldDefinition.of("weeklyHours", FieldType.NUMBER, "Haftalık saat"),
+            FieldDefinition.of("syllabus", FieldType.OBJECT_ARRAY, "Haftalık program")
+                    .withItemFields(SYLLABUS_FIELDS)
+                    .withHelp("Her satır bir haftanın konusu. Hafta numarasına göre sıralı döner."),
+            FieldDefinition.of("midtermWeight", FieldType.NUMBER, "Vize ağırlığı (%)"),
+            FieldDefinition.of("finalWeight", FieldType.NUMBER, "Final ağırlığı (%)"),
+            FieldDefinition.of("theoryHours", FieldType.NUMBER, "Teori saati"),
+            FieldDefinition.of("practiceHours", FieldType.NUMBER, "Uygulama saati"),
+            FieldDefinition.of("labHours", FieldType.NUMBER, "Laboratuvar saati"),
+            FieldDefinition.of("weeklyHours", FieldType.NUMBER, "Haftalık saat (toplam)")
+                    .withHelp("Boş bırakılırsa teori + uygulama + laboratuvar toplamından hesaplanır."),
             FieldDefinition.of("localCredit", FieldType.NUMBER, "Yerel kredi"),
             FieldDefinition.of("ects", FieldType.NUMBER, "AKTS"),
             FieldDefinition.of("bolognaLink", FieldType.URL, "Bologna sayfası"),
@@ -57,6 +89,9 @@ public final class LectureCollectionSchema {
             FieldDefinition.of("noteCount", FieldType.NUMBER, "Not sayısı")
                     .asComputed()
                     .withHelp("Onaylanmış ders notu sayısı, okuma anında hesaplanır."),
+            FieldDefinition.of("electiveGroupCount", FieldType.NUMBER, "Seçmeli grup sayısı")
+                    .asComputed()
+                    .withHelp("Bu dersin seçenek olarak yer aldığı seçmeli slot sayısı. Ders türü ELECTIVE ise burası 0 olmamalı."),
             FieldDefinition.of("statisticsTermCount", FieldType.NUMBER, "İstatistik dönem sayısı")
                     .asComputed()
                     .withHelp("Sınav istatistiği bulunan dönem sayısı, okuma anında hesaplanır."),

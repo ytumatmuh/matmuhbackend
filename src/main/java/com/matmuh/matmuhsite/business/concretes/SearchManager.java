@@ -104,7 +104,7 @@ public class SearchManager implements SearchService {
     }
 
     private SearchGroupDto lectureGroup(String query, int limit) {
-        var page = lectureDao.search(null, null, null, query, OffsetPageable.of(0, limit, LECTURE_SORT));
+        var page = lectureDao.search(null, null, null, null, null, query, OffsetPageable.of(0, limit, LECTURE_SORT));
 
         var items = page.getContent().stream().map(this::toHit).toList();
         return group(SearchResultType.LECTURE, SearchMessages.GROUP_LECTURES, page.getTotalElements(), items);

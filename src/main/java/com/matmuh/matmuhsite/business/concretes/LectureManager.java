@@ -19,8 +19,12 @@ import com.matmuh.matmuhsite.core.mappers.LectureNoteMapper;
 import com.matmuh.matmuhsite.dataAccess.abstracts.LectureDao;
 import com.matmuh.matmuhsite.dataAccess.abstracts.LectureNoteDao;
 import com.matmuh.matmuhsite.dataAccess.abstracts.LectureOfferingDao;
+import com.matmuh.matmuhsite.dataAccess.abstracts.ElectiveGroupDao;
 import com.matmuh.matmuhsite.entities.DegreeLevel;
+import com.matmuh.matmuhsite.entities.LectureCategory;
+import com.matmuh.matmuhsite.entities.LectureType;
 import com.matmuh.matmuhsite.entities.Lecture;
+import com.matmuh.matmuhsite.entities.SyllabusWeek;
 import com.matmuh.matmuhsite.core.dtos.lecture.response.LectureStatisticsDto;
 import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
@@ -28,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -51,17 +56,19 @@ public class LectureManager implements LectureService {
 
     private final LectureNoteDao lectureNoteDao;
     private final LectureOfferingDao lectureOfferingDao;
+    private final ElectiveGroupDao electiveGroupDao;
 
 
     public LectureManager(LectureDao lectureDao, LectureMapper lectureMapper, LectureNoteService lectureNoteService,
                           LectureNoteMapper lectureNoteMapper, LectureNoteDao lectureNoteDao,
-                          LectureOfferingDao lectureOfferingDao) {
+                          LectureOfferingDao lectureOfferingDao, ElectiveGroupDao electiveGroupDao) {
         this.lectureDao = lectureDao;
         this.lectureMapper = lectureMapper;
         this.lectureNoteService = lectureNoteService;
         this.lectureNoteMapper = lectureNoteMapper;
         this.lectureNoteDao = lectureNoteDao;
         this.lectureOfferingDao = lectureOfferingDao;
+        this.electiveGroupDao = electiveGroupDao;
     }
 
 
@@ -85,9 +92,13 @@ public class LectureManager implements LectureService {
                     .add(row[1] + "|" + row[2]);
         }
 
+        Map<UUID, Long> groupCounts = electiveGroupDao.countByLectureIds(ids).stream()
+                .collect(Collectors.toMap(row -> (UUID) row[0], row -> ((Number) row[1]).longValue()));
+
         for (var dto : lectures) {
             dto.setNoteCount(noteCounts.getOrDefault(dto.getId(), 0L));
             dto.setStatisticsTermCount(terms.getOrDefault(dto.getId(), Set.of()).size());
+            dto.setElectiveGroupCount(groupCounts.getOrDefault(dto.getId(), 0L));
         }
     }
 
@@ -105,6 +116,9 @@ public class LectureManager implements LectureService {
 
 
         Lecture lecture = lectureMapper.toEntity(createLectureRequestDto);
+        applyDerivedWeeklyHours(lecture, createLectureRequestDto.getWeeklyHours());
+        sortSyllabus(lecture);
+
         if (lecture.getDegreeLevels() == null || lecture.getDegreeLevels().isEmpty()) {
             lecture.setDegreeLevels(new LinkedHashSet<>(DegreeLevel.fromCode(createLectureRequestDto.getCode())));
         }
@@ -202,6 +216,8 @@ public class LectureManager implements LectureService {
         }
 
         lectureMapper.updateLectureFromDto(request, lecture);
+        applyDerivedWeeklyHours(lecture, request.getWeeklyHours());
+        sortSyllabus(lecture);
         var saved = lectureDao.save(lecture);
 
         logger.info("Lecture updated with ID: {}", saved.getId());
@@ -224,10 +240,11 @@ public class LectureManager implements LectureService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageDto<LectureDto> getLectures(Integer term, Semester semester, DegreeLevel degreeLevel, String search, Pageable pageable) {
+    public PageDto<LectureDto> getLectures(Integer term, Semester semester, DegreeLevel degreeLevel,
+                                          LectureType type, LectureCategory category, String search, Pageable pageable) {
         logger.info("Retrieving lectures term={} semester={} degreeLevel={} search={} page={}", term, semester, degreeLevel, search, pageable.getPageNumber());
 
-        var page = lectureDao.search(term, semester, degreeLevel,
+        var page = lectureDao.search(term, semester, degreeLevel, type, category,
                 search == null || search.isBlank() ? null : search.trim(), pageable);
 
         logger.info("Retrieved {} lectures", page.getTotalElements());
@@ -257,5 +274,34 @@ public class LectureManager implements LectureService {
         logger.info("Retrieving reference for lecture with ID: {}", lectureId);
 
         return lectureDao.getReferenceById(lectureId);
+    }
+
+
+    private void applyDerivedWeeklyHours(Lecture lecture, Integer requestedTotal) {
+        if (requestedTotal != null) {
+            return;
+        }
+
+        var theory = lecture.getTheoryHours();
+        var practice = lecture.getPracticeHours();
+        var lab = lecture.getLabHours();
+        if (theory == null && practice == null && lab == null) {
+            return;
+        }
+
+        lecture.setWeeklyHours(orZero(theory) + orZero(practice) + orZero(lab));
+    }
+
+
+    private void sortSyllabus(Lecture lecture) {
+        var syllabus = lecture.getSyllabus();
+        if (syllabus == null || syllabus.size() < 2) {
+            return;
+        }
+        syllabus.sort(Comparator.comparing(SyllabusWeek::getWeek, Comparator.nullsLast(Integer::compareTo)));
+    }
+
+    private int orZero(Integer value) {
+        return value == null ? 0 : value;
     }
 }

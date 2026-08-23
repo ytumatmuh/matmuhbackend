@@ -1,6 +1,10 @@
 package com.matmuh.matmuhsite.business.constants;
 
 public class LectureMessages {
+    public static final String LECTURE_TYPE_INVALID = "lecture.type.invalid";
+    public static final String LECTURE_CATEGORY_INVALID = "lecture.category.invalid";
+    public static final String WEIGHT_MIN = "{lecture.weight.min}";
+    public static final String WEIGHT_MAX = "{lecture.weight.max}";
     public static final String DEGREE_LEVEL_INVALID = "lecture.degree.level.invalid";
     public static final String LECTURE_CODE_EXISTS = "lecture.code.exists";
     public static final String LECTURE_NOT_FOUND = "lecture.not.found";

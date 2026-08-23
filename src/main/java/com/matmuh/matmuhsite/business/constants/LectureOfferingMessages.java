@@ -1,6 +1,7 @@
 package com.matmuh.matmuhsite.business.constants;
 
 public class LectureOfferingMessages {
+    public static final String EXAM_WEIGHT_DUPLICATE = "offering.exam.weight.duplicate";
     public static final String OFFERING_NOT_FOUND = "offering.not.found";
     public static final String OFFERING_CREATED_SUCCESSFULLY = "offering.created";
     public static final String GRADE_RESULT_SAVED_SUCCESSFULLY = "offering.grade.result.saved";

@@ -1,6 +1,7 @@
 package com.matmuh.matmuhsite.entities;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 import lombok.*;
@@ -45,6 +46,14 @@ public class LectureOffering extends BaseEntity{
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "staff_id")
     private Staff staff;
+
+
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "lecture_offering_exam_weights",
+            joinColumns = @JoinColumn(name = "lecture_offering_id"))
+    @BatchSize(size = 50)
+    @Builder.Default
+    private List<ExamWeight> examWeights = new ArrayList<>();
 
     @OneToMany(mappedBy = "lectureOffering", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default

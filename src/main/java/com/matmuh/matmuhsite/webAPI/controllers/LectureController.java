@@ -32,6 +32,8 @@ import com.matmuh.matmuhsite.business.abstracts.ElectiveGroupService;
 import com.matmuh.matmuhsite.business.constants.ElectiveGroupMessages;
 import com.matmuh.matmuhsite.core.dtos.electiveGroup.response.ElectiveGroupDto;
 import com.matmuh.matmuhsite.entities.DegreeLevel;
+import com.matmuh.matmuhsite.entities.LectureCategory;
+import com.matmuh.matmuhsite.entities.LectureType;
 import com.matmuh.matmuhsite.entities.Semester;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -72,9 +74,11 @@ public class LectureController {
             @RequestParam(required = false) Integer term,
             @RequestParam(required = false) Semester semester,
             @RequestParam(required = false) DegreeLevel degreeLevel,
+            @RequestParam(required = false) LectureType type,
+            @RequestParam(required = false) LectureCategory category,
             @RequestParam(required = false) String search,
             @ParameterObject @PageableDefault(size = 20, sort = "code", direction = Sort.Direction.ASC) Pageable pageable) {
-        var lectures = lectureService.getLectures(term, semester, degreeLevel, search, PageableSanitizer.sanitize(pageable, SORTABLE, "code"));
+        var lectures = lectureService.getLectures(term, semester, degreeLevel, type, category, search, PageableSanitizer.sanitize(pageable, SORTABLE, "code"));
         return ResponseEntity.ok(new SuccessDataResult<>(lectures, messageResolver.resolve(LectureNoteMessages.LECTURES_FETCH_SUCCESS), HttpStatus.OK));
     }
 

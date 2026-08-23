@@ -19,6 +19,8 @@ import com.matmuh.matmuhsite.entities.ExamStatistic;
 import com.matmuh.matmuhsite.entities.ExamType;
 import com.matmuh.matmuhsite.entities.GradeDistribution;
 import com.matmuh.matmuhsite.entities.GradeResult;
+import com.matmuh.matmuhsite.core.dtos.lectureOfferings.response.ExamWeightDto;
+import com.matmuh.matmuhsite.entities.ExamWeight;
 import com.matmuh.matmuhsite.entities.LectureOffering;
 import com.matmuh.matmuhsite.entities.Semester;
 import com.matmuh.matmuhsite.entities.StaffGroup;
@@ -28,6 +30,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -63,6 +67,7 @@ public class LectureOfferingManager implements LectureOfferingService {
         lectureOffering.setSemester(request.getSemester());
         lectureOffering.setGroupNumber(request.getGroupNumber() == null ? 1 : request.getGroupNumber());
         lectureOffering.setLanguage(request.getLanguage());
+        lectureOffering.setExamWeights(toExamWeights(request.getExamWeights()));
 
         LectureOffering savedOffering = lectureOfferingDao.save(lectureOffering);
         logger.info("Lecture offering created with ID: {}", savedOffering.getId());
@@ -92,6 +97,9 @@ public class LectureOfferingManager implements LectureOfferingService {
             offering.setGroupNumber(request.getGroupNumber());
         if (request.getLanguage() != null) {
             offering.setLanguage(request.getLanguage());
+        }
+        if (request.getExamWeights() != null) {
+            offering.setExamWeights(toExamWeights(request.getExamWeights()));
         }
         }
 
@@ -248,6 +256,23 @@ public class LectureOfferingManager implements LectureOfferingService {
     @Override
     public LectureOffering getOfferingReferenceById(UUID offeringId) {
         return lectureOfferingDao.getReferenceById(offeringId);
+    }
+
+
+    private List<ExamWeight> toExamWeights(List<ExamWeightDto> requested) {
+        if (requested == null || requested.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        var seen = new LinkedHashSet<ExamType>();
+        var weights = new ArrayList<ExamWeight>();
+        for (var dto : requested) {
+            if (!seen.add(dto.getExamType())) {
+                throw new BusinessRuleException(LectureOfferingMessages.EXAM_WEIGHT_DUPLICATE);
+            }
+            weights.add(new ExamWeight(dto.getExamType(), dto.getWeightPercent()));
+        }
+        return weights;
     }
 
     private void requireTeachingStaff(com.matmuh.matmuhsite.core.dtos.staff.response.StaffDto staff) {

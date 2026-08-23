@@ -18,6 +18,8 @@ import com.matmuh.matmuhsite.core.mappers.LectureMapper;
 import com.matmuh.matmuhsite.dataAccess.abstracts.LectureDao;
 import com.matmuh.matmuhsite.entities.Lecture;
 import com.matmuh.matmuhsite.entities.DegreeLevel;
+import com.matmuh.matmuhsite.entities.LectureCategory;
+import com.matmuh.matmuhsite.entities.LectureType;
 import com.matmuh.matmuhsite.entities.Semester;
 import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
@@ -55,6 +57,10 @@ public class LectureCollectionProvider implements CmsCollectionProvider {
                 filterTerm(filters),
                 filterSemester(filters),
                 filterDegreeLevel(filters),
+                filterEnum(filters, LectureCollectionSchema.FIELD_TYPE, LectureType.class,
+                        LectureMessages.LECTURE_TYPE_INVALID),
+                filterEnum(filters, LectureCollectionSchema.FIELD_CATEGORY, LectureCategory.class,
+                        LectureMessages.LECTURE_CATEGORY_INVALID),
                 filterCode(filters),
                 OffsetPageable.of(offset, limit, DEFAULT_SORT));
 
@@ -161,6 +167,24 @@ public class LectureCollectionProvider implements CmsCollectionProvider {
     private String filterCode(ObjectNode filters) {
         var node = filters == null ? null : filters.get(LectureCollectionSchema.FIELD_CODE);
         return node == null || node.isNull() ? null : node.asString();
+    }
+
+    private <E extends Enum<E>> E filterEnum(ObjectNode filters, String field, Class<E> type, String invalidMessage) {
+        var node = filters == null ? null : filters.get(field);
+        if (node == null || node.isNull()) {
+            return null;
+        }
+
+        var text = node.isArray() ? (node.isEmpty() ? null : node.get(0).asString()) : node.asString();
+        if (text == null || text.isBlank()) {
+            return null;
+        }
+
+        try {
+            return Enum.valueOf(type, text.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new CmsValidationException(invalidMessage);
+        }
     }
 
     private DegreeLevel filterDegreeLevel(ObjectNode filters) {

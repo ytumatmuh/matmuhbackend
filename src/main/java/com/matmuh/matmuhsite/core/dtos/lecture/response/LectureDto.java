@@ -2,6 +2,8 @@ package com.matmuh.matmuhsite.core.dtos.lecture.response;
 
 import com.matmuh.matmuhsite.core.dtos.staff.response.StaffDto;
 import com.matmuh.matmuhsite.entities.DegreeLevel;
+import com.matmuh.matmuhsite.entities.LectureCategory;
+import com.matmuh.matmuhsite.entities.LectureType;
 import com.matmuh.matmuhsite.entities.Semester;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -40,6 +42,22 @@ public class LectureDto {
 
     private Semester semester;
 
+    private LectureType type;
+
+    private LectureCategory category;
+
+    private List<SyllabusWeekDto> syllabus = new ArrayList<>();
+
+    private Integer midtermWeight;
+
+    private Integer finalWeight;
+
+    private Integer theoryHours;
+
+    private Integer practiceHours;
+
+    private Integer labHours;
+
     private Set<DegreeLevel> degreeLevels = new LinkedHashSet<>();
 
     private Integer weeklyHours;
@@ -58,5 +76,7 @@ public class LectureDto {
     private long noteCount;
 
     private long statisticsTermCount;
+
+    private long electiveGroupCount;
 
 }

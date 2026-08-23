@@ -2,6 +2,8 @@ package com.matmuh.matmuhsite.dataAccess.abstracts;
 
 import com.matmuh.matmuhsite.entities.DegreeLevel;
 import com.matmuh.matmuhsite.entities.Lecture;
+import com.matmuh.matmuhsite.entities.LectureCategory;
+import com.matmuh.matmuhsite.entities.LectureType;
 import com.matmuh.matmuhsite.entities.Semester;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -48,6 +50,8 @@ public interface LectureDao extends JpaRepository<Lecture, UUID> {
             WHERE (:term IS NULL OR l.term = :term)
               AND (:semester IS NULL OR l.semester = :semester)
               AND (:degreeLevel IS NULL OR :degreeLevel MEMBER OF l.degreeLevels)
+              AND (:type IS NULL OR l.type = :type)
+              AND (:category IS NULL OR l.category = :category)
               AND (CAST(:search AS String) IS NULL
                    OR LOWER(l.name) LIKE LOWER(CONCAT('%', CAST(:search AS String), '%'))
                    OR LOWER(l.code) LIKE LOWER(CONCAT('%', CAST(:search AS String), '%'))
@@ -56,6 +60,8 @@ public interface LectureDao extends JpaRepository<Lecture, UUID> {
     Page<Lecture> search(@Param("term") Integer term,
                          @Param("semester") Semester semester,
                          @Param("degreeLevel") DegreeLevel degreeLevel,
+                         @Param("type") LectureType type,
+                         @Param("category") LectureCategory category,
                          @Param("search") String search,
                          Pageable pageable);
 }

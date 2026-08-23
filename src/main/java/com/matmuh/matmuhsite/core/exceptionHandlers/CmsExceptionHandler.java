@@ -37,7 +37,12 @@ public class CmsExceptionHandler {
 
     @ExceptionHandler(CmsValidationException.class)
     public ResponseEntity<ProblemDetailsDto> handleValidation(CmsValidationException exception, HttpServletRequest request) {
-        return problem(HttpStatus.BAD_REQUEST, "Validation failed", String.join(" ", exception.getErrors()), request);
+
+        var detail = exception.getErrors().stream()
+                .map(messageResolver::resolve)
+                .reduce((a, b) -> a + " " + b)
+                .orElseGet(() -> messageResolver.resolve("error.validation"));
+        return problem(HttpStatus.BAD_REQUEST, "Validation failed", detail, request);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

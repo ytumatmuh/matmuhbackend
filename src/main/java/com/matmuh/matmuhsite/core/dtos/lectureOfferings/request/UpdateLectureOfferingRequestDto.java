@@ -4,13 +4,16 @@ import com.matmuh.matmuhsite.business.constants.LectureOfferingMessages;
 import com.matmuh.matmuhsite.core.validation.NullOrNotBlank;
 import com.matmuh.matmuhsite.core.validation.AcademicYear;
 import com.matmuh.matmuhsite.entities.InstructionLanguage;
+import com.matmuh.matmuhsite.core.dtos.lectureOfferings.response.ExamWeightDto;
 import com.matmuh.matmuhsite.entities.Semester;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -31,4 +34,7 @@ public class UpdateLectureOfferingRequestDto {
     private Integer groupNumber;
 
     private InstructionLanguage language;
+
+    @Valid
+    private List<ExamWeightDto> examWeights;
 }

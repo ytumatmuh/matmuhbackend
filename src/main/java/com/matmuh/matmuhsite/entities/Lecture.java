@@ -66,6 +66,36 @@ public class Lecture extends BaseEntity{
     @Column(name = "semester")
     private Semester semester;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type", length = 20)
+    private LectureType type;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "category", length = 32)
+    private LectureCategory category;
+
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "lecture_syllabus", joinColumns = @JoinColumn(name = "lecture_id"))
+    @OrderBy("week ASC")
+    @BatchSize(size = 50)
+    @Builder.Default
+    private List<SyllabusWeek> syllabus = new ArrayList<>();
+
+    @Column(name = "midterm_weight")
+    private Integer midtermWeight;
+
+    @Column(name = "final_weight")
+    private Integer finalWeight;
+
+    @Column(name = "theory_hours")
+    private Integer theoryHours;
+
+    @Column(name = "practice_hours")
+    private Integer practiceHours;
+
+    @Column(name = "lab_hours")
+    private Integer labHours;
+
     @Column(name = "weekly_hours")
     private int weeklyHours;
 

@@ -34,6 +34,8 @@ public class LectureOfferingDto {
 
     private StaffDto staff;
 
+    private List<ExamWeightDto> examWeights;
+
     private List<GradeResultDto> gradeResults;
 
     private List<ExamStatisticDto> examStatistics;

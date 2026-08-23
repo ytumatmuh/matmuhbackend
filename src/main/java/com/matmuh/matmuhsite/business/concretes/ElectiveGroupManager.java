@@ -17,12 +17,14 @@ import com.matmuh.matmuhsite.dataAccess.abstracts.LectureDao;
 import com.matmuh.matmuhsite.entities.DegreeLevel;
 import com.matmuh.matmuhsite.entities.ElectiveGroup;
 import com.matmuh.matmuhsite.entities.Lecture;
+import com.matmuh.matmuhsite.entities.LectureType;
 import com.matmuh.matmuhsite.entities.Semester;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -109,6 +111,7 @@ public class ElectiveGroupManager implements ElectiveGroupService {
 
         var group = electiveGroupMapper.toEntity(requestDto);
         group.setOptions(resolveLectures(requestDto.getOptionLectureIds()));
+        markAsElective(group.getOptions());
 
         if (group.getDegreeLevels() == null || group.getDegreeLevels().isEmpty()) {
             group.setDegreeLevels(deriveDegreeLevels(group.getOptions()));
@@ -149,6 +152,7 @@ public class ElectiveGroupManager implements ElectiveGroupService {
 
         if (requestDto.getOptionLectureIds() != null) {
             group.setOptions(resolveLectures(requestDto.getOptionLectureIds()));
+            markAsElective(group.getOptions());
         }
 
         var saved = electiveGroupDao.save(group);
@@ -170,6 +174,7 @@ public class ElectiveGroupManager implements ElectiveGroupService {
             throw new ResourceAlreadyExistsException(ElectiveGroupMessages.OPTION_ALREADY_ADDED);
         }
 
+        markAsElective(List.of(lecture));
         refreshDerivedDegreeLevels(group);
         var saved = electiveGroupDao.save(group);
         log.info("Lecture {} added to elective group {}", lectureId, id);
@@ -220,6 +225,15 @@ public class ElectiveGroupManager implements ElectiveGroupService {
             log.error("Lecture with ID {} not found.", lectureId);
             return new ResourceNotFoundException(LectureMessages.LECTURE_NOT_FOUND);
         });
+    }
+
+
+    private void markAsElective(Collection<Lecture> lectures) {
+        for (var lecture : lectures) {
+            if (lecture.getType() == null) {
+                lecture.setType(LectureType.ELECTIVE);
+            }
+        }
     }
 
     private Set<Lecture> resolveLectures(Set<UUID> lectureIds) {
