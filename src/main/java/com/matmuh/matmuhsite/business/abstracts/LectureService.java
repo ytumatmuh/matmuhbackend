@@ -36,6 +36,9 @@ public interface LectureService {
 
     void deleteLecture(UUID lectureId);
 
+
+    void applyBadgeCounts(List<LectureDto> lectures);
+
     PageDto<LectureDto> getLectures(Integer term, Semester semester, DegreeLevel degreeLevel,
                                     LectureType type, LectureCategory category, String search, Pageable pageable);
 

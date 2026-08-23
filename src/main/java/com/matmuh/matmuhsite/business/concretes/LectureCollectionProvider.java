@@ -26,6 +26,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.ArrayList;
+import java.util.List;
+
 import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.node.ObjectNode;
 
@@ -64,7 +67,14 @@ public class LectureCollectionProvider implements CmsCollectionProvider {
                 filterCode(filters),
                 OffsetPageable.of(offset, limit, DEFAULT_SORT));
 
-        var items = page.getContent().stream().map(this::toItem).toList();
+        var lectures = page.getContent();
+        var dtos = lectures.stream().map(lectureMapper::toDto).toList();
+        lectureService.applyBadgeCounts(dtos);
+
+        var items = new ArrayList<CollectionItemDto>(dtos.size());
+        for (int i = 0; i < dtos.size(); i++) {
+            items.add(toItem(dtos.get(i), lectures.get(i).getVersion()));
+        }
 
         return new CollectionListDto(items, page.getTotalElements(), offset, limit);
     }
@@ -110,10 +120,13 @@ public class LectureCollectionProvider implements CmsCollectionProvider {
     }
 
     private CollectionItemDto toItem(Lecture lecture) {
-        return toItem(lectureMapper.toDto(lecture), lecture.getVersion());
+        var dto = lectureMapper.toDto(lecture);
+        lectureService.applyBadgeCounts(List.of(dto));
+        return toItem(dto, lecture.getVersion());
     }
 
     private CollectionItemDto toItem(LectureDto lecture) {
+        lectureService.applyBadgeCounts(List.of(lecture));
         var version = lectureDao.findBySlug(lecture.getSlug()).map(Lecture::getVersion).orElse(0);
         return toItem(lecture, version);
     }

@@ -72,7 +72,8 @@ public class LectureManager implements LectureService {
     }
 
 
-    private void applyBadgeCounts(List<LectureDto> lectures) {
+    @Override
+    public void applyBadgeCounts(List<LectureDto> lectures) {
         if (lectures.isEmpty()) {
             return;
         }
