@@ -115,6 +115,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH,  "/api/elective-groups/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/elective-groups/**").hasRole("ADMIN")
 
+                        .requestMatchers(HttpMethod.GET, "/api/lecture-notes/me").authenticated()
                         .requestMatchers("/api/lecture-notes/**").hasRole("ADMIN")
 
                         .requestMatchers(HttpMethod.GET, "/api/lecture-offerings/**").authenticated()

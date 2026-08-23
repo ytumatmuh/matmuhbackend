@@ -43,16 +43,31 @@ public class LectureNoteController {
     }
 
     @Operation(summary = "Notları listele",
-            description = "Sayfalı liste. Filtreler: approved, lectureId, lectureOfferingId, staffId, search (başlık/açıklama). Sayfalama: page, size, sort. Sıralanabilir alanlar: title, createdAt, viewCount, isApproved (ADMIN).")
+            description = "Sayfalı liste. Filtreler: approved, lectureId, lectureOfferingId, staffId, uploaderId (yükleyen kullanıcı), search (başlık/açıklama). Sayfalama: page, size, sort. Sıralanabilir alanlar: title, createdAt, viewCount, isApproved (ADMIN).")
     @GetMapping
     public ResponseEntity<DataResult<PageDto<LectureNoteWithLectureDto>>> getLectureNotes(
             @RequestParam(required = false) Boolean approved,
             @RequestParam(required = false) UUID lectureId,
             @RequestParam(required = false) UUID lectureOfferingId,
             @RequestParam(required = false) UUID staffId,
+            @RequestParam(required = false) UUID uploaderId,
             @RequestParam(required = false) String search,
             @ParameterObject @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        var result = lectureNoteService.getAllNotes(approved, lectureId, lectureOfferingId, staffId, search, PageableSanitizer.sanitize(pageable, SORTABLE, "createdAt"));
+        var result = lectureNoteService.getAllNotes(approved, lectureId, lectureOfferingId, staffId, uploaderId, search, PageableSanitizer.sanitize(pageable, SORTABLE, "createdAt"));
+        return ResponseEntity.ok(new SuccessDataResult<>(result, messageResolver.resolve(LectureNoteMessages.LECTURE_NOTES_FETCH_SUCCESS), HttpStatus.OK));
+    }
+
+    @Operation(summary = "Kendi yüklediğim notlar",
+            description = "Giriş yapmış kullanıcının kendi yüklediği ders notlarını sayfalı döner; onay bekleyenler dahil. "
+                    + "isApproved alanı durumu gösterir. approved=false ile sadece bekleyenler, approved=true ile onaylananlar süzülür. "
+                    + "Filtre: search (başlık/açıklama). Sıralanabilir alanlar: title, createdAt, viewCount, isApproved.")
+    @GetMapping("/me")
+    public ResponseEntity<DataResult<PageDto<LectureNoteWithLectureDto>>> getMyLectureNotes(
+            @RequestParam(required = false) Boolean approved,
+            @RequestParam(required = false) UUID lectureId,
+            @RequestParam(required = false) String search,
+            @ParameterObject @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        var result = lectureNoteService.getMyNotes(approved, lectureId, search, PageableSanitizer.sanitize(pageable, SORTABLE, "createdAt"));
         return ResponseEntity.ok(new SuccessDataResult<>(result, messageResolver.resolve(LectureNoteMessages.LECTURE_NOTES_FETCH_SUCCESS), HttpStatus.OK));
     }
 

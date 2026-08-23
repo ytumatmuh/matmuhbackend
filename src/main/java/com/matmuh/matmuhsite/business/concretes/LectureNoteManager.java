@@ -112,13 +112,24 @@ public class LectureNoteManager implements LectureNoteService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageDto<LectureNoteWithLectureDto> getAllNotes(Boolean approved, UUID lectureId, UUID lectureOfferingId, UUID staffId, String search, Pageable pageable) {
-        logger.info("Getting lecture notes approved={} lectureId={} offeringId={} staffId={} search={} page={}", approved, lectureId, lectureOfferingId, staffId, search, pageable.getPageNumber());
+    public PageDto<LectureNoteWithLectureDto> getAllNotes(Boolean approved, UUID lectureId, UUID lectureOfferingId,
+                                                          UUID staffId, UUID uploaderId, String search, Pageable pageable) {
+        logger.info("Getting lecture notes approved={} lectureId={} offeringId={} staffId={} uploaderId={} search={} page={}",
+                approved, lectureId, lectureOfferingId, staffId, uploaderId, search, pageable.getPageNumber());
 
-        var page = lectureNoteDao.search(approved, lectureId, lectureOfferingId, staffId,
+        var page = lectureNoteDao.search(approved, lectureId, lectureOfferingId, staffId, uploaderId,
                 search == null || search.isBlank() ? null : search.trim(), pageable);
 
         return PageDto.of(page, lectureNoteMapper::toLectureNoteWithLectureDto);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageDto<LectureNoteWithLectureDto> getMyNotes(Boolean approved, UUID lectureId, String search, Pageable pageable) {
+        var user = securityService.getAuthenticatedUserFromContext();
+        logger.info("Getting own lecture notes for user {} lectureId={}", user.getId(), lectureId);
+
+        return getAllNotes(approved, lectureId, null, null, user.getId(), search, pageable);
     }
 
     @Override

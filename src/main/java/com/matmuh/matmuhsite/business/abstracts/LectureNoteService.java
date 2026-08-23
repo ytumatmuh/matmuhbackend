@@ -21,7 +21,11 @@ public interface LectureNoteService {
 
     LectureNoteDto approveLectureNote(UUID lectureNoteId, boolean approved);
 
-    PageDto<LectureNoteWithLectureDto> getAllNotes(Boolean approved, UUID lectureId, UUID lectureOfferingId, UUID staffId, String search, Pageable pageable);
+    PageDto<LectureNoteWithLectureDto> getAllNotes(Boolean approved, UUID lectureId, UUID lectureOfferingId,
+                                                  UUID staffId, UUID uploaderId, String search, Pageable pageable);
+
+
+    PageDto<LectureNoteWithLectureDto> getMyNotes(Boolean approved, UUID lectureId, String search, Pageable pageable);
 
     LectureNoteDto getLectureNoteById(UUID lectureNoteId);
 

@@ -37,6 +37,7 @@ public interface LectureNoteDao extends JpaRepository<LectureNote, UUID> {
               AND (:lectureId IS NULL OR n.lecture.id = :lectureId)
               AND (:offeringId IS NULL OR o.id = :offeringId)
               AND (:staffId IS NULL OR i.id = :staffId)
+              AND (:uploaderId IS NULL OR n.createdBy.id = :uploaderId)
               AND (CAST(:search AS String) IS NULL
                    OR LOWER(n.title) LIKE LOWER(CONCAT('%', CAST(:search AS String), '%'))
                    OR LOWER(n.description) LIKE LOWER(CONCAT('%', CAST(:search AS String), '%')))
@@ -45,6 +46,7 @@ public interface LectureNoteDao extends JpaRepository<LectureNote, UUID> {
                              @Param("lectureId") UUID lectureId,
                              @Param("offeringId") UUID offeringId,
                              @Param("staffId") UUID staffId,
+                             @Param("uploaderId") UUID uploaderId,
                              @Param("search") String search,
                              Pageable pageable);
 }
