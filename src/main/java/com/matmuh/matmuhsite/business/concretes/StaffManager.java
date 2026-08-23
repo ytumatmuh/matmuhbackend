@@ -57,6 +57,7 @@ public class StaffManager implements StaffService {
         });
 
         staffMapper.updateStaffFromDto(request, staff);
+        applyPhotoAlt(staff);
         var saved = staffDao.save(staff);
 
         log.info("Staff updated with ID: {}", saved.getId());
@@ -100,6 +101,8 @@ public class StaffManager implements StaffService {
                 StaffMessages.SLUG_EXISTS
         ));
 
+        applyPhotoAlt(staff);
+
         Staff savedStaff = staffDao.save(staff);
 
         log.info("Staff created with ID: {}", savedStaff.getId());
@@ -116,6 +119,19 @@ public class StaffManager implements StaffService {
         log.info("Total staff found: {}", page.getTotalElements());
 
         return PageDto.of(page, staffMapper::toStaffDto);
+    }
+
+    // Alt metni erisilebilirlik icin gerekli; REST/ice aktarma yolunda gonderilmezse
+    // kisinin adindan doldurulur. CMS tarafinda SDK zaten alt kutusu ciziyor.
+    private void applyPhotoAlt(Staff staff) {
+        var photo = staff.getPhoto();
+        if (photo == null || photo.getSrc() == null || photo.getSrc().isBlank()) {
+            staff.setPhoto(null);
+            return;
+        }
+        if (photo.getAlt() == null || photo.getAlt().isBlank()) {
+            photo.setAlt((staff.getFirstName() + " " + staff.getLastName()).trim());
+        }
     }
 
     private String normalize(String search) {

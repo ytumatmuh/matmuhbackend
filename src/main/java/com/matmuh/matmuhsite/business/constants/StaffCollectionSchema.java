@@ -39,6 +39,8 @@ public final class StaffCollectionSchema {
             FieldDefinition.of(FIELD_EMAIL, FieldType.SHORT_TEXT, "E-posta").asFilterable(),
             FieldDefinition.of("phone", FieldType.SHORT_TEXT, "Telefon"),
             FieldDefinition.of("office", FieldType.SHORT_TEXT, "Ofis"),
+            FieldDefinition.of("photo", FieldType.IMAGE, "Fotoğraf")
+                    .withHelp("Opsiyonel. Boş bırakılırsa arayüz ad-soyad baş harflerini gösterir. Görsel POST /api/cms/media ile yüklenir, dönen url src alanına yazılır."),
             FieldDefinition.of(FIELD_AVESIS_LINK, FieldType.URL, "AVESİS").asFilterable()
     ));
 }

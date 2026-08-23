@@ -1,5 +1,7 @@
 package com.matmuh.matmuhsite.core.dtos.staff.response;
 
+import com.matmuh.matmuhsite.core.dtos.common.ImageRefDto;
+
 import com.matmuh.matmuhsite.entities.StaffGroup;
 import lombok.*;
 
@@ -33,6 +35,8 @@ public class StaffDto {
     private String avesisLink;
 
     private String office;
+
+    private ImageRefDto photo;
 
     private String role;
 

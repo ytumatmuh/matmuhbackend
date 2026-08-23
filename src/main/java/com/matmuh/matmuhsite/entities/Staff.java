@@ -71,6 +71,14 @@ public class Staff extends BaseEntity{
     @Column(name = "office")
     private String office;
 
+
+    @Embedded
+    @AttributeOverrides({
+            @AttributeOverride(name = "src", column = @Column(name = "photo_url")),
+            @AttributeOverride(name = "alt", column = @Column(name = "photo_alt"))
+    })
+    private ImageRef photo;
+
     @OneToMany(mappedBy = "staff", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<LectureOffering> offerings = new ArrayList<>();
