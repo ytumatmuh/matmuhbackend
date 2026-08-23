@@ -1,23 +1,22 @@
 package com.matmuh.matmuhsite.business.concretes;
 
 import com.matmuh.matmuhsite.business.abstracts.CmsCollectionProvider;
-import com.matmuh.matmuhsite.business.abstracts.LectureService;
+import com.matmuh.matmuhsite.business.abstracts.ElectiveGroupService;
 import com.matmuh.matmuhsite.business.constants.CmsMessages;
-import com.matmuh.matmuhsite.business.constants.LectureCollectionSchema;
-import com.matmuh.matmuhsite.business.constants.LectureMessages;
+import com.matmuh.matmuhsite.business.constants.ElectiveGroupCollectionSchema;
+import com.matmuh.matmuhsite.business.constants.ElectiveGroupMessages;
 import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionItemDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionListDto;
-import com.matmuh.matmuhsite.core.dtos.lecture.request.CreateLectureRequestDto;
-import com.matmuh.matmuhsite.core.dtos.lecture.request.UpdateLectureRequestDto;
-import com.matmuh.matmuhsite.core.dtos.lecture.response.LectureDto;
+import com.matmuh.matmuhsite.core.dtos.electiveGroup.request.CreateElectiveGroupRequestDto;
+import com.matmuh.matmuhsite.core.dtos.electiveGroup.request.UpdateElectiveGroupRequestDto;
+import com.matmuh.matmuhsite.core.dtos.electiveGroup.response.ElectiveGroupDto;
 import com.matmuh.matmuhsite.core.exceptions.CmsValidationException;
 import com.matmuh.matmuhsite.core.exceptions.ConcurrencyConflictException;
 import com.matmuh.matmuhsite.core.exceptions.ResourceNotFoundException;
 import com.matmuh.matmuhsite.core.helpers.OffsetPageable;
-import com.matmuh.matmuhsite.core.mappers.LectureMapper;
-import com.matmuh.matmuhsite.dataAccess.abstracts.LectureDao;
-import com.matmuh.matmuhsite.entities.Lecture;
+import com.matmuh.matmuhsite.dataAccess.abstracts.ElectiveGroupDao;
 import com.matmuh.matmuhsite.entities.DegreeLevel;
+import com.matmuh.matmuhsite.entities.ElectiveGroup;
 import com.matmuh.matmuhsite.entities.Semester;
 import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
@@ -27,38 +26,37 @@ import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.node.ObjectNode;
 
+import java.util.Locale;
+
 @Service
 @RequiredArgsConstructor
-public class LectureCollectionProvider implements CmsCollectionProvider {
+public class ElectiveGroupCollectionProvider implements CmsCollectionProvider {
 
     private static final Sort DEFAULT_SORT = Sort.by(Sort.Direction.ASC, "code");
 
-    private static final String SEMESTER_INVALID =
-            "Field 'semester' must be one of FALL, SPRING, SUMMER.";
-
-    private final LectureService lectureService;
-    private final LectureDao lectureDao;
-    private final LectureMapper lectureMapper;
+    private final ElectiveGroupService electiveGroupService;
+    private final ElectiveGroupDao electiveGroupDao;
     private final JsonMapper objectMapper;
     private final Validator validator;
 
-
     @Override
     public String collectionKey() {
-        return LectureCollectionSchema.KEY;
+        return ElectiveGroupCollectionSchema.KEY;
     }
 
     @Override
     @Transactional(readOnly = true)
     public CollectionListDto list(ObjectNode filters, String locale, int offset, int limit) {
-        var page = lectureDao.search(
+        var page = electiveGroupDao.search(
                 filterTerm(filters),
                 filterSemester(filters),
                 filterDegreeLevel(filters),
-                filterCode(filters),
+                filterSearch(filters),
                 OffsetPageable.of(offset, limit, DEFAULT_SORT));
 
-        var items = page.getContent().stream().map(this::toItem).toList();
+        var items = page.getContent().stream()
+                .map(group -> toItem(electiveGroupService.getElectiveGroupById(group.getId()), group.getVersion()))
+                .toList();
 
         return new CollectionListDto(items, page.getTotalElements(), offset, limit);
     }
@@ -66,60 +64,42 @@ public class LectureCollectionProvider implements CmsCollectionProvider {
     @Override
     @Transactional(readOnly = true)
     public CollectionItemDto getBySlug(String slug, String locale) {
-        return toItem(requireBySlug(slug));
+        var group = requireBySlug(slug);
+        return toItem(electiveGroupService.getElectiveGroupById(group.getId()), group.getVersion());
     }
 
     @Override
     @Transactional
     public CollectionItemDto create(ObjectNode data, String locale) {
-        var request = convert(data, CreateLectureRequestDto.class);
+        var request = convert(data, CreateElectiveGroupRequestDto.class);
         validate(request);
-        return toItem(lectureService.createLecture(request));
+        return toItem(electiveGroupService.createElectiveGroup(request));
     }
 
     @Override
     @Transactional
     public CollectionItemDto upsert(String slug, ObjectNode data, Integer version, String locale) {
-        var lecture = requireBySlug(slug);
+        var group = requireBySlug(slug);
 
-        if (version != null && version != lecture.getVersion()) {
+        if (version != null && version != group.getVersion()) {
             throw new ConcurrencyConflictException(CmsMessages.VERSION_CONFLICT);
         }
 
-        var request = convert(data, UpdateLectureRequestDto.class);
+        var request = convert(data, UpdateElectiveGroupRequestDto.class);
         validate(request);
-        return toItem(lectureService.updateLecture(lecture.getId(), request));
+        return toItem(electiveGroupService.updateElectiveGroup(group.getId(), request));
     }
 
     @Override
     @Transactional(readOnly = true)
     public boolean existsBySlug(String slug) {
-        return lectureDao.existsBySlug(slug);
+        return electiveGroupDao.existsBySlug(slug);
     }
 
-    private Lecture requireBySlug(String slug) {
-        return lectureDao.findBySlug(slug)
+    private ElectiveGroup requireBySlug(String slug) {
+        return electiveGroupDao.findBySlug(slug)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        CmsMessages.COLLECTION_ITEM_NOT_FOUND + LectureCollectionSchema.KEY + "/" + slug));
-    }
-
-    private CollectionItemDto toItem(Lecture lecture) {
-        return toItem(lectureMapper.toDto(lecture), lecture.getVersion());
-    }
-
-    private CollectionItemDto toItem(LectureDto lecture) {
-        var version = lectureDao.findBySlug(lecture.getSlug()).map(Lecture::getVersion).orElse(0);
-        return toItem(lecture, version);
-    }
-
-    private CollectionItemDto toItem(LectureDto lecture, int version) {
-        var item = new CollectionItemDto();
-        item.setId(lecture.getId());
-        item.setCollectionKey(LectureCollectionSchema.KEY);
-        item.setSlug(lecture.getSlug());
-        item.setData(objectMapper.valueToTree(lecture));
-        item.setVersion(version);
-        return item;
+                        CmsMessages.COLLECTION_ITEM_NOT_FOUND + ElectiveGroupCollectionSchema.KEY + "/" + slug));
     }
 
     private <T> T convert(ObjectNode data, Class<T> type) {
@@ -142,29 +122,36 @@ public class LectureCollectionProvider implements CmsCollectionProvider {
     }
 
     private Integer filterTerm(ObjectNode filters) {
-        var node = filters == null ? null : filters.get(LectureCollectionSchema.FIELD_TERM);
+        var node = filters == null ? null : filters.get(ElectiveGroupCollectionSchema.FIELD_TERM);
         return node == null || node.isNull() ? null : node.asInt();
     }
 
+    private String filterSearch(ObjectNode filters) {
+        if (filters == null) {
+            return null;
+        }
+        var node = filters.get(ElectiveGroupCollectionSchema.FIELD_CODE);
+        if (node == null || node.isNull()) {
+            node = filters.get(ElectiveGroupCollectionSchema.FIELD_NAME);
+        }
+        return node == null || node.isNull() ? null : node.asString();
+    }
+
     private Semester filterSemester(ObjectNode filters) {
-        var node = filters == null ? null : filters.get(LectureCollectionSchema.FIELD_SEMESTER);
+        var node = filters == null ? null : filters.get(ElectiveGroupCollectionSchema.FIELD_SEMESTER);
         if (node == null || node.isNull()) {
             return null;
         }
         try {
-            return Semester.valueOf(node.asString().trim().toUpperCase());
+            return Semester.valueOf(node.asString().trim().toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException e) {
-            throw new CmsValidationException(SEMESTER_INVALID);
+            throw new CmsValidationException("Field '" + ElectiveGroupCollectionSchema.FIELD_SEMESTER
+                    + "': invalid value '" + node.asString() + "'.");
         }
     }
 
-    private String filterCode(ObjectNode filters) {
-        var node = filters == null ? null : filters.get(LectureCollectionSchema.FIELD_CODE);
-        return node == null || node.isNull() ? null : node.asString();
-    }
-
     private DegreeLevel filterDegreeLevel(ObjectNode filters) {
-        var node = filters == null ? null : filters.get(LectureCollectionSchema.FIELD_DEGREE_LEVELS);
+        var node = filters == null ? null : filters.get(ElectiveGroupCollectionSchema.FIELD_DEGREE_LEVELS);
         if (node == null || node.isNull()) {
             return null;
         }
@@ -175,9 +162,24 @@ public class LectureCollectionProvider implements CmsCollectionProvider {
         }
 
         try {
-            return DegreeLevel.valueOf(text.trim().toUpperCase());
+            return DegreeLevel.valueOf(text.trim().toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException e) {
-            throw new CmsValidationException(LectureMessages.DEGREE_LEVEL_INVALID);
+            throw new CmsValidationException(ElectiveGroupMessages.DEGREE_LEVEL_INVALID);
         }
+    }
+
+    private CollectionItemDto toItem(ElectiveGroupDto group) {
+        var version = electiveGroupDao.findBySlug(group.getSlug()).map(ElectiveGroup::getVersion).orElse(0);
+        return toItem(group, version);
+    }
+
+    private CollectionItemDto toItem(ElectiveGroupDto group, int version) {
+        var item = new CollectionItemDto();
+        item.setId(group.getId());
+        item.setCollectionKey(ElectiveGroupCollectionSchema.KEY);
+        item.setSlug(group.getSlug());
+        item.setData(objectMapper.valueToTree(group));
+        item.setVersion(version);
+        return item;
     }
 }

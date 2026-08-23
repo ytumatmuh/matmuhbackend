@@ -24,7 +24,7 @@ public interface CmsCollectionService {
     List<MyCollectionDto> getMyCollections();
 
     CollectionListDto list(String collectionKey, String userId, Map<String, String> filters,
-                           String sort, boolean archived, String locale, int offset, int limit);
+                           String sort, boolean archived, String locale, String search, int offset, int limit);
 
     CollectionItemDto getBySlug(String collectionKey, String slug, String userId, String locale);
 

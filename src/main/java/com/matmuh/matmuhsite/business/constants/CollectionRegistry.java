@@ -39,6 +39,13 @@ public class CollectionRegistry {
                     false
             ),
             new CollectionDefinition(
+                    ElectiveGroupCollectionSchema.KEY,
+                    ElectiveGroupCollectionSchema.SCHEMA,
+                    SlugSource.AUTO_GENERATED,
+                    ElectiveGroupCollectionSchema.SLUG_SOURCE_FIELD,
+                    true,
+                    false),
+            new CollectionDefinition(
                     AnnouncementCollectionSchema.KEY,
                     AnnouncementCollectionSchema.SCHEMA,
                     SlugSource.AUTO_GENERATED,

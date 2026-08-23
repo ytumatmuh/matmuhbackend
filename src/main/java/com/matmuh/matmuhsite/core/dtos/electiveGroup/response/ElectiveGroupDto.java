@@ -1,6 +1,5 @@
-package com.matmuh.matmuhsite.core.dtos.lecture.response;
+package com.matmuh.matmuhsite.core.dtos.electiveGroup.response;
 
-import com.matmuh.matmuhsite.core.dtos.staff.response.StaffDto;
 import com.matmuh.matmuhsite.entities.DegreeLevel;
 import com.matmuh.matmuhsite.entities.Semester;
 import lombok.AllArgsConstructor;
@@ -18,23 +17,17 @@ import java.util.UUID;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class LectureDto {
+public class ElectiveGroupDto {
 
     private UUID id;
 
-    private String name;
-
     private String code;
+
+    private String name;
 
     private String slug;
 
-    private String language;
-
     private String about;
-
-    private String gradingPolicy;
-
-    private String resources;
 
     private Integer term;
 
@@ -48,15 +41,9 @@ public class LectureDto {
 
     private Integer ects;
 
-    private String bolognaLink;;
+    private Integer selectionCount;
 
-    private String notesLink;
+    private List<ElectiveGroupOptionDto> options = new ArrayList<>();
 
-    private List<StaffDto> staff = new ArrayList<>();
-
-
-    private long noteCount;
-
-    private long statisticsTermCount;
-
+    private int optionCount;
 }

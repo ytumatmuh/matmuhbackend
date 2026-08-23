@@ -2,6 +2,7 @@ package com.matmuh.matmuhsite.business.abstracts;
 
 import com.matmuh.matmuhsite.core.dtos.common.PageDto;
 import com.matmuh.matmuhsite.core.dtos.lecture.request.CreateLectureRequestDto;
+import com.matmuh.matmuhsite.entities.DegreeLevel;
 import com.matmuh.matmuhsite.entities.Semester;
 import org.springframework.data.domain.Pageable;
 import com.matmuh.matmuhsite.core.dtos.lecture.request.UpdateLectureRequestDto;
@@ -33,7 +34,7 @@ public interface LectureService {
 
     void deleteLecture(UUID lectureId);
 
-    PageDto<LectureDto> getLectures(Integer term, Semester semester, String search, Pageable pageable);
+    PageDto<LectureDto> getLectures(Integer term, Semester semester, DegreeLevel degreeLevel, String search, Pageable pageable);
 
     LectureStatisticsDto getLectureStatistics(UUID lectureId);
 

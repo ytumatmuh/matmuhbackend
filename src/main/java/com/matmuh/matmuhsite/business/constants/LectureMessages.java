@@ -1,6 +1,7 @@
 package com.matmuh.matmuhsite.business.constants;
 
 public class LectureMessages {
+    public static final String DEGREE_LEVEL_INVALID = "lecture.degree.level.invalid";
     public static final String LECTURE_CODE_EXISTS = "lecture.code.exists";
     public static final String LECTURE_NOT_FOUND = "lecture.not.found";
     public static final String LECTURE_NAME_CANNOT_BE_BLANK = "{lecture.name.not.blank}";

@@ -1,6 +1,7 @@
 package com.matmuh.matmuhsite.entities;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 import jakarta.persistence.Id;
@@ -10,7 +11,7 @@ import java.util.*;
 
 @Getter
 @Setter
-@SQLDelete(sql = "UPDATE lectures SET is_deleted = true WHERE id = ?")
+@SQLDelete(sql = "UPDATE lectures SET is_deleted = true WHERE id = ? AND version = ?")
 @SQLRestriction("is_deleted = false")
 @Entity
 @AllArgsConstructor
@@ -52,6 +53,14 @@ public class Lecture extends BaseEntity{
 
     @Column(name = "term")
     private int term;
+
+    @ElementCollection(targetClass = DegreeLevel.class, fetch = FetchType.EAGER)
+    @CollectionTable(name = "lecture_degree_levels", joinColumns = @JoinColumn(name = "lecture_id"))
+    @Column(name = "degree_level", nullable = false)
+    @Enumerated(EnumType.STRING)
+    @BatchSize(size = 50)
+    @Builder.Default
+    private Set<DegreeLevel> degreeLevels = new LinkedHashSet<>();
 
     @Enumerated(EnumType.STRING)
     @Column(name = "semester")

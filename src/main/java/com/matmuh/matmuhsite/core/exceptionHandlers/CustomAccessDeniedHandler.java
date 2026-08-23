@@ -2,6 +2,7 @@ package com.matmuh.matmuhsite.core.exceptionHandlers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.matmuh.matmuhsite.core.helpers.MessageResolver;
+import com.matmuh.matmuhsite.core.utilities.results.ErrorCodes;
 import com.matmuh.matmuhsite.core.utilities.results.ErrorResult;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -31,7 +32,8 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
 
         ErrorResult errorResult = new ErrorResult(
                 messageResolver.resolve("error.access.denied"),
-                HttpStatus.FORBIDDEN);
+                HttpStatus.FORBIDDEN,
+                ErrorCodes.ACCESS_DENIED);
 
         response.setContentType("application/json;charset=UTF-8");
         response.setCharacterEncoding("UTF-8");

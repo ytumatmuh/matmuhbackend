@@ -19,6 +19,7 @@ import com.matmuh.matmuhsite.core.mappers.LectureNoteMapper;
 import com.matmuh.matmuhsite.dataAccess.abstracts.LectureDao;
 import com.matmuh.matmuhsite.dataAccess.abstracts.LectureNoteDao;
 import com.matmuh.matmuhsite.dataAccess.abstracts.LectureOfferingDao;
+import com.matmuh.matmuhsite.entities.DegreeLevel;
 import com.matmuh.matmuhsite.entities.Lecture;
 import com.matmuh.matmuhsite.core.dtos.lecture.response.LectureStatisticsDto;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +30,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -103,6 +105,9 @@ public class LectureManager implements LectureService {
 
 
         Lecture lecture = lectureMapper.toEntity(createLectureRequestDto);
+        if (lecture.getDegreeLevels() == null || lecture.getDegreeLevels().isEmpty()) {
+            lecture.setDegreeLevels(new LinkedHashSet<>(DegreeLevel.fromCode(createLectureRequestDto.getCode())));
+        }
         lecture.setSlug(UniqueSlugResolver.resolve(
                 createLectureRequestDto.getSlug(),
                 createLectureRequestDto.getCode(),
@@ -219,10 +224,10 @@ public class LectureManager implements LectureService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageDto<LectureDto> getLectures(Integer term, Semester semester, String search, Pageable pageable) {
-        logger.info("Retrieving lectures term={} semester={} search={} page={}", term, semester, search, pageable.getPageNumber());
+    public PageDto<LectureDto> getLectures(Integer term, Semester semester, DegreeLevel degreeLevel, String search, Pageable pageable) {
+        logger.info("Retrieving lectures term={} semester={} degreeLevel={} search={} page={}", term, semester, degreeLevel, search, pageable.getPageNumber());
 
-        var page = lectureDao.search(term, semester,
+        var page = lectureDao.search(term, semester, degreeLevel,
                 search == null || search.isBlank() ? null : search.trim(), pageable);
 
         logger.info("Retrieved {} lectures", page.getTotalElements());

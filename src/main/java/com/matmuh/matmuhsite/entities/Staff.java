@@ -17,7 +17,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@SQLDelete(sql = "UPDATE staff SET is_deleted = true WHERE id = ?")
+@SQLDelete(sql = "UPDATE staff SET is_deleted = true WHERE id = ? AND version = ?")
 @SQLRestriction("is_deleted = false")
 @Entity
 @Table(name = "staff")

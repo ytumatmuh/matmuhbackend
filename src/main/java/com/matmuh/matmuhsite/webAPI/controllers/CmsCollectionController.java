@@ -35,7 +35,7 @@ public class CmsCollectionController {
     private static final int DEFAULT_LIMIT = 50;
     private static final int MAX_LIMIT = 100;
 
-    private static final Set<String> RESERVED_QUERY_KEYS = Set.of("offset", "limit", "sort", "archived", "locale", "translationGroup");
+    private static final Set<String> RESERVED_QUERY_KEYS = Set.of("offset", "limit", "sort", "archived", "locale", "translationGroup", "q");
 
     private final CmsCollectionService collectionService;
 
@@ -61,6 +61,7 @@ public class CmsCollectionController {
     @Operation(summary = "Listele",
             description = "Sayfalı, sıralı ve filtreli collection item listesi. "
                     + "sort=alan:asc|desc (slug, createdAt, updatedAt veya şemada sortable alanlar). "
+                    + "q=metin şemada searchable işaretli alanlarda (duyuru/haberde başlık ve özet) büyük-küçük harf duyarsız parça arama yapar. "
                     + "archived=true arşivi listeler, sadece editör için.")
     @GetMapping("/{key}")
     public CollectionListDto list(@PathVariable String key,
@@ -76,12 +77,13 @@ public class CmsCollectionController {
 
         var sort = queryParams.get("sort");
         var locale = queryParams.get("locale");
+        var search = queryParams.get("q");
         var archived = Boolean.parseBoolean(queryParams.get("archived"));
 
         var filters = new HashMap<>(queryParams);
         filters.keySet().removeAll(RESERVED_QUERY_KEYS);
 
-        return collectionService.list(key, editorUserId(authentication), filters, sort, archived, locale, offset, limit);
+        return collectionService.list(key, editorUserId(authentication), filters, sort, archived, locale, search, offset, limit);
     }
 
     @Operation(summary = "Item getir", description = "Slug ile tek item döner.")

@@ -2,12 +2,15 @@ package com.matmuh.matmuhsite.core.dtos.lecture.request;
 
 import com.matmuh.matmuhsite.business.constants.LectureMessages;
 import com.matmuh.matmuhsite.core.validation.NullOrNotBlank;
+import com.matmuh.matmuhsite.entities.DegreeLevel;
 import com.matmuh.matmuhsite.entities.Semester;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.util.Set;
 
 @Getter
 @Setter
@@ -34,6 +37,8 @@ public class CreateLectureRequestDto {
     private Integer term;
 
     private Semester semester;
+
+    private Set<DegreeLevel> degreeLevels;
 
     private Integer weeklyHours;
 

@@ -17,8 +17,10 @@ public final class NewsCollectionSchema {
             FieldDefinition.readOnly("id", FieldType.SHORT_TEXT, "ID"),
             FieldDefinition.readOnly("slug", FieldType.SHORT_TEXT, "Slug"),
             FieldDefinition.required(SLUG_SOURCE_FIELD, FieldType.SHORT_TEXT, "Başlık")
+                    .asSearchable()
+                    .asSortable()
                     .withHelp("Slug bu başlıktan üretilir. Çeviri kendi başlığından kendi slug'ını alır."),
-            FieldDefinition.of("summary", FieldType.LONG_TEXT, "Özet"),
+            FieldDefinition.of("summary", FieldType.LONG_TEXT, "Özet").asSearchable(),
             FieldDefinition.of("body", FieldType.RICH_TEXT, "İçerik"),
             FieldDefinition.of("coverImage", FieldType.IMAGE, "Kapak görseli"),
             FieldDefinition.of("gallery", FieldType.OBJECT_ARRAY, "Galeri")
@@ -36,7 +38,7 @@ public final class NewsCollectionSchema {
             FieldDefinition.of("publishedAt", FieldType.DATE, "Yayın tarihi")
                     .asFilterable()
                     .asSortable(),
-            FieldDefinition.of("featured", FieldType.BOOL, "Öne çıkan").asFilterable(),
+            FieldDefinition.of("featured", FieldType.BOOL, "Öne çıkan").asFilterable().asSortable(),
             FieldDefinition.of("tags", FieldType.STRING_ARRAY, "Etiketler").asFilterable(),
             FieldDefinition.of("sourceUrl", FieldType.URL, "Kaynak bağlantısı")
     ));

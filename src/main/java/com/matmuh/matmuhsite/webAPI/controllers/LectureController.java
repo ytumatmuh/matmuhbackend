@@ -28,6 +28,10 @@ import com.matmuh.matmuhsite.core.utilities.results.DataResult;
 import com.matmuh.matmuhsite.core.utilities.results.Result;
 import com.matmuh.matmuhsite.core.utilities.results.SuccessDataResult;
 import com.matmuh.matmuhsite.core.utilities.results.SuccessResult;
+import com.matmuh.matmuhsite.business.abstracts.ElectiveGroupService;
+import com.matmuh.matmuhsite.business.constants.ElectiveGroupMessages;
+import com.matmuh.matmuhsite.core.dtos.electiveGroup.response.ElectiveGroupDto;
+import com.matmuh.matmuhsite.entities.DegreeLevel;
 import com.matmuh.matmuhsite.entities.Semester;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -48,26 +52,39 @@ public class LectureController {
 
     private final LectureService lectureService;
     private final LectureOfferingService lectureOfferingService;
+    private final ElectiveGroupService electiveGroupService;
     private final MessageResolver messageResolver;
 
     public LectureController(LectureService lectureService,
                              LectureOfferingService lectureOfferingService,
+                             ElectiveGroupService electiveGroupService,
                              MessageResolver messageResolver) {
+        this.electiveGroupService = electiveGroupService;
         this.lectureService = lectureService;
         this.lectureOfferingService = lectureOfferingService;
         this.messageResolver = messageResolver;
     }
 
     @Operation(summary = "Dersleri listele",
-            description = "Sayfalı liste. Filtreler: term, semester, search (ad, kod, açıklama). Sayfalama: page, size, sort (örn. code,asc). Sıralanabilir alanlar: code, name, term, semester, ects, createdAt.")
+            description = "Sayfalı liste. Filtreler: term, semester, degreeLevel, search (ad, kod, açıklama). degreeLevel tek değer alır ve dersin düzeylerinden biri eşleşiyorsa döner; ortak lisansüstü dersleri hem MASTERS hem DOCTORATE filtresinde listelenir. Sayfalama: page, size, sort (örn. code,asc). Sıralanabilir alanlar: code, name, term, semester, ects, createdAt.")
     @GetMapping
     public ResponseEntity<DataResult<PageDto<LectureDto>>> getLectures(
             @RequestParam(required = false) Integer term,
             @RequestParam(required = false) Semester semester,
+            @RequestParam(required = false) DegreeLevel degreeLevel,
             @RequestParam(required = false) String search,
             @ParameterObject @PageableDefault(size = 20, sort = "code", direction = Sort.Direction.ASC) Pageable pageable) {
-        var lectures = lectureService.getLectures(term, semester, search, PageableSanitizer.sanitize(pageable, SORTABLE, "code"));
+        var lectures = lectureService.getLectures(term, semester, degreeLevel, search, PageableSanitizer.sanitize(pageable, SORTABLE, "code"));
         return ResponseEntity.ok(new SuccessDataResult<>(lectures, messageResolver.resolve(LectureNoteMessages.LECTURES_FETCH_SUCCESS), HttpStatus.OK));
+    }
+
+    @Operation(summary = "Dersin bağlı olduğu seçmeli grupları",
+            description = "Bu dersin hangi müfredat seçmeli slotlarında seçenek olarak yer aldığını döner (ör. MTM3521 -> Mesleki Seçmeli 2).")
+    @GetMapping("/{id}/elective-groups")
+    public ResponseEntity<DataResult<List<ElectiveGroupDto>>> getLectureElectiveGroups(@PathVariable UUID id) {
+        var groups = electiveGroupService.getGroupsContainingLecture(id);
+        return ResponseEntity.ok(new SuccessDataResult<>(groups,
+                messageResolver.resolve(ElectiveGroupMessages.ELECTIVE_GROUP_LIST_FETCHED_SUCCESSFULLY), HttpStatus.OK));
     }
 
     @Operation(summary = "Ders getir (kod ile)",

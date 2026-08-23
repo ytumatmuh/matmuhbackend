@@ -23,6 +23,7 @@ import com.matmuh.matmuhsite.core.dtos.cms.response.MyCollectionDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.TranslationRefDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.VirtualItemDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionSchema;
+import com.matmuh.matmuhsite.core.dtos.cms.response.FieldDefinition;
 import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionSchemaResponseDto;
 import com.matmuh.matmuhsite.entities.cms.SlugSource;
 import com.matmuh.matmuhsite.core.exceptions.ArchivedException;
@@ -91,8 +92,15 @@ public class CmsCollectionManager implements CmsCollectionService {
         return def.localized() ? localeResolver.declared() : List.of();
     }
 
+    private List<String> searchableFields(CollectionSchema schema) {
+        return schema.fields().stream()
+                .filter(FieldDefinition::searchable)
+                .map(FieldDefinition::name)
+                .toList();
+    }
+
     private String writeLocale(CollectionRegistry.CollectionDefinition def, String locale) {
-        return def.localized() ? localeResolver.requireForWrite(locale) : null;
+        return def.localized() ? localeResolver.resolveForWrite(locale) : null;
     }
 
     @Override
@@ -105,7 +113,7 @@ public class CmsCollectionManager implements CmsCollectionService {
     @Override
     @Transactional(readOnly = true)
     public CollectionListDto list(String collectionKey, String userId, Map<String, String> filters,
-                                  String sort, boolean archived, String locale, int offset, int limit) {
+                                  String sort, boolean archived, String locale, String search, int offset, int limit) {
         var def = registry.resolve(collectionKey);
         var key = def.key();
 
@@ -134,8 +142,10 @@ public class CmsCollectionManager implements CmsCollectionService {
             total = result.getTotal();
             itemDtos = new ArrayList<>(result.getItems());
         } else {
-            var items = collectionItemDao.searchByFilter(key, filterJson, parsedSort, showArchived, resolvedLocale, offset, limit);
-            total = collectionItemDao.countByFilter(key, filterJson, showArchived, resolvedLocale);
+            var searchFields = searchableFields(def.schema());
+            var items = collectionItemDao.searchByFilter(key, filterJson, parsedSort, showArchived, resolvedLocale,
+                    searchFields, search, offset, limit);
+            total = collectionItemDao.countByFilter(key, filterJson, showArchived, resolvedLocale, searchFields, search);
             itemDtos = items.stream().map(this::toDto).collect(Collectors.toCollection(ArrayList::new));
         }
 

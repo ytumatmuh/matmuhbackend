@@ -56,7 +56,7 @@ public class CmsLocaleResolver {
     }
 
 
-    public String requireForWrite(String requested) {
+    public String resolveForWrite(String requested) {
         var locales = declared();
 
         if (locales.isEmpty()) {
@@ -68,7 +68,7 @@ public class CmsLocaleResolver {
 
 
         if (requested == null || requested.isBlank()) {
-            throw new CmsValidationException(CmsMessages.LOCALE_REQUIRED_FOR_WRITE + String.join(", ", locales));
+            return locales.get(0);
         }
 
         var normalized = normalize(requested);
