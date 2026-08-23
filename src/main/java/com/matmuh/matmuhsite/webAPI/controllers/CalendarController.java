@@ -10,6 +10,9 @@ import com.matmuh.matmuhsite.core.helpers.MessageResolver;
 import com.matmuh.matmuhsite.core.utilities.results.DataResult;
 import com.matmuh.matmuhsite.core.utilities.results.SuccessDataResult;
 import org.springframework.format.annotation.DateTimeFormat;
+import com.matmuh.matmuhsite.core.dtos.calendar.response.WeeklySlotDto;
+import com.matmuh.matmuhsite.entities.Semester;
+import com.matmuh.matmuhsite.core.validation.AcademicYear;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -44,6 +47,21 @@ public class CalendarController {
 
         var occurrences = calendarService.getCalendar(from, to);
         return ResponseEntity.ok(new SuccessDataResult<>(occurrences,
+                messageResolver.resolve(EnrollmentMessages.LISTED), HttpStatus.OK));
+    }
+
+    @Operation(summary = "Haftalık ders programı",
+            description = "Tarihe açılmamış haftalık ders saatleri: gün, başlangıç/bitiş saati, derslik, ders, grup ve hoca. "
+                    + "/egitim/ders-programi gibi gün-saat ızgarası çizen sayfalar için. Güne ve saate göre sıralı döner. "
+                    + "academicYear ve semester boş bırakılırsa bugünü kapsayan dönem kullanılır; term ile tek bir yarıyıla daraltılır.")
+    @GetMapping("/weekly")
+    public ResponseEntity<DataResult<List<WeeklySlotDto>>> getWeeklySchedule(
+            @RequestParam(required = false) @AcademicYear String academicYear,
+            @RequestParam(required = false) Semester semester,
+            @RequestParam(required = false) Integer term) {
+
+        var slots = calendarService.getWeeklySchedule(academicYear, semester, term);
+        return ResponseEntity.ok(new SuccessDataResult<>(slots,
                 messageResolver.resolve(EnrollmentMessages.LISTED), HttpStatus.OK));
     }
 

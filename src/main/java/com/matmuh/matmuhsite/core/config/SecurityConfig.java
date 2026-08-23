@@ -81,7 +81,7 @@ public class SecurityConfig {
 
 
                         .requestMatchers(HttpMethod.GET, "/api/calendar/me").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/calendar").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/calendar", "/api/calendar/weekly").permitAll()
                         .requestMatchers("/api/enrollments/**").authenticated()
 
                         .requestMatchers(HttpMethod.GET, "/api/cms/data").permitAll()

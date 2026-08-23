@@ -1,6 +1,7 @@
 package com.matmuh.matmuhsite.business.constants;
 
 public class EnrollmentMessages {
+    public static final String TERM_NOT_FOUND = "calendar.term.not.found";
 
     public static final String ALREADY_ENROLLED = "Bu ders açılışına zaten kayıtlısınız.";
     public static final String NOT_ENROLLED = "Bu ders açılışına kayıtlı değilsiniz.";

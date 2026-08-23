@@ -1,7 +1,11 @@
 package com.matmuh.matmuhsite.business.concretes;
 
 import com.matmuh.matmuhsite.business.abstracts.CalendarService;
+import com.matmuh.matmuhsite.business.constants.EnrollmentMessages;
 import com.matmuh.matmuhsite.core.dtos.calendar.response.CalendarOccurrenceDto;
+import com.matmuh.matmuhsite.core.dtos.calendar.response.WeeklySlotDto;
+import com.matmuh.matmuhsite.core.exceptions.ResourceNotFoundException;
+import com.matmuh.matmuhsite.entities.Semester;
 import com.matmuh.matmuhsite.core.helpers.CalendarExpander;
 import com.matmuh.matmuhsite.dataAccess.abstracts.AcademicTermDao;
 import com.matmuh.matmuhsite.dataAccess.abstracts.CalendarEventDao;
@@ -16,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -114,4 +119,56 @@ public class CalendarManager implements CalendarService {
 
     /** IN () boş liste kabul etmediği için, hiçbir açılışla eşleşmeyecek bir kimlik. */
     private static final UUID NO_OFFERING = new UUID(0, 0);
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<WeeklySlotDto> getWeeklySchedule(String academicYear, Semester semester, Integer term) {
+        var resolved = resolveTerm(academicYear, semester);
+
+        logger.info("Retrieving weekly schedule for {} {} term={}",
+                resolved.getAcademicYear(), resolved.getSemester(), term);
+
+        return scheduleSlotDao.findByTerm(resolved.getAcademicYear(), resolved.getSemester()).stream()
+                .filter(slot -> term == null || term.equals(slot.getLectureOffering().getLecture().getTerm()))
+                .sorted(Comparator.comparing(ScheduleSlot::getDayOfWeek)
+                        .thenComparing(ScheduleSlot::getStartTime)
+                        .thenComparing(slot -> slot.getLectureOffering().getLecture().getCode(),
+                                Comparator.nullsLast(String::compareToIgnoreCase)))
+                .map(this::toWeeklySlot)
+                .toList();
+    }
+
+
+    private AcademicTerm resolveTerm(String academicYear, Semester semester) {
+        if (academicYear != null && !academicYear.isBlank() && semester != null) {
+            return academicTermDao.findByAcademicYearAndSemester(academicYear, semester)
+                    .orElseThrow(() -> new ResourceNotFoundException(EnrollmentMessages.TERM_NOT_FOUND));
+        }
+
+        var today = LocalDate.now();
+        return academicTermDao.findByStartDateLessThanEqualAndEndDateGreaterThanEqual(today, today).stream()
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException(EnrollmentMessages.TERM_NOT_FOUND));
+    }
+
+    private WeeklySlotDto toWeeklySlot(ScheduleSlot slot) {
+        var offering = slot.getLectureOffering();
+        var lecture = offering.getLecture();
+        var staff = offering.getStaff();
+
+        return new WeeklySlotDto(
+                slot.getId(),
+                slot.getDayOfWeek(),
+                slot.getStartTime(),
+                slot.getEndTime(),
+                slot.getClassroom(),
+                slot.isOnline(),
+                offering.getId(),
+                lecture == null ? null : lecture.getCode(),
+                lecture == null ? null : lecture.getName(),
+                offering.getGroupNumber(),
+                lecture == null ? null : lecture.getTerm(),
+                offering.getLanguage(),
+                staff == null ? null : (staff.getFirstName() + " " + staff.getLastName()).trim());
+    }
 }
