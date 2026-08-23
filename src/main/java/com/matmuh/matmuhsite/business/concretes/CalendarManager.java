@@ -7,6 +7,7 @@ import com.matmuh.matmuhsite.core.dtos.calendar.response.WeeklySlotDto;
 import com.matmuh.matmuhsite.core.exceptions.ResourceNotFoundException;
 import com.matmuh.matmuhsite.entities.Semester;
 import com.matmuh.matmuhsite.core.helpers.CalendarExpander;
+import com.matmuh.matmuhsite.core.helpers.InstructorNames;
 import com.matmuh.matmuhsite.dataAccess.abstracts.AcademicTermDao;
 import com.matmuh.matmuhsite.dataAccess.abstracts.CalendarEventDao;
 import com.matmuh.matmuhsite.dataAccess.abstracts.EnrollmentDao;
@@ -154,7 +155,6 @@ public class CalendarManager implements CalendarService {
     private WeeklySlotDto toWeeklySlot(ScheduleSlot slot) {
         var offering = slot.getLectureOffering();
         var lecture = offering.getLecture();
-        var staff = offering.getStaff();
 
         return new WeeklySlotDto(
                 slot.getId(),
@@ -169,6 +169,6 @@ public class CalendarManager implements CalendarService {
                 offering.getGroupNumber(),
                 lecture == null ? null : lecture.getTerm(),
                 offering.getLanguage(),
-                staff == null ? null : (staff.getFirstName() + " " + staff.getLastName()).trim());
+                InstructorNames.of(offering));
     }
 }

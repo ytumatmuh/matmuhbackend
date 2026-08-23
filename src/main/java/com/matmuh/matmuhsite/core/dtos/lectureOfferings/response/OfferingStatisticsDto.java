@@ -29,6 +29,10 @@ public class OfferingStatisticsDto {
 
     private StaffDto staff;
 
+    private String instructorRawName;
+
+    private String instructorName;
+
     private GradeResultDto finalResult;
 
     private GradeResultDto butResult;

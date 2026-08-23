@@ -10,6 +10,7 @@ import com.matmuh.matmuhsite.core.exceptions.ResourceNotFoundException;
 import com.matmuh.matmuhsite.dataAccess.abstracts.EnrollmentDao;
 import com.matmuh.matmuhsite.dataAccess.abstracts.LectureOfferingDao;
 import com.matmuh.matmuhsite.entities.Enrollment;
+import com.matmuh.matmuhsite.core.helpers.InstructorNames;
 import com.matmuh.matmuhsite.entities.LectureOffering;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -100,7 +101,6 @@ public class EnrollmentManager implements EnrollmentService {
     }
 
     private String staffName(LectureOffering offering) {
-        var staff = offering.getStaff();
-        return staff == null ? null : (staff.getFirstName() + " " + staff.getLastName()).trim();
+        return InstructorNames.of(offering);
     }
 }

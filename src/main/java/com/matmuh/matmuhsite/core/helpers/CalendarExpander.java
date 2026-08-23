@@ -74,7 +74,7 @@ public final class CalendarExpander {
                 offering == null ? null : offering.getGroupNumber(),
                 offering == null ? null : offering.getLecture().getTerm(),
                 offering == null ? null : offering.getLanguage(),
-                staffName(offering),
+                InstructorNames.of(offering),
                 event.getExamType());
     }
 
@@ -108,16 +108,8 @@ public final class CalendarExpander {
                 offering.getGroupNumber(),
                 lecture.getTerm(),
                 offering.getLanguage(),
-                staffName(offering),
+                InstructorNames.of(offering),
                 null);
-    }
-
-    private static String staffName(LectureOffering offering) {
-        if (offering == null || offering.getStaff() == null) {
-            return null;
-        }
-        var staff = offering.getStaff();
-        return (staff.getFirstName() + " " + staff.getLastName()).trim();
     }
 
     private static LocalDate max(LocalDate a, LocalDate b) {

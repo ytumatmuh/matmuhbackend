@@ -3,6 +3,7 @@ package com.matmuh.matmuhsite.core.mappers;
 import com.matmuh.matmuhsite.core.dtos.lectureOfferings.response.LectureOfferingDto;
 import com.matmuh.matmuhsite.core.dtos.lectureOfferings.response.OfferingStatisticsDto;
 import com.matmuh.matmuhsite.entities.ExamPeriod;
+import com.matmuh.matmuhsite.core.helpers.InstructorNames;
 import com.matmuh.matmuhsite.entities.LectureOffering;
 import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
@@ -18,6 +19,7 @@ public abstract class LectureOfferingMapper {
 
     @Mapping(target = "finalResult", ignore = true)
     @Mapping(target = "butResult", ignore = true)
+    @Mapping(target = "instructorName", ignore = true)
     public abstract OfferingStatisticsDto offeringStatisticsDto(LectureOffering lectureOffering);
 
     @AfterMapping
@@ -39,11 +41,15 @@ public abstract class LectureOfferingMapper {
 
     @AfterMapping
     protected void resolveInstructorName(@MappingTarget LectureOfferingDto dto, LectureOffering entity) {
-        var staff = entity.getStaff();
-        if (staff != null) {
-            dto.setInstructorName((staff.getFirstName() + " " + staff.getLastName()).trim());
-            return;
-        }
-        dto.setInstructorName(entity.getInstructorRawName());
+        dto.setInstructorName(instructorNameOf(entity));
+    }
+
+    @AfterMapping
+    protected void resolveInstructorName(@MappingTarget OfferingStatisticsDto dto, LectureOffering entity) {
+        dto.setInstructorName(instructorNameOf(entity));
+    }
+
+    private String instructorNameOf(LectureOffering entity) {
+        return InstructorNames.of(entity);
     }
 }
