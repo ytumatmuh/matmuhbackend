@@ -88,8 +88,7 @@ public class LectureNoteManager implements LectureNoteService {
     @Override
     public List<LectureNote> getLectureNotesByLecture(Lecture lecture) {
         logger.info("Getting lecture notes for lecture ID: {}", lecture.getId());
-        var viewer = securityService.getAuthenticatedUserFromContext();
-        return lectureNoteDao.findVisibleByLecture(lecture, viewer.getId());
+        return lectureNoteDao.findByLectureAndStatus(lecture, NoteReviewStatus.APPROVED);
     }
 
     @Override

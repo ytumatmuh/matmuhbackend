@@ -20,15 +20,6 @@ public interface LectureNoteDao extends JpaRepository<LectureNote, UUID> {
     List<LectureNote> findByLectureAndStatus(Lecture lecture, NoteReviewStatus status);
 
     @Query("""
-            SELECT n FROM LectureNote n
-            WHERE n.lecture = :lecture
-              AND (n.status = com.matmuh.matmuhsite.entities.NoteReviewStatus.APPROVED
-                   OR n.createdBy.id = :viewerId)
-            """)
-    List<LectureNote> findVisibleByLecture(@Param("lecture") Lecture lecture,
-                                           @Param("viewerId") UUID viewerId);
-
-    @Query("""
             SELECT n.lecture.id, COUNT(n)
             FROM LectureNote n
             WHERE n.status = com.matmuh.matmuhsite.entities.NoteReviewStatus.APPROVED
