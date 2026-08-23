@@ -39,7 +39,7 @@ public class ElectiveGroup extends BaseEntity {
     @Column(name = "version", nullable = false)
     private int version;
 
-    @Column(name = "about")
+    @Column(name = "about", columnDefinition = "TEXT")
     private String about;
 
     @Column(name = "term")

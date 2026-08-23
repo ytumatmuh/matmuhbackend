@@ -14,6 +14,7 @@ import com.matmuh.matmuhsite.webAPI.controllers.CmsContentController;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
@@ -94,6 +95,17 @@ public class CmsExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .contentType(MediaType.APPLICATION_PROBLEM_JSON)
                 .body(body);
+    }
+
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ProblemDetailsDto> handleDataIntegrity(DataIntegrityViolationException exception,
+                                                                 HttpServletRequest request) {
+        logger.error("CMS data integrity violation", exception);
+
+        var cause = exception.getMostSpecificCause().getMessage();
+        var detail = cause == null ? messageResolver.resolve("error.data.conflict") : cause;
+        return problem(HttpStatus.BAD_REQUEST, "Validation failed", detail, request);
     }
 
     @ExceptionHandler(Exception.class)

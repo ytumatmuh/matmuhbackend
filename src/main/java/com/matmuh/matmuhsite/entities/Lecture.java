@@ -42,13 +42,13 @@ public class Lecture extends BaseEntity{
     @Column(name = "version", nullable = false)
     private int version;
 
-    @Column(name = "about")
+    @Column(name = "about", columnDefinition = "TEXT")
     private String about;
 
-    @Column(name = "grading_policy")
+    @Column(name = "grading_policy", columnDefinition = "TEXT")
     private String gradingPolicy;
 
-    @Column(name = "resources")
+    @Column(name = "resources", columnDefinition = "TEXT")
     private String resources;
 
     @Column(name = "term")

@@ -27,6 +27,8 @@ public final class CollectionSchemaValidator {
 
     private static final java.util.Set<String> ENVELOPE_KEYS = java.util.Set.of("id", "slug");
 
+    private static final int SHORT_TEXT_MAX_LENGTH = 255;
+
     private static final List<FieldDefinition> IMAGE_FIELDS = List.of(
             FieldDefinition.required("src", FieldType.URL, "Src"),
             FieldDefinition.required("alt", FieldType.SHORT_TEXT, "Alt")
@@ -123,7 +125,19 @@ public final class CollectionSchemaValidator {
 
     private static String typeErrorFor(JsonNode value, FieldDefinition field) {
         switch (field.type()) {
-            case SHORT_TEXT, LONG_TEXT, RICH_TEXT, URL -> {
+            case SHORT_TEXT, URL -> {
+                if (!value.isTextual()) return "expected string.";
+                if (field.options() != null && !field.options().isEmpty()
+                        && !field.options().contains(value.asText())) {
+                    return "value not in allowed options.";
+                }
+
+                if (value.asText().length() > SHORT_TEXT_MAX_LENGTH) {
+                    return "must be at most " + SHORT_TEXT_MAX_LENGTH + " characters, got " + value.asText().length() + ".";
+                }
+                return null;
+            }
+            case LONG_TEXT, RICH_TEXT -> {
                 if (!value.isTextual()) return "expected string.";
                 if (field.options() != null && !field.options().isEmpty()
                         && !field.options().contains(value.asText())) {
