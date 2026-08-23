@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.Locale;
 
 public final class CollectionSortParser {
 
@@ -78,7 +79,7 @@ public final class CollectionSortParser {
 
         var descending = false;
         if (parts.length == 2) {
-            descending = switch (parts[1].trim().toLowerCase()) {
+            descending = switch (parts[1].trim().toLowerCase(Locale.ROOT)) {
                 case "desc" -> true;
                 case "asc" -> false;
                 default -> throw new CmsValidationException(
@@ -87,7 +88,7 @@ public final class CollectionSortParser {
         }
 
         var requested = parts[0].trim();
-        var column = COLUMNS.get(requested.toLowerCase());
+        var column = COLUMNS.get(requested.toLowerCase(Locale.ROOT));
         if (column != null) {
             return new CollectionSort(column, null, descending);
         }

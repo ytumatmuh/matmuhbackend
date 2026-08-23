@@ -126,6 +126,9 @@ public class SecurityConfig {
 
                         .requestMatchers(HttpMethod.GET, "/api/academic-years").permitAll()
 
+                        .requestMatchers(HttpMethod.GET, "/api/users/me").authenticated()
+                        .requestMatchers("/api/users/**").hasRole("ADMIN")
+
                         .requestMatchers(HttpMethod.GET,  "/api/staff/{id}/notes").authenticated()
                         .requestMatchers(HttpMethod.GET,  "/api/staff/{id}/offerings").authenticated()
                         .requestMatchers(HttpMethod.GET,  "/api/staff/**").permitAll()

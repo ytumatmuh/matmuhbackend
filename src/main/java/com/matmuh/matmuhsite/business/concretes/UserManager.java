@@ -3,8 +3,10 @@ package com.matmuh.matmuhsite.business.concretes;
 import com.matmuh.matmuhsite.business.abstracts.SecurityService;
 import com.matmuh.matmuhsite.business.abstracts.UserService;
 import com.matmuh.matmuhsite.business.constants.UserMessages;
+import com.matmuh.matmuhsite.core.dtos.common.PageDto;
 import com.matmuh.matmuhsite.core.dtos.user.request.CreateUserRequestDto;
 import com.matmuh.matmuhsite.core.dtos.user.response.UserDto;
+import com.matmuh.matmuhsite.core.exceptions.BusinessRuleException;
 import com.matmuh.matmuhsite.core.exceptions.ResourceNotFoundException;
 import com.matmuh.matmuhsite.core.mappers.UserMapper;
 import com.matmuh.matmuhsite.core.utilities.results.*;
@@ -13,6 +15,7 @@ import com.matmuh.matmuhsite.entities.Role;
 import com.matmuh.matmuhsite.entities.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -20,12 +23,15 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
 @Service
 public class UserManager implements UserService {
+
+    private static final Set<Role> MANAGEABLE_ROLES = Set.of(Role.ROLE_EDITOR);
 
     private final UserDao userDao;
 
@@ -122,6 +128,60 @@ public class UserManager implements UserService {
         return userMapper.toDtoList(users);
     }
 
+
+    @Override
+    public PageDto<UserDto> getUsers(Role role, String search, Pageable pageable) {
+        logger.info("Getting users role={} search={} page={}", role, search, pageable.getPageNumber());
+        var page = userDao.search(role, search == null || search.isBlank() ? null : search.trim(), pageable);
+        return PageDto.of(page, userMapper::toDto);
+    }
+
+    @Override
+    public UserDto grantRole(UUID userId, Role role) {
+        logger.info("Granting role {} to user {}", role, userId);
+
+        User user = requireManageable(userId, role);
+        var authorities = EnumSet.noneOf(Role.class);
+        if (user.getAuthorities() != null) {
+            authorities.addAll(user.getAuthorities());
+        }
+        authorities.add(Role.ROLE_USER);
+        authorities.add(role);
+        user.setAuthorities(authorities);
+
+        var saved = userDao.save(user);
+        logger.info("Role {} granted to user {}", role, userId);
+        return userMapper.toDto(saved);
+    }
+
+    @Override
+    public UserDto revokeRole(UUID userId, Role role) {
+        logger.info("Revoking role {} from user {}", role, userId);
+
+        User user = requireManageable(userId, role);
+        var authorities = EnumSet.noneOf(Role.class);
+        if (user.getAuthorities() != null) {
+            authorities.addAll(user.getAuthorities());
+        }
+        authorities.remove(role);
+        authorities.add(Role.ROLE_USER);
+        user.setAuthorities(authorities);
+
+        var saved = userDao.save(user);
+        logger.info("Role {} revoked from user {}", role, userId);
+        return userMapper.toDto(saved);
+    }
+
+    private User requireManageable(UUID userId, Role role) {
+        if (role == null || !MANAGEABLE_ROLES.contains(role)) {
+            logger.warn("Refused to manage role {} through the role endpoint", role);
+            throw new BusinessRuleException(UserMessages.ROLE_NOT_MANAGEABLE);
+        }
+        return userDao.findById(userId).orElseThrow(() -> {
+            logger.warn("User not found with id: {}", userId);
+            return new ResourceNotFoundException(UserMessages.USER_NOT_FOUND_WITH_ID);
+        });
+    }
 
     @Override
     public UserDetails loadUserByUsername(String username) {

@@ -18,6 +18,7 @@ import com.matmuh.matmuhsite.entities.Semester;
 import com.matmuh.matmuhsite.entities.StaffGroup;
 import com.matmuh.matmuhsite.core.helpers.MessageResolver;
 import com.matmuh.matmuhsite.core.helpers.PageableSanitizer;
+import com.matmuh.matmuhsite.entities.NoteReviewStatus;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -99,7 +100,7 @@ public class StaffController {
             @RequestParam(required = false) String search,
             @ParameterObject @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         staffService.getStaffById(id);
-        var notes = lectureNoteService.getAllNotes(true, null, null, id, null, search,
+        var notes = lectureNoteService.getAllNotes(NoteReviewStatus.APPROVED, null, null, id, null, search,
                 PageableSanitizer.sanitize(pageable, NOTE_SORTABLE, "createdAt"));
         return ResponseEntity.ok(new SuccessDataResult<>(notes, messageResolver.resolve(StaffMessages.STAFF_NOTES_FETCHED_SUCCESSFULLY), HttpStatus.OK));
     }

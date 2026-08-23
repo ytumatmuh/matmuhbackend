@@ -1,6 +1,6 @@
 package com.matmuh.matmuhsite.core.dtos.lectureNote.response;
 
-import com.matmuh.matmuhsite.core.dtos.lecture.response.LectureDto;
+import com.matmuh.matmuhsite.core.dtos.lecture.response.LectureSummaryDto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,6 +12,7 @@ import lombok.Setter;
 @NoArgsConstructor
 public class LectureNoteWithLectureDto extends LectureNoteDto{
 
-    private LectureDto lecture;
+
+    private LectureSummaryDto lecture;
 
 }

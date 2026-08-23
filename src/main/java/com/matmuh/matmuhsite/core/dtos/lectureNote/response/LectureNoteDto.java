@@ -1,5 +1,7 @@
 package com.matmuh.matmuhsite.core.dtos.lectureNote.response;
 
+import com.matmuh.matmuhsite.entities.NoteReviewStatus;
+
 import com.matmuh.matmuhsite.core.dtos.file.response.FileDto;
 import com.matmuh.matmuhsite.core.dtos.user.response.SimpleUserDto;
 import com.matmuh.matmuhsite.core.dtos.user.response.UserDto;
@@ -31,7 +33,7 @@ public class LectureNoteDto {
 
     private Integer viewCount;
 
-    private boolean isApproved;
+    private NoteReviewStatus status;
 
     private SimpleUserDto approvedBy;
 

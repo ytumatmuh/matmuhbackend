@@ -1,6 +1,7 @@
 package com.matmuh.matmuhsite.core.dtos.lectureNote.request;
 
 import com.matmuh.matmuhsite.business.constants.LectureNoteMessages;
+import com.matmuh.matmuhsite.entities.NoteReviewStatus;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,8 +12,8 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class LectureNoteApproveRequestDto {
+public class LectureNoteReviewRequestDto {
 
-    @NotNull(message = LectureNoteMessages.APPROVED_NOT_NULL)
-    private Boolean approved;
+    @NotNull(message = LectureNoteMessages.REVIEW_STATUS_REQUIRED)
+    private NoteReviewStatus status;
 }

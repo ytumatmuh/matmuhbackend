@@ -5,6 +5,7 @@ import com.matmuh.matmuhsite.core.dtos.lectureNote.request.LectureNoteCreateRequ
 import org.springframework.data.domain.Pageable;
 import com.matmuh.matmuhsite.core.dtos.lectureNote.response.LectureNoteDto;
 import com.matmuh.matmuhsite.entities.Lecture;
+import com.matmuh.matmuhsite.entities.NoteReviewStatus;
 import com.matmuh.matmuhsite.entities.LectureNote;
 import com.matmuh.matmuhsite.core.dtos.lectureNote.response.LectureNoteWithLectureDto;
 import org.springframework.web.multipart.MultipartFile;
@@ -19,13 +20,13 @@ public interface LectureNoteService {
 
     List<LectureNote> getLectureNotesByLecture(Lecture lecture);
 
-    LectureNoteDto approveLectureNote(UUID lectureNoteId, boolean approved);
+    LectureNoteDto setReviewStatus(UUID lectureNoteId, NoteReviewStatus status);
 
-    PageDto<LectureNoteWithLectureDto> getAllNotes(Boolean approved, UUID lectureId, UUID lectureOfferingId,
+    PageDto<LectureNoteWithLectureDto> getAllNotes(NoteReviewStatus status, UUID lectureId, UUID lectureOfferingId,
                                                   UUID staffId, UUID uploaderId, String search, Pageable pageable);
 
 
-    PageDto<LectureNoteWithLectureDto> getMyNotes(Boolean approved, UUID lectureId, String search, Pageable pageable);
+    PageDto<LectureNoteWithLectureDto> getMyNotes(NoteReviewStatus status, UUID lectureId, String search, Pageable pageable);
 
     LectureNoteDto getLectureNoteById(UUID lectureNoteId);
 

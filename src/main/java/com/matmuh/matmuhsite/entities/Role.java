@@ -2,6 +2,8 @@ package com.matmuh.matmuhsite.entities;
 
 import org.springframework.security.core.GrantedAuthority;
 
+import java.util.Locale;
+
 public enum Role implements GrantedAuthority {
 
     ROLE_ADMIN("ADMIN"),
@@ -21,5 +23,21 @@ public enum Role implements GrantedAuthority {
     @Override
     public String getAuthority() {
         return name();
+    }
+
+    public static Role fromValue(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        var normalized = raw.trim().toUpperCase(Locale.ROOT);
+        if (!normalized.startsWith("ROLE_")) {
+            normalized = "ROLE_" + normalized;
+        }
+        for (Role role : values()) {
+            if (role.name().equals(normalized)) {
+                return role;
+            }
+        }
+        return null;
     }
 }

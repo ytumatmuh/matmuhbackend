@@ -8,7 +8,7 @@ public class LectureNoteMessages {
     public static final String LECTURE_NOTE_APPROVE_SUCCESS = "lecture.note.approved";
     public static final String LECTURE_NOTE_DELETE_SUCCESS = "lecture.note.deleted";
     public static final String LECTURE_NOTE_FETCH_SUCCESS = "lecture.note.fetched";
-    public static final String APPROVED_NOT_NULL = "{lecture.note.approved.not.null}";
+    public static final String REVIEW_STATUS_REQUIRED = "{lecture.note.review.status.required}";
     public static final String LECTURE_NOTE_NOT_FOUND = "lecture.note.not.found";
     public static final String LECTURE_STATISTICS_FETCH_SUCCESS = "lecture.statistics.fetched";
 }

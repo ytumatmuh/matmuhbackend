@@ -32,8 +32,10 @@ public class LectureNote extends BaseEntity{
     @Column(name = "view_count")
     private int viewCount = 0;
 
-    @Column(name = "is_approved")
-    private boolean isApproved = false;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "review_status", length = 16)
+    private NoteReviewStatus status = NoteReviewStatus.PENDING;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "approved_by_id")

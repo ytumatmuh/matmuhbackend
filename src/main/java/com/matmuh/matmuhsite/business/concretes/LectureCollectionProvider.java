@@ -31,6 +31,7 @@ import java.util.List;
 
 import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.node.ObjectNode;
+import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
@@ -171,7 +172,7 @@ public class LectureCollectionProvider implements CmsCollectionProvider {
             return null;
         }
         try {
-            return Semester.valueOf(node.asString().trim().toUpperCase());
+            return Semester.valueOf(node.asString().trim().toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException e) {
             throw new CmsValidationException(SEMESTER_INVALID);
         }
@@ -194,7 +195,7 @@ public class LectureCollectionProvider implements CmsCollectionProvider {
         }
 
         try {
-            return Enum.valueOf(type, text.trim().toUpperCase());
+            return Enum.valueOf(type, text.trim().toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException e) {
             throw new CmsValidationException(invalidMessage);
         }
@@ -212,7 +213,7 @@ public class LectureCollectionProvider implements CmsCollectionProvider {
         }
 
         try {
-            return DegreeLevel.valueOf(text.trim().toUpperCase());
+            return DegreeLevel.valueOf(text.trim().toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException e) {
             throw new CmsValidationException(LectureMessages.DEGREE_LEVEL_INVALID);
         }

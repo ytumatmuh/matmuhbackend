@@ -2,6 +2,7 @@ package com.matmuh.matmuhsite.dataAccess.abstracts;
 
 import com.matmuh.matmuhsite.entities.Lecture;
 import com.matmuh.matmuhsite.entities.LectureNote;
+import com.matmuh.matmuhsite.entities.NoteReviewStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -16,24 +17,33 @@ import java.util.UUID;
 @Repository
 public interface LectureNoteDao extends JpaRepository<LectureNote, UUID> {
 
-    List<LectureNote> findByLectureAndIsApproved(Lecture lecture, boolean approved);
+    List<LectureNote> findByLectureAndStatus(Lecture lecture, NoteReviewStatus status);
 
+    @Query("""
+            SELECT n FROM LectureNote n
+            WHERE n.lecture = :lecture
+              AND (n.status = com.matmuh.matmuhsite.entities.NoteReviewStatus.APPROVED
+                   OR n.createdBy.id = :viewerId)
+            """)
+    List<LectureNote> findVisibleByLecture(@Param("lecture") Lecture lecture,
+                                           @Param("viewerId") UUID viewerId);
 
     @Query("""
             SELECT n.lecture.id, COUNT(n)
             FROM LectureNote n
-            WHERE n.isApproved = true AND n.lecture.id IN :lectureIds
+            WHERE n.status = com.matmuh.matmuhsite.entities.NoteReviewStatus.APPROVED
+              AND n.lecture.id IN :lectureIds
             GROUP BY n.lecture.id
             """)
     List<Object[]> countApprovedByLectureIds(@Param("lectureIds") Collection<UUID> lectureIds);
 
-    Page<LectureNote> findByLectureAndIsApproved(Lecture lecture, boolean approved, Pageable pageable);
+    Page<LectureNote> findByLectureAndStatus(Lecture lecture, NoteReviewStatus status, Pageable pageable);
 
     @Query("""
             SELECT n FROM LectureNote n
             LEFT JOIN n.lectureOffering o
             LEFT JOIN o.staff i
-            WHERE (:approved IS NULL OR n.isApproved = :approved)
+            WHERE (:status IS NULL OR n.status = :status)
               AND (:lectureId IS NULL OR n.lecture.id = :lectureId)
               AND (:offeringId IS NULL OR o.id = :offeringId)
               AND (:staffId IS NULL OR i.id = :staffId)
@@ -42,7 +52,7 @@ public interface LectureNoteDao extends JpaRepository<LectureNote, UUID> {
                    OR LOWER(n.title) LIKE LOWER(CONCAT('%', CAST(:search AS String), '%'))
                    OR LOWER(n.description) LIKE LOWER(CONCAT('%', CAST(:search AS String), '%')))
             """)
-    Page<LectureNote> search(@Param("approved") Boolean approved,
+    Page<LectureNote> search(@Param("status") NoteReviewStatus status,
                              @Param("lectureId") UUID lectureId,
                              @Param("offeringId") UUID offeringId,
                              @Param("staffId") UUID staffId,
