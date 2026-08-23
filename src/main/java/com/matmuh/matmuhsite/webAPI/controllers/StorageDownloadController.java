@@ -47,7 +47,7 @@ public class StorageDownloadController {
 
     private String keyOf(HttpServletRequest request) {
         var uri = request.getRequestURI();
-        var key = uri.substring(uri.indexOf(BASE_PATH) + BASE_PATH.length());
+        var key = StorageKeys.fromRequestPath(uri.substring(uri.indexOf(BASE_PATH) + BASE_PATH.length()));
         if (!StorageKeys.isPrivate(key) && !key.startsWith(StorageKeys.PUBLIC_PREFIX)) {
             throw new IllegalArgumentException("Unsupported storage key: " + key);
         }
