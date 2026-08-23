@@ -5,6 +5,7 @@ import com.matmuh.matmuhsite.entities.InstructionLanguage;
 import com.matmuh.matmuhsite.core.dtos.lectureOfferings.response.ExamWeightDto;
 import com.matmuh.matmuhsite.entities.Semester;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Size;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -21,8 +22,10 @@ import java.util.UUID;
 @NoArgsConstructor
 public class CreateLectureOfferingRequestDto {
 
-    @NotNull(message = "{offering.staff.id.not.null}")
     private UUID staffId;
+
+    @Size(max = 255, message = "{offering.instructor.raw.name.too.long}")
+    private String instructorRawName;
 
     @NotBlank(message = "{offering.academic.year.not.blank}")
     @AcademicYear

@@ -57,12 +57,16 @@ public class LectureOfferingManager implements LectureOfferingService {
         logger.info("Creating lecture offering for lecture ID: {}", lectureId);
 
         var lecture = lectureService.getLectureById(lectureId);
-        var staff = staffService.getStaffById(request.getStaffId());
-        requireTeachingStaff(staff);
 
         LectureOffering lectureOffering = new LectureOffering();
         lectureOffering.setLecture(lectureService.getLectureReferenceById(lecture.getId()));
-        lectureOffering.setStaff(staffService.getStaffReferenceById(staff.getId()));
+
+        if (request.getStaffId() != null) {
+            var staff = staffService.getStaffById(request.getStaffId());
+            requireTeachingStaff(staff);
+            lectureOffering.setStaff(staffService.getStaffReferenceById(staff.getId()));
+        }
+        lectureOffering.setInstructorRawName(normalize(request.getInstructorRawName()));
         lectureOffering.setAcademicYear(request.getAcademicYear());
         lectureOffering.setSemester(request.getSemester());
         lectureOffering.setGroupNumber(request.getGroupNumber() == null ? 1 : request.getGroupNumber());
@@ -92,6 +96,9 @@ public class LectureOfferingManager implements LectureOfferingService {
         }
         if (request.getSemester() != null) {
             offering.setSemester(request.getSemester());
+        }
+        if (request.getInstructorRawName() != null) {
+            offering.setInstructorRawName(normalize(request.getInstructorRawName()));
         }
         if (request.getGroupNumber() != null) {
             offering.setGroupNumber(request.getGroupNumber());
@@ -273,6 +280,10 @@ public class LectureOfferingManager implements LectureOfferingService {
             weights.add(new ExamWeight(dto.getExamType(), dto.getWeightPercent()));
         }
         return weights;
+    }
+
+    private String normalize(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
     }
 
     private void requireTeachingStaff(com.matmuh.matmuhsite.core.dtos.staff.response.StaffDto staff) {

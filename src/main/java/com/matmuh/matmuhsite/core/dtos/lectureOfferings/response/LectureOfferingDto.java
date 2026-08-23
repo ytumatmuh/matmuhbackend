@@ -34,6 +34,10 @@ public class LectureOfferingDto {
 
     private StaffDto staff;
 
+    private String instructorRawName;
+
+    private String instructorName;
+
     private List<ExamWeightDto> examWeights;
 
     private List<GradeResultDto> gradeResults;

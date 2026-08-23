@@ -33,6 +33,17 @@ public abstract class LectureOfferingMapper {
         }
     }
 
+    @Mapping(target = "instructorName", ignore = true)
     public abstract LectureOfferingDto toLectureOfferingDto(LectureOffering savedOffering);
 
+
+    @AfterMapping
+    protected void resolveInstructorName(@MappingTarget LectureOfferingDto dto, LectureOffering entity) {
+        var staff = entity.getStaff();
+        if (staff != null) {
+            dto.setInstructorName((staff.getFirstName() + " " + staff.getLastName()).trim());
+            return;
+        }
+        dto.setInstructorName(entity.getInstructorRawName());
+    }
 }

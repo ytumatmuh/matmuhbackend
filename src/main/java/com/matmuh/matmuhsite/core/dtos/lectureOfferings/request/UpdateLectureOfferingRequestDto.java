@@ -7,6 +7,7 @@ import com.matmuh.matmuhsite.entities.InstructionLanguage;
 import com.matmuh.matmuhsite.core.dtos.lectureOfferings.response.ExamWeightDto;
 import com.matmuh.matmuhsite.entities.Semester;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Size;
 import jakarta.validation.constraints.Min;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -23,6 +24,9 @@ import java.util.UUID;
 public class UpdateLectureOfferingRequestDto {
 
     private UUID staffId;
+
+    @Size(max = 255, message = "{offering.instructor.raw.name.too.long}")
+    private String instructorRawName;
 
     @NullOrNotBlank(message = LectureOfferingMessages.ACADEMIC_YEAR_NOT_BLANK_IF_PRESENT)
     @AcademicYear
