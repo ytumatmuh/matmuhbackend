@@ -2,5 +2,6 @@ package com.matmuh.matmuhsite.entities;
 
 public enum EvaluationMethod {
     RELATIVE,
-    ABSOLUTE
+    ABSOLUTE,
+    MANUAL
 }
