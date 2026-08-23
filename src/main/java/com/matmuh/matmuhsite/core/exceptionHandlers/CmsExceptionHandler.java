@@ -2,6 +2,7 @@ package com.matmuh.matmuhsite.core.exceptionHandlers;
 
 import com.matmuh.matmuhsite.core.dtos.cms.response.ProblemDetailsDto;
 import com.matmuh.matmuhsite.core.exceptions.ArchivedException;
+import com.matmuh.matmuhsite.core.exceptions.SlugConflictException;
 import com.matmuh.matmuhsite.core.exceptions.CmsValidationException;
 import com.matmuh.matmuhsite.core.exceptions.ConcurrencyConflictException;
 import com.matmuh.matmuhsite.core.exceptions.ResourceAlreadyExistsException;
@@ -75,6 +76,16 @@ public class CmsExceptionHandler {
         var body = problem(HttpStatus.CONFLICT, "Conflict", exception.getMessage(), request).getBody();
         body.setReason("archived");
         body.setVersion(exception.getVersion());
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .body(body);
+    }
+
+    @ExceptionHandler(SlugConflictException.class)
+    public ResponseEntity<ProblemDetailsDto> handleSlugConflict(SlugConflictException exception, HttpServletRequest request) {
+        var body = problem(HttpStatus.CONFLICT, "Conflict", exception.getMessage(), request).getBody();
+        body.setReason(exception.getReason());
+        body.setConflictingSlug(exception.getConflictingSlug());
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .contentType(MediaType.APPLICATION_PROBLEM_JSON)
                 .body(body);

@@ -20,6 +20,7 @@ public class ProblemDetailsDto {
 
     private String reason;
     private Integer version;
+    private String conflictingSlug;
 
     public ProblemDetailsDto(String type, String title, int status, String detail, String instance) {
         this.type = type;

@@ -52,7 +52,7 @@ public class Lecture extends BaseEntity{
     private String resources;
 
     @Column(name = "term")
-    private int term;
+    private Integer term;
 
     @ElementCollection(targetClass = DegreeLevel.class, fetch = FetchType.EAGER)
     @CollectionTable(name = "lecture_degree_levels", joinColumns = @JoinColumn(name = "lecture_id"))

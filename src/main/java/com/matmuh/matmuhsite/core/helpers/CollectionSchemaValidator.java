@@ -25,6 +25,8 @@ public final class CollectionSchemaValidator {
 
     private static final JsonNodeFactory NODES = JsonNodeFactory.instance;
 
+    private static final java.util.Set<String> ENVELOPE_KEYS = java.util.Set.of("id", "slug");
+
     private static final List<FieldDefinition> IMAGE_FIELDS = List.of(
             FieldDefinition.required("src", FieldType.URL, "Src"),
             FieldDefinition.required("alt", FieldType.SHORT_TEXT, "Alt")
@@ -89,10 +91,15 @@ public final class CollectionSchemaValidator {
         }
 
         for (Map.Entry<String, JsonNode> prop : data.properties()) {
-            if (!fieldNames.contains(prop.getKey())) {
-                var unknownPath = path == null ? prop.getKey() : path + "." + prop.getKey();
-                errors.add("Unknown field '" + unknownPath + "'.");
+            if (fieldNames.contains(prop.getKey())) {
+                continue;
             }
+
+            if (path == null && ENVELOPE_KEYS.contains(prop.getKey())) {
+                continue;
+            }
+            var unknownPath = path == null ? prop.getKey() : path + "." + prop.getKey();
+            errors.add("Unknown field '" + unknownPath + "'.");
         }
 
         return result;

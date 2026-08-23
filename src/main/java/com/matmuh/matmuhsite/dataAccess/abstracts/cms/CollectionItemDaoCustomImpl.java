@@ -6,6 +6,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -19,7 +20,7 @@ public class CollectionItemDaoCustomImpl implements CollectionItemDaoCustom {
 
     @Override
     @SuppressWarnings("unchecked")
-    public List<CollectionItem> searchByFilter(String collectionKey, String filterJson, CollectionSort sort,
+    public List<CollectionItem> searchByFilter(String collectionKey, String filterJson, List<CollectionSort> sorts,
                                                boolean archived, String locale, List<String> searchFields, String search,
                                                int offset, int limit) {
         var sql = new StringBuilder("""
@@ -32,7 +33,8 @@ public class CollectionItemDaoCustomImpl implements CollectionItemDaoCustom {
         }
         sql.append(localeClause(locale));
         sql.append(searchClause(searchFields, search));
-        sql.append(orderBy(sort == null ? CollectionSort.DEFAULT : sort));
+        var effectiveSorts = sorts == null || sorts.isEmpty() ? List.of(CollectionSort.DEFAULT) : sorts;
+        sql.append(orderBy(effectiveSorts));
         sql.append(" OFFSET :offset LIMIT :limit");
 
         var query = entityManager.createNativeQuery(sql.toString(), CollectionItem.class)
@@ -43,8 +45,10 @@ public class CollectionItemDaoCustomImpl implements CollectionItemDaoCustom {
         if (filterJson != null) {
             query.setParameter("filterJson", filterJson);
         }
-        if (sort != null && sort.isDataField()) {
-            query.setParameter("sortField", sort.dataField());
+        for (int i = 0; i < effectiveSorts.size(); i++) {
+            if (effectiveSorts.get(i).isDataField()) {
+                query.setParameter("sortField" + i, effectiveSorts.get(i).dataField());
+            }
         }
         bindLocale(query, locale);
         bindSearch(query, searchFields, search);
@@ -108,15 +112,28 @@ public class CollectionItemDaoCustomImpl implements CollectionItemDaoCustom {
                 && searchFields.stream().anyMatch(field -> SAFE_FIELD.matcher(field).matches());
     }
 
-    private String orderBy(CollectionSort sort) {
-        var direction = sort.descending() ? "DESC" : "ASC";
-        if (sort.isDataField()) {
-            return " ORDER BY jsonb_extract_path(data, :sortField) IS NULL,"
-                    + " jsonb_extract_path(data, :sortField) " + direction + ", slug ASC";
+
+    private String orderBy(List<CollectionSort> sorts) {
+        var terms = new ArrayList<String>();
+        var sortsBySlug = false;
+
+        for (int i = 0; i < sorts.size(); i++) {
+            var sort = sorts.get(i);
+            var direction = sort.descending() ? "DESC" : "ASC";
+            if (sort.isDataField()) {
+                var path = "jsonb_extract_path(data, :sortField" + i + ")";
+                terms.add(path + " IS NULL");
+                terms.add(path + " " + direction);
+            } else {
+                terms.add(sort.column() + " " + direction);
+                sortsBySlug = sortsBySlug || "slug".equals(sort.column());
+            }
         }
-        if ("slug".equals(sort.column())) {
-            return " ORDER BY slug " + direction;
+
+        if (!sortsBySlug) {
+            terms.add("slug ASC");
         }
-        return " ORDER BY " + sort.column() + " " + direction + ", slug ASC";
+
+        return " ORDER BY " + String.join(", ", terms);
     }
 }

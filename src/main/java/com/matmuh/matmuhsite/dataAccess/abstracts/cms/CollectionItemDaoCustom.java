@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface CollectionItemDaoCustom {
 
-    List<CollectionItem> searchByFilter(String collectionKey, String filterJson, CollectionSort sort,
+    List<CollectionItem> searchByFilter(String collectionKey, String filterJson, List<CollectionSort> sorts,
                                         boolean archived, String locale, List<String> searchFields, String search,
                                         int offset, int limit);
 

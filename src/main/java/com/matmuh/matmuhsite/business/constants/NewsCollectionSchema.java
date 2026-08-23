@@ -14,8 +14,6 @@ public final class NewsCollectionSchema {
     public static final String SLUG_SOURCE_FIELD = "title";
 
     public static final CollectionSchema SCHEMA = new CollectionSchema(List.of(
-            FieldDefinition.readOnly("id", FieldType.SHORT_TEXT, "ID"),
-            FieldDefinition.readOnly("slug", FieldType.SHORT_TEXT, "Slug"),
             FieldDefinition.required(SLUG_SOURCE_FIELD, FieldType.SHORT_TEXT, "Başlık")
                     .asSearchable()
                     .asSortable()

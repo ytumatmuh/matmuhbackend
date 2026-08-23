@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -34,4 +35,6 @@ public interface CollectionDraftDao extends JpaRepository<CollectionDraft, UUID>
     Optional<CollectionDraft> findOwnNewDraft(@Param("collectionKey") String collectionKey,
                                               @Param("userId") String userId,
                                               @Param("locale") String locale);
+
+    List<CollectionDraft> findByCollectionKeyAndSlug(String collectionKey, String slug);
 }

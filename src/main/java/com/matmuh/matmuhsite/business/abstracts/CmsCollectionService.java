@@ -2,6 +2,7 @@ package com.matmuh.matmuhsite.business.abstracts;
 
 import com.matmuh.matmuhsite.core.dtos.cms.request.CreateCollectionItemRequestDto;
 import com.matmuh.matmuhsite.core.dtos.cms.request.SaveDraftRequestDto;
+import com.matmuh.matmuhsite.core.dtos.cms.request.RenameSlugRequestDto;
 import com.matmuh.matmuhsite.core.dtos.cms.request.SaveNewDraftRequestDto;
 import com.matmuh.matmuhsite.core.dtos.cms.request.UpsertCollectionItemRequestDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.ArchiveResultDto;
@@ -43,4 +44,9 @@ public interface CmsCollectionService {
     void deleteItemDraft(String collectionKey, String slug, String userId, String locale);
 
     void deleteNewDraft(String collectionKey, String userId, String locale);
+
+    CollectionItemDto renameSlug(String collectionKey, String slug, RenameSlugRequestDto request,
+                                 boolean replaceAlias, String updatedBy);
+
+    void deleteSlugAlias(String collectionKey, String slug);
 }

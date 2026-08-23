@@ -6,6 +6,7 @@ import com.matmuh.matmuhsite.business.abstracts.CmsCollectionService;
 import com.matmuh.matmuhsite.core.helpers.CmsCacheHeaders;
 import com.matmuh.matmuhsite.core.dtos.cms.request.CreateCollectionItemRequestDto;
 import com.matmuh.matmuhsite.core.dtos.cms.request.SaveDraftRequestDto;
+import com.matmuh.matmuhsite.core.dtos.cms.request.RenameSlugRequestDto;
 import com.matmuh.matmuhsite.core.dtos.cms.request.SaveNewDraftRequestDto;
 import com.matmuh.matmuhsite.core.dtos.cms.request.UpsertCollectionItemRequestDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.ArchiveResultDto;
@@ -17,6 +18,7 @@ import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionSchemaResponseDto;
 import com.matmuh.matmuhsite.core.exceptions.PermissionDeniedException;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -86,7 +88,10 @@ public class CmsCollectionController {
         return collectionService.list(key, editorUserId(authentication), filters, sort, archived, locale, search, offset, limit);
     }
 
-    @Operation(summary = "Item getir", description = "Slug ile tek item döner.")
+    @Operation(summary = "Item getir",
+            description = "Slug ile tek item döner. Eski bir slug (alias) ile istenirse yönlendirme yapılmaz: item 200 ile "
+                    + "kendi güncel slug'ıyla döner ve yanıt Content-Location başlığında da onu taşır. İstemci istediği slug ile "
+                    + "dönen slug'ı karşılaştırıp kendi adresinde 301 vermelidir.")
     @GetMapping("/{key}/{slug}")
     public CollectionItemDto getBySlug(@PathVariable String key,
                                        @PathVariable String slug,
@@ -94,7 +99,11 @@ public class CmsCollectionController {
                                        Authentication authentication,
                                        HttpServletResponse response) {
         requireReadAccess(key, authentication, response);
-        return collectionService.getBySlug(key, slug, editorUserId(authentication), locale);
+        var item = collectionService.getBySlug(key, slug, editorUserId(authentication), locale);
+        if (item.getSlug() != null && !item.getSlug().equals(slug)) {
+            response.setHeader(HttpHeaders.CONTENT_LOCATION, "/api/cms/collections/" + key + "/" + item.getSlug());
+        }
+        return item;
     }
 
     @Operation(summary = "Item oluştur", description = "Auto-slug ile yeni item (ADMIN).")
@@ -117,6 +126,31 @@ public class CmsCollectionController {
                                     @RequestBody @Valid UpsertCollectionItemRequestDto request,
                                     Authentication authentication) {
         return collectionService.upsert(key, slug, request, authentication.getName(), locale, translationGroup);
+    }
+
+    @Operation(summary = "Slug değiştir",
+            description = "Item'ın slug'ını değiştirir; eski slug alias olarak kalır ve o adresten okuma çalışmaya devam eder. "
+                    + "version zorunludur. Yeni slug canlı/arşivli bir item'daysa 409 reason=taken, başka bir item'ın alias'ındaysa "
+                    + "409 reason=alias döner; ikincisi replaceAlias=true ile devralınabilir. Sadece slug'ı düzenlenebilir "
+                    + "koleksiyonlarda çalışır (ADMIN).")
+    @PutMapping("/{key}/{slug}/slug")
+    public CollectionItemDto renameSlug(@PathVariable String key,
+                                        @PathVariable String slug,
+                                        @RequestParam(required = false, defaultValue = "false") boolean replaceAlias,
+                                        @RequestBody @Valid RenameSlugRequestDto request,
+                                        Authentication authentication,
+                                        HttpServletResponse response) {
+        var item = collectionService.renameSlug(key, slug, request, replaceAlias, authentication.getName());
+        response.setHeader(HttpHeaders.CONTENT_LOCATION, "/api/cms/collections/" + key + "/" + item.getSlug());
+        return item;
+    }
+
+    @Operation(summary = "Slug alias sil",
+            description = "Eski bir slug'ı (alias) kaldırır ve o slug'ı yeniden kullanıma açar. Item'a dokunmaz (ADMIN).")
+    @DeleteMapping("/{key}/{slug}/alias")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteSlugAlias(@PathVariable String key, @PathVariable String slug) {
+        collectionService.deleteSlugAlias(key, slug);
     }
 
     @Operation(summary = "Item draft", description = "Item draftını kaydeder (ADMIN).")

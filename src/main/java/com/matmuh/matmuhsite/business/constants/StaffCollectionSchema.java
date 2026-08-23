@@ -25,8 +25,6 @@ public final class StaffCollectionSchema {
             Arrays.stream(StaffGroup.values()).map(Enum::name).toArray(String[]::new);
 
     public static final CollectionSchema SCHEMA = new CollectionSchema(List.of(
-            FieldDefinition.readOnly("id", FieldType.SHORT_TEXT, "ID"),
-            FieldDefinition.readOnly("slug", FieldType.SHORT_TEXT, "Slug"),
             FieldDefinition.readOnly("rawName", FieldType.SHORT_TEXT, "Ham ad")
                     .withHelp("İçe aktarmada gelen ham ad; editörden değiştirilmez."),
             FieldDefinition.required(FIELD_FIRST_NAME, FieldType.SHORT_TEXT, "Ad").asFilterable(),

@@ -19,6 +19,13 @@ public class CmsMessages {
     public static final String AUTO_GENERATED_USE_POST = "This collection uses auto-generated slugs; use POST to create items.";
     public static final String USER_DEFINED_USE_PUT = "This collection uses user-defined slugs; use PUT to create items.";
     public static final String SLUG_SOURCE_FIELD_MISSING = "Cannot generate slug: source field is missing or empty.";
+    public static final String SLUG_REQUIRED = "Slug is required.";
+    public static final String VERSION_REQUIRED_FOR_RENAME = "Version is required when renaming a slug.";
+    public static final String SLUG_NOT_EDITABLE = "Slug is not editable for this collection.";
+    public static final String SLUG_RENAME_NOT_SUPPORTED = "Slug rename is not supported for this collection.";
+    public static final String SLUG_TAKEN = "Slug is already taken: ";
+    public static final String SLUG_HELD_BY_ALIAS = "Slug is held as an alias of another item: ";
+    public static final String ALIAS_NOT_FOUND = "Alias not found: ";
     public static final String SLUG_REQUIRED_FOR_NEW_DRAFT = "Slug is required for a new item draft in this collection.";
     public static final String SLUG_ALREADY_IN_USE = "Slug is already in use: ";
     public static final String FILE_EMPTY = "Uploaded file is empty.";

@@ -30,8 +30,12 @@ import com.matmuh.matmuhsite.core.exceptions.ArchivedException;
 import com.matmuh.matmuhsite.core.exceptions.ResourceNotFoundException;
 import com.matmuh.matmuhsite.core.exceptions.CmsValidationException;
 import com.matmuh.matmuhsite.core.exceptions.ConcurrencyConflictException;
+import com.matmuh.matmuhsite.core.exceptions.SlugConflictException;
+import com.matmuh.matmuhsite.core.dtos.cms.request.RenameSlugRequestDto;
 import com.matmuh.matmuhsite.dataAccess.abstracts.cms.CollectionDraftDao;
 import com.matmuh.matmuhsite.dataAccess.abstracts.cms.CollectionItemDao;
+import com.matmuh.matmuhsite.dataAccess.abstracts.cms.CollectionSlugAliasDao;
+import com.matmuh.matmuhsite.entities.cms.CollectionSlugAlias;
 import com.matmuh.matmuhsite.entities.cms.CollectionDraft;
 import com.matmuh.matmuhsite.entities.cms.CollectionItem;
 import org.slf4j.Logger;
@@ -57,17 +61,20 @@ public class CmsCollectionManager implements CmsCollectionService {
 
     private final CollectionItemDao collectionItemDao;
     private final CollectionDraftDao collectionDraftDao;
+    private final CollectionSlugAliasDao slugAliasDao;
     private final CollectionRegistry registry;
     private final CmsLocaleResolver localeResolver;
     private final Map<String, CmsCollectionProvider> providers;
 
     public CmsCollectionManager(CollectionItemDao collectionItemDao,
                                 CollectionDraftDao collectionDraftDao,
+                                CollectionSlugAliasDao slugAliasDao,
                                 CollectionRegistry registry,
                                 CmsLocaleResolver localeResolver,
                                 List<CmsCollectionProvider> providers) {
         this.collectionItemDao = collectionItemDao;
         this.collectionDraftDao = collectionDraftDao;
+        this.slugAliasDao = slugAliasDao;
         this.registry = registry;
         this.localeResolver = localeResolver;
         this.providers = providers.stream()
@@ -85,7 +92,7 @@ public class CmsCollectionManager implements CmsCollectionService {
     public CollectionSchemaResponseDto getSchema(String collectionKey) {
         var def = registry.resolve(collectionKey);
         return new CollectionSchemaResponseDto(def.key(), def.schema(), def.slugSource(),
-                def.slugSource() == SlugSource.USER_DEFINED, localesOf(def));
+                def.slugEditable(), localesOf(def));
     }
 
 
@@ -126,7 +133,7 @@ public class CmsCollectionManager implements CmsCollectionService {
 
         var filterNode = CollectionFilterParser.build(def.schema(), filters);
         var filterJson = filterNode == null ? null : filterNode.toString();
-        var parsedSort = CollectionSortParser.parse(def.schema(), sort);
+        var parsedSorts = CollectionSortParser.parse(def.schema(), sort);
         var resolvedLocale = localeResolver.resolveForRead(locale);
 
         var provider = providers.get(key);
@@ -144,7 +151,7 @@ public class CmsCollectionManager implements CmsCollectionService {
             itemDtos = new ArrayList<>(result.getItems());
         } else {
             var searchFields = searchableFields(def.schema());
-            var items = collectionItemDao.searchByFilter(key, filterJson, parsedSort, showArchived, resolvedLocale,
+            var items = collectionItemDao.searchByFilter(key, filterJson, parsedSorts, showArchived, resolvedLocale,
                     searchFields, search, offset, limit);
             total = collectionItemDao.countByFilter(key, filterJson, showArchived, resolvedLocale, searchFields, search);
             itemDtos = items.stream().map(this::toDto).collect(Collectors.toCollection(ArrayList::new));
@@ -247,6 +254,7 @@ public class CmsCollectionManager implements CmsCollectionService {
             dto = provider.getBySlug(normalizedSlug, resolvedLocale);
         } else {
             var found = collectionItemDao.findByCollectionKeyAndSlugAndArchivedFalse(key, normalizedSlug)
+                    .or(() -> resolveAlias(key, normalizedSlug))
                     .orElseThrow(() -> new ResourceNotFoundException(
                             CmsMessages.COLLECTION_ITEM_NOT_FOUND + key + "/" + normalizedSlug));
             var item = resolveLocaleSibling(found, locale);
@@ -356,6 +364,16 @@ public class CmsCollectionManager implements CmsCollectionService {
 
         var item = collectionItemDao.findByCollectionKeyAndSlug(key, normalizedSlug).orElse(null);
         var isCreate = item == null;
+
+
+        if (isCreate) {
+            slugAliasDao.findByCollectionKeyAndSlug(key, normalizedSlug).ifPresent(alias -> {
+                var holder = collectionItemDao.findById(alias.getItemId());
+                throw new SlugConflictException(CmsMessages.SLUG_HELD_BY_ALIAS + normalizedSlug,
+                        SlugConflictException.REASON_ALIAS,
+                        holder.map(CollectionItem::getSlug).orElse(normalizedSlug));
+            });
+        }
 
 
         var resolvedLocale = isCreate
@@ -589,10 +607,102 @@ public class CmsCollectionManager implements CmsCollectionService {
         return false;
     }
 
+
+    private java.util.Optional<CollectionItem> resolveAlias(String collectionKey, String slug) {
+        return slugAliasDao.findByCollectionKeyAndSlug(collectionKey, slug)
+                .flatMap(alias -> collectionItemDao.findById(alias.getItemId()))
+                .filter(item -> !item.isArchived());
+    }
+
+    @Override
+    @Transactional
+    public CollectionItemDto renameSlug(String collectionKey, String slug, RenameSlugRequestDto request,
+                                        boolean replaceAlias, String updatedBy) {
+        var def = registry.resolve(collectionKey);
+        var key = def.key();
+
+        if (!def.slugEditable()) {
+            throw new CmsValidationException(CmsMessages.SLUG_NOT_EDITABLE);
+        }
+        if (providers.containsKey(key)) {
+            throw new CmsValidationException(CmsMessages.SLUG_RENAME_NOT_SUPPORTED);
+        }
+
+        var currentSlug = SlugNormalizer.normalizeBlockPath(slug);
+        var item = collectionItemDao.findByCollectionKeyAndSlug(key, currentSlug)
+                .or(() -> resolveAlias(key, currentSlug))
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        CmsMessages.COLLECTION_ITEM_NOT_FOUND + key + "/" + currentSlug));
+
+        if (item.getVersion() != request.getVersion()) {
+            throw new ConcurrencyConflictException(CmsMessages.VERSION_CONFLICT);
+        }
+
+        var target = SlugGenerator.slugify(request.getSlug());
+        if (target.isBlank()) {
+            throw new CmsValidationException(CmsMessages.SLUG_REQUIRED);
+        }
+        if (target.equals(item.getSlug())) {
+            return toDto(item);
+        }
+
+        collectionItemDao.findByCollectionKeyAndSlug(key, target).ifPresent(holder -> {
+            throw new SlugConflictException(CmsMessages.SLUG_TAKEN + target,
+                    SlugConflictException.REASON_TAKEN, target);
+        });
+
+        slugAliasDao.findByCollectionKeyAndSlug(key, target).ifPresent(alias -> {
+            if (alias.getItemId().equals(item.getId())) {
+                slugAliasDao.delete(alias);
+                return;
+            }
+            if (!replaceAlias) {
+                var holder = collectionItemDao.findById(alias.getItemId());
+                throw new SlugConflictException(CmsMessages.SLUG_HELD_BY_ALIAS + target,
+                        SlugConflictException.REASON_ALIAS,
+                        holder.map(CollectionItem::getSlug).orElse(target));
+            }
+            slugAliasDao.delete(alias);
+        });
+
+        var previousSlug = item.getSlug();
+
+        item.setSlug(target);
+        touch(item, updatedBy);
+        var saved = collectionItemDao.save(item);
+
+        slugAliasDao.save(CollectionSlugAlias.builder()
+                .collectionKey(key)
+                .slug(previousSlug)
+                .itemId(saved.getId())
+                .build());
+
+        collectionDraftDao.findByCollectionKeyAndSlug(key, previousSlug)
+                .forEach(draft -> draft.setSlug(target));
+
+        logger.info("Renamed collection item {}/{} to {} by {}", key, previousSlug, target, updatedBy);
+
+        return toDto(saved);
+    }
+
+    @Override
+    @Transactional
+    public void deleteSlugAlias(String collectionKey, String slug) {
+        var key = registry.resolve(collectionKey).key();
+        var normalizedSlug = SlugNormalizer.normalizeBlockPath(slug);
+
+        var alias = slugAliasDao.findByCollectionKeyAndSlug(key, normalizedSlug)
+                .orElseThrow(() -> new ResourceNotFoundException(CmsMessages.ALIAS_NOT_FOUND + key + "/" + normalizedSlug));
+
+        slugAliasDao.delete(alias);
+        logger.info("Dropped slug alias {}/{}", key, normalizedSlug);
+    }
+
     private String resolveUniqueSlug(String collectionKey, String base) {
         var candidate = base;
         int suffix = 2;
-        while (collectionItemDao.existsByCollectionKeyAndSlug(collectionKey, candidate)) {
+        while (collectionItemDao.existsByCollectionKeyAndSlug(collectionKey, candidate)
+                || slugAliasDao.existsByCollectionKeyAndSlug(collectionKey, candidate)) {
             candidate = base + "-" + suffix++;
         }
         return candidate;

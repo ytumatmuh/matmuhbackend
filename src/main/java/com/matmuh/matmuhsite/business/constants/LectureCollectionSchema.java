@@ -33,8 +33,6 @@ public final class LectureCollectionSchema {
     );
 
     public static final CollectionSchema SCHEMA = new CollectionSchema(List.of(
-            FieldDefinition.readOnly("id", FieldType.SHORT_TEXT, "ID"),
-            FieldDefinition.readOnly("slug", FieldType.SHORT_TEXT, "Slug"),
             FieldDefinition.required("name", FieldType.SHORT_TEXT, "Ders adı"),
             FieldDefinition.required(FIELD_CODE, FieldType.SHORT_TEXT, "Ders kodu")
                     .asFilterable()
@@ -56,6 +54,12 @@ public final class LectureCollectionSchema {
             FieldDefinition.of("ects", FieldType.NUMBER, "AKTS"),
             FieldDefinition.of("bolognaLink", FieldType.URL, "Bologna sayfası"),
             FieldDefinition.of("notesLink", FieldType.URL, "Not bağlantısı"),
+            FieldDefinition.of("noteCount", FieldType.NUMBER, "Not sayısı")
+                    .asComputed()
+                    .withHelp("Onaylanmış ders notu sayısı, okuma anında hesaplanır."),
+            FieldDefinition.of("statisticsTermCount", FieldType.NUMBER, "İstatistik dönem sayısı")
+                    .asComputed()
+                    .withHelp("Sınav istatistiği bulunan dönem sayısı, okuma anında hesaplanır."),
             FieldDefinition.of("staff", FieldType.OBJECT_ARRAY, "Personel")
                     .asReadOnly()
                     .withItemFields(STAFF_FIELDS)

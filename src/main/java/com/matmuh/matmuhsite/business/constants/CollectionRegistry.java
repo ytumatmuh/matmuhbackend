@@ -19,7 +19,8 @@ public class CollectionRegistry {
             SlugSource slugSource,
             String slugSourceField,
             boolean allowAnonymousRead,
-            boolean localized
+            boolean localized,
+            boolean slugEditable
     ) {}
 
     private static final List<CollectionDefinition> DEFINITIONS = List.of(
@@ -29,6 +30,7 @@ public class CollectionRegistry {
                     SlugSource.AUTO_GENERATED,
                     LectureCollectionSchema.SLUG_SOURCE_FIELD,
                     true,
+                    false,
                     false),
             new CollectionDefinition(
                     StaffCollectionSchema.KEY,
@@ -36,6 +38,7 @@ public class CollectionRegistry {
                     SlugSource.AUTO_GENERATED,
                     StaffCollectionSchema.SLUG_SOURCE_FIELD,
                     true,
+                    false,
                     false
             ),
             new CollectionDefinition(
@@ -44,6 +47,7 @@ public class CollectionRegistry {
                     SlugSource.AUTO_GENERATED,
                     ElectiveGroupCollectionSchema.SLUG_SOURCE_FIELD,
                     true,
+                    false,
                     false),
             new CollectionDefinition(
                     AnnouncementCollectionSchema.KEY,
@@ -51,12 +55,14 @@ public class CollectionRegistry {
                     SlugSource.AUTO_GENERATED,
                     AnnouncementCollectionSchema.SLUG_SOURCE_FIELD,
                     true,
+                    true,
                     true),
             new CollectionDefinition(
                     NewsCollectionSchema.KEY,
                     NewsCollectionSchema.SCHEMA,
                     SlugSource.AUTO_GENERATED,
                     NewsCollectionSchema.SLUG_SOURCE_FIELD,
+                    true,
                     true,
                     true)
     );

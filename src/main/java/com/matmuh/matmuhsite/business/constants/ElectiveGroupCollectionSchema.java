@@ -33,8 +33,6 @@ public final class ElectiveGroupCollectionSchema {
     );
 
     public static final CollectionSchema SCHEMA = new CollectionSchema(List.of(
-            FieldDefinition.readOnly("id", FieldType.SHORT_TEXT, "ID"),
-            FieldDefinition.readOnly("slug", FieldType.SHORT_TEXT, "Slug"),
             FieldDefinition.required(FIELD_CODE, FieldType.SHORT_TEXT, "Slot kodu")
                     .asFilterable()
                     .withHelp("Bologna müfredatındaki seçmeli slot kodu, ör. MES2-3G. Slug bu koddan üretilir."),
@@ -57,6 +55,9 @@ public final class ElectiveGroupCollectionSchema {
                     .withHelp("Öğrencinin bu slottan kaç ders seçeceği. Varsayılan 1."),
             FieldDefinition.of(FIELD_OPTION_LECTURE_IDS, FieldType.STRING_ARRAY, "Seçenek ders ID'leri")
                     .withHelp("Bu slotun yerine alınabilecek derslerin ID listesi. Gönderilirse mevcut liste tamamen değiştirilir."),
+            FieldDefinition.of("optionCount", FieldType.NUMBER, "Seçenek sayısı")
+                    .asComputed()
+                    .withHelp("Havuzdaki ders sayısı, okuma anında hesaplanır."),
             FieldDefinition.of("options", FieldType.OBJECT_ARRAY, "Seçenek dersler")
                     .asReadOnly()
                     .withItemFields(OPTION_FIELDS)
