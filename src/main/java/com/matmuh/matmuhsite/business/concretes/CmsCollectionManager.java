@@ -164,9 +164,10 @@ public class CmsCollectionManager implements CmsCollectionService {
         }
 
         if (userId != null) {
+            var drafts = itemDrafts(key, itemDtos, userId, resolvedLocale);
             for (var dto : itemDtos) {
                 dto.setCanEdit(true);
-                dto.setDraftData(resolveItemDraft(key, dto.getSlug(), userId, resolvedLocale, dto.getData()));
+                dto.setDraftData(draftFor(drafts.get(dto.getSlug()), dto.getData()));
             }
             if (!showArchived && filterJson == null && offset == 0) {
                 result.setVirtualItems(pendingVirtualItems(key, userId, resolvedLocale));
@@ -566,6 +567,28 @@ public class CmsCollectionManager implements CmsCollectionService {
             collectionDraftDao.findOwnNewDraft(collectionKey, userId, locale)
                     .ifPresent(collectionDraftDao::delete);
         }
+    }
+
+    private Map<String, CollectionDraft> itemDrafts(String key, List<CollectionItemDto> items,
+                                                    String userId, String locale) {
+        var slugs = items.stream()
+                .map(CollectionItemDto::getSlug)
+                .filter(Objects::nonNull)
+                .toList();
+
+        if (slugs.isEmpty()) {
+            return Map.of();
+        }
+
+        return collectionDraftDao.findOwnItemDrafts(key, slugs, userId, locale).stream()
+                .collect(Collectors.toMap(CollectionDraft::getSlug, draft -> draft, (first, second) -> first));
+    }
+
+    private JsonNode draftFor(CollectionDraft draft, JsonNode publishedData) {
+        if (draft == null || draft.getPayload() == null || draft.getPayload().equals(publishedData)) {
+            return null;
+        }
+        return draft.getPayload();
     }
 
     private JsonNode resolveItemDraft(String collectionKey, String slug, String userId, String locale, JsonNode publishedData) {

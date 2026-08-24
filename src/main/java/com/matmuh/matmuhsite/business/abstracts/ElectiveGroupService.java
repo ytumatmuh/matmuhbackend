@@ -4,6 +4,7 @@ import com.matmuh.matmuhsite.core.dtos.common.PageDto;
 import com.matmuh.matmuhsite.core.dtos.electiveGroup.request.CreateElectiveGroupRequestDto;
 import com.matmuh.matmuhsite.core.dtos.electiveGroup.request.UpdateElectiveGroupRequestDto;
 import com.matmuh.matmuhsite.core.dtos.electiveGroup.response.ElectiveGroupDto;
+import com.matmuh.matmuhsite.entities.ElectiveGroup;
 import com.matmuh.matmuhsite.core.dtos.electiveGroup.response.ElectiveGroupOptionDto;
 import com.matmuh.matmuhsite.entities.DegreeLevel;
 import com.matmuh.matmuhsite.entities.Semester;
@@ -18,6 +19,8 @@ public interface ElectiveGroupService {
                                                 String search, Pageable pageable);
 
     ElectiveGroupDto getElectiveGroupById(UUID id);
+
+    ElectiveGroupDto toDto(ElectiveGroup group);
 
     ElectiveGroupDto getElectiveGroupByCode(String code);
 

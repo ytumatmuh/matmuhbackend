@@ -3,6 +3,8 @@ package com.matmuh.matmuhsite.business.concretes;
 import com.matmuh.matmuhsite.business.abstracts.ImageService;
 import com.matmuh.matmuhsite.business.abstracts.SecurityService;
 import com.matmuh.matmuhsite.business.constants.ImageMessages;
+import com.matmuh.matmuhsite.business.constants.FileMessages;
+import com.matmuh.matmuhsite.core.helpers.UploadValidator;
 import com.matmuh.matmuhsite.core.utilities.storage.FolderType;
 import com.matmuh.matmuhsite.core.dtos.image.response.ImageDto;
 import com.matmuh.matmuhsite.core.exceptions.*;
@@ -31,27 +33,24 @@ public class ImageManager implements ImageService {
 
     private final StorageService storageService;
 
+    private final UploadValidator uploadValidator;
+
     private final Logger logger = LoggerFactory.getLogger(ImageManager.class);
 
-    public ImageManager(ImageDao imageDao, SecurityService securityService, StorageService storageService) {
+    public ImageManager(ImageDao imageDao, SecurityService securityService, StorageService storageService,
+                        UploadValidator uploadValidator) {
         this.imageDao = imageDao;
         this.securityService = securityService;
         this.storageService = storageService;
+        this.uploadValidator = uploadValidator;
     }
 
 
     @Override
     public ImageDto uploadImage(MultipartFile image) {
         logger.info("Uploading image file: {}", image.getOriginalFilename());
-        if (image.isEmpty()) {
-            logger.error("Image upload failed: Image file is empty.");
-            throw new FileEmptyException(ImageMessages.IMAGE_EMPTY_ERROR);
-        }
-
-        if (image.getSize() > 50 * 1024 * 1024){
-            logger.error("Image upload failed: Image file size exceeds the limit of 50 MB.");
-            throw new FileSizeExceededException(ImageMessages.IMAGE_SIZE_ERROR);
-        }
+        uploadValidator.validate(image, FolderType.IMAGE,
+                ImageMessages.IMAGE_EMPTY_ERROR, FileMessages.FILE_SIZE_LIMIT);
 
         try{
             byte[] cleanImageBytes = removeMetadata(image);

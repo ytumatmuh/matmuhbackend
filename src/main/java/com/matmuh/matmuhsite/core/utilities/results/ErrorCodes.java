@@ -14,6 +14,7 @@ public final class ErrorCodes {
 	public static final String INVALID_CREDENTIALS = "INVALID_CREDENTIALS";
 	public static final String EMAIL_NOT_ALLOWED = "EMAIL_NOT_ALLOWED";
 	public static final String FILE_INVALID = "FILE_INVALID";
+	public static final String FILE_TOO_LARGE = "FILE_TOO_LARGE";
 	public static final String FILE_OPERATION_FAILED = "FILE_OPERATION_FAILED";
 	public static final String PARAMETER_MISSING = "PARAMETER_MISSING";
 	public static final String REQUEST_MALFORMED = "REQUEST_MALFORMED";

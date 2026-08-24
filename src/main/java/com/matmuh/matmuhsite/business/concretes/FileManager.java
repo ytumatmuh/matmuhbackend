@@ -4,6 +4,7 @@ import com.matmuh.matmuhsite.business.abstracts.FileService;
 import com.matmuh.matmuhsite.business.abstracts.SecurityService;
 import com.matmuh.matmuhsite.business.abstracts.UserService;
 import com.matmuh.matmuhsite.business.constants.FileMessages;
+import com.matmuh.matmuhsite.core.helpers.UploadValidator;
 import com.matmuh.matmuhsite.business.constants.ImageMessages;
 import com.matmuh.matmuhsite.core.utilities.storage.FolderType;
 import com.matmuh.matmuhsite.core.dtos.file.response.FileDto;
@@ -37,28 +38,25 @@ public class FileManager implements FileService {
 
     private final FileDao fileDao;
 
+    private final UploadValidator uploadValidator;
+
     private final Logger logger = LoggerFactory.getLogger(FileManager.class);
 
 
-    public FileManager(SecurityService securityService, FileDao fileDao, StorageService storageService) {
+    public FileManager(SecurityService securityService, FileDao fileDao, StorageService storageService,
+                       UploadValidator uploadValidator) {
         this.securityService = securityService;
         this.fileDao = fileDao;
         this.storageService = storageService;
+        this.uploadValidator = uploadValidator;
     }
 
     @Override
     public FileDto uploadFile(MultipartFile file) {
         logger.info("Uploading file: {}", file.getOriginalFilename());
 
-        if (file.isEmpty()) {
-            logger.error("File upload failed: File file is empty.");
-            throw new FileEmptyException(FileMessages.FILE_EMPTY_ERROR);
-        }
-
-        if (file.getSize() > 50 * 1024 * 1024){
-            logger.error("File upload failed: Image file size exceeds the limit of 50 MB.");
-            throw new FileSizeExceededException(FileMessages.FILE_SIZE_ERROR);
-        }
+        uploadValidator.validate(file, FolderType.FILE,
+                FileMessages.FILE_EMPTY_ERROR, FileMessages.FILE_SIZE_LIMIT);
 
         try {
             String fileKey = storageService.uploadFile(

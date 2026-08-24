@@ -27,8 +27,14 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
+import org.springframework.boot.servlet.autoconfigure.MultipartProperties;
+import com.matmuh.matmuhsite.business.constants.FileMessages;
+
+import java.io.EOFException;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.stream.Collectors;
@@ -43,9 +49,11 @@ public class GlobalExceptionConfig {
     private final Logger logger = LoggerFactory.getLogger(GlobalExceptionConfig.class);
 
     private final MessageResolver messageResolver;
+    private final MultipartProperties multipartProperties;
 
-    public GlobalExceptionConfig(MessageResolver messageResolver) {
+    public GlobalExceptionConfig(MessageResolver messageResolver, MultipartProperties multipartProperties) {
         this.messageResolver = messageResolver;
+        this.multipartProperties = multipartProperties;
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
@@ -94,12 +102,57 @@ public class GlobalExceptionConfig {
         return error("error.email.not.yildiz", HttpStatus.FORBIDDEN, ErrorCodes.EMAIL_NOT_ALLOWED);
     }
 
-    @ExceptionHandler({FileEmptyException.class, FileSizeExceededException.class, MaxUploadSizeExceededException.class})
-    public ResponseEntity<ErrorResult> handleFileValidation(Exception exception) {
-        var message = exception instanceof MaxUploadSizeExceededException
-                ? "file.size.exceeded"
-                : exception.getMessage();
-        return error(message, HttpStatus.BAD_REQUEST, ErrorCodes.FILE_INVALID);
+    @ExceptionHandler(MissingServletRequestPartException.class)
+    public ResponseEntity<ErrorResult> handleMissingPart(MissingServletRequestPartException exception) {
+        var message = messageResolver.resolve("request.part.missing", exception.getRequestPartName());
+        return errorMessage(message, HttpStatus.BAD_REQUEST, ErrorCodes.REQUEST_MALFORMED,
+                List.of(new ErrorDetail(exception.getRequestPartName(), message)));
+    }
+
+
+    @ExceptionHandler(MultipartException.class)
+    public ResponseEntity<ErrorResult> handleMultipart(MultipartException exception) {
+        if (isClientAbort(exception)) {
+            logger.warn("Upload aborted by the client: {}", exception.getMessage());
+            return error("request.upload.aborted", HttpStatus.BAD_REQUEST, ErrorCodes.REQUEST_MALFORMED);
+        }
+
+        logger.warn("Multipart request could not be parsed", exception);
+        return error("request.multipart.invalid", HttpStatus.BAD_REQUEST, ErrorCodes.REQUEST_MALFORMED);
+    }
+
+    private boolean isClientAbort(Throwable exception) {
+        for (Throwable cause = exception; cause != null; cause = cause.getCause()) {
+            if (cause instanceof EOFException || "ClientAbortException".equals(cause.getClass().getSimpleName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @ExceptionHandler({FileEmptyException.class, UnsupportedFileTypeException.class})
+    public ResponseEntity<ErrorResult> handleFileValidation(MatmuhException exception) {
+        return error(exception.getMessage(), HttpStatus.BAD_REQUEST, ErrorCodes.FILE_INVALID,
+                exception.getMessageArguments());
+    }
+
+
+    @ExceptionHandler(FileSizeExceededException.class)
+    public ResponseEntity<ErrorResult> handleFileTooLarge(FileSizeExceededException exception) {
+        return error(exception.getMessage(), HttpStatus.PAYLOAD_TOO_LARGE, ErrorCodes.FILE_TOO_LARGE,
+                exception.getMessageArguments());
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ErrorResult> handleRequestTooLarge(MaxUploadSizeExceededException exception) {
+        return error(FileMessages.FILE_SIZE_LIMIT, HttpStatus.PAYLOAD_TOO_LARGE, ErrorCodes.FILE_TOO_LARGE,
+                servletUploadLimitMb());
+    }
+
+    private long servletUploadLimitMb() {
+        var perFile = multipartProperties.getMaxFileSize().toMegabytes();
+        var perRequest = multipartProperties.getMaxRequestSize().toMegabytes();
+        return Math.min(perFile, perRequest);
     }
 
     @ExceptionHandler({FileUploadException.class, FileDeleteException.class, ImageDeleteException.class})

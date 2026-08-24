@@ -19,6 +19,7 @@ import com.matmuh.matmuhsite.core.utilities.results.SuccessResult;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpHeaders;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -102,10 +103,20 @@ public class AuthController {
     public ResponseEntity<Result> logout(@RequestBody(required = false) RefreshTokenRequestDto request,
                                          HttpServletRequest httpRequest) {
         authService.logout(resolveRefreshToken(request, httpRequest));
+        endSession(httpRequest);
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookieFactory.clearedRefresh())
                 .header(HttpHeaders.SET_COOKIE, cookieFactory.clearedAccess())
                 .body(new SuccessResult(messageResolver.resolve(AuthMessages.LOGOUT_SUCCESS), HttpStatus.OK));
+    }
+
+
+    private void endSession(HttpServletRequest httpRequest) {
+        var session = httpRequest.getSession(false);
+        if (session != null) {
+            session.invalidate();
+        }
+        SecurityContextHolder.clearContext();
     }
 
     private String resolveRefreshToken(RefreshTokenRequestDto request, HttpServletRequest httpRequest) {

@@ -55,7 +55,7 @@ public class ElectiveGroupCollectionProvider implements CmsCollectionProvider {
                 OffsetPageable.of(offset, limit, DEFAULT_SORT));
 
         var items = page.getContent().stream()
-                .map(group -> toItem(electiveGroupService.getElectiveGroupById(group.getId()), group.getVersion()))
+                .map(group -> toItem(electiveGroupService.toDto(group), group.getVersion()))
                 .toList();
 
         return new CollectionListDto(items, page.getTotalElements(), offset, limit);

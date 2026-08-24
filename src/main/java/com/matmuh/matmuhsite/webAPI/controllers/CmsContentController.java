@@ -14,6 +14,7 @@ import com.matmuh.matmuhsite.core.dtos.cms.response.UpdatePageResponseDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.UploadResponseDto;
 import com.matmuh.matmuhsite.core.exceptions.CmsValidationException;
 import com.matmuh.matmuhsite.core.helpers.StorageUrlResolver;
+import com.matmuh.matmuhsite.core.helpers.UploadValidator;
 import com.matmuh.matmuhsite.core.utilities.storage.StorageService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -36,14 +37,17 @@ public class CmsContentController {
     private final ContentService contentService;
     private final StorageService storageService;
     private final StorageUrlResolver storageUrlResolver;
+    private final UploadValidator uploadValidator;
 
 
     public CmsContentController(ContentService contentService,
                                 StorageService storageService,
-                                StorageUrlResolver storageUrlResolver) {
+                                StorageUrlResolver storageUrlResolver,
+                                UploadValidator uploadValidator) {
         this.contentService = contentService;
         this.storageService = storageService;
         this.storageUrlResolver = storageUrlResolver;
+        this.uploadValidator = uploadValidator;
     }
 
     @Operation(summary = "Public içerik", description = "Yayınlanmış blokları döner (anonim).")
@@ -123,6 +127,10 @@ public class CmsContentController {
         }
         if (file.getSize() > MAX_UPLOAD_BYTES) {
             throw new CmsValidationException(CmsMessages.FILE_TOO_LARGE);
+        }
+
+        if (!uploadValidator.isAllowed(file, FolderType.IMAGE)) {
+            throw new CmsValidationException(CmsMessages.FILE_TYPE_NOT_SUPPORTED);
         }
 
         try {

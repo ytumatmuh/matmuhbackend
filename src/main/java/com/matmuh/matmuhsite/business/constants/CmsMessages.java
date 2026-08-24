@@ -30,6 +30,7 @@ public class CmsMessages {
     public static final String SLUG_ALREADY_IN_USE = "Slug is already in use: ";
     public static final String FILE_EMPTY = "Uploaded file is empty.";
     public static final String FILE_TOO_LARGE = "Uploaded file exceeds the size limit.";
+    public static final String FILE_TYPE_NOT_SUPPORTED = "Uploaded file type is not accepted.";
 
     public static final String SYNCED_BY_DEPLOY_PIPELINE = "deploy-pipeline";
 }

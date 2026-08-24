@@ -3,6 +3,7 @@ package com.matmuh.matmuhsite.business.constants;
 public class FileMessages {
     public static final String FILE_EMPTY_ERROR = "file.empty";
     public static final String FILE_SIZE_ERROR = "file.size.exceeded";
+    public static final String FILE_SIZE_LIMIT = "file.size.exceeded.limit";
     public static final String FILE_UPLOAD_ERROR = "file.upload.error";
     public static final String FILE_NOT_FOUND_ERROR = "file.not.found";
     public static final String FILE_PERMISSION_ERROR = "file.permission.denied";

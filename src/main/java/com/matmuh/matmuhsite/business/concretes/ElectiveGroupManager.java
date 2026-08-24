@@ -264,7 +264,8 @@ public class ElectiveGroupManager implements ElectiveGroupService {
         return levels;
     }
 
-    private ElectiveGroupDto toDto(ElectiveGroup group) {
+    @Override
+    public ElectiveGroupDto toDto(ElectiveGroup group) {
         var dto = electiveGroupMapper.toDto(group);
         dto.setOptions(sortedOptions(group));
         dto.setOptionCount(dto.getOptions().size());
