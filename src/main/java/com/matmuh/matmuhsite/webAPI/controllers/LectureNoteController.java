@@ -90,7 +90,8 @@ public class LectureNoteController {
 
     @Operation(summary = "Notu güncelle",
             description = "Kısmi güncelleme. Gövde: {\"status\": \"APPROVED\"} ve/veya {\"type\": \"PAST_EXAM\"}. "
-                    + "Gönderilmeyen alan korunur; en az biri gerekir. Tür düzeltmesi onaylayanı değiştirmez (ADMIN).")
+                    + "Gönderilmeyen alan korunur; en az biri gerekir. Tür düzeltmesi onaylayanı değiştirmez. "
+                    + "Notu yükleyen kişi yalnız type gönderebilir; status yalnız ADMIN'e açıktır.")
     @PatchMapping("/{id}")
     public ResponseEntity<DataResult<LectureNoteDto>> updateLectureNote(@PathVariable UUID id,
                                                                         @Valid @RequestBody LectureNoteUpdateRequestDto request) {

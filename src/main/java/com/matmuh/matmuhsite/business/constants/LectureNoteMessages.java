@@ -9,6 +9,8 @@ public class LectureNoteMessages {
     public static final String LECTURE_NOTE_DELETE_SUCCESS = "lecture.note.deleted";
     public static final String LECTURE_NOTE_FETCH_SUCCESS = "lecture.note.fetched";
     public static final String UPDATE_FIELDS_REQUIRED = "lecture.note.update.empty";
+    public static final String UPDATE_FORBIDDEN = "lecture.note.update.forbidden";
+    public static final String STATUS_CHANGE_FORBIDDEN = "lecture.note.status.forbidden";
     public static final String LECTURE_NOTE_NOT_FOUND = "lecture.note.not.found";
     public static final String LECTURE_NOTE_DELETE_FORBIDDEN = "lecture.note.delete.forbidden";
     public static final String PENDING_LIMIT_REACHED = "lecture.note.pending.limit";

@@ -117,6 +117,8 @@ public class LectureNoteManager implements LectureNoteService {
             throw new ResourceNotFoundException(LectureNoteMessages.LECTURE_NOTE_NOT_FOUND);
         });
 
+        requireUpdatePermission(lectureNote, status);
+
         // Kısmi güncelleme: gönderilmeyen alan korunur. Onaylayan yalnız durum
         // değiştiğinde dokunulur, tür düzeltmesi inceleyeni değiştirmemeli.
         if (type != null) {
@@ -247,20 +249,40 @@ public class LectureNoteManager implements LectureNoteService {
                 : EnumSet.copyOf(statuses);
     }
 
-    private void requireDeletePermission(LectureNote lectureNote) {
-        var user = securityService.getAuthenticatedUserFromContext();
 
-        var authorities = user.getAuthorities();
-        if (authorities != null && authorities.contains(Role.ROLE_ADMIN)) {
+    private void requireUpdatePermission(LectureNote lectureNote, NoteReviewStatus status) {
+        if (isAdmin()) {
             return;
         }
 
+        if (!isUploader(lectureNote)) {
+            logger.warn("Non-owner attempted to update lecture note {}", lectureNote.getId());
+            throw new PermissionDeniedException(LectureNoteMessages.UPDATE_FORBIDDEN);
+        }
+
+        if (status != null) {
+            logger.warn("Uploader attempted to change review status of lecture note {}", lectureNote.getId());
+            throw new PermissionDeniedException(LectureNoteMessages.STATUS_CHANGE_FORBIDDEN);
+        }
+    }
+
+    private boolean isAdmin() {
+        var authorities = securityService.getAuthenticatedUserFromContext().getAuthorities();
+        return authorities != null && authorities.contains(Role.ROLE_ADMIN);
+    }
+
+    private boolean isUploader(LectureNote lectureNote) {
         var uploader = lectureNote.getCreatedBy();
-        if (uploader != null && uploader.getId().equals(user.getId())) {
+        return uploader != null
+                && uploader.getId().equals(securityService.getAuthenticatedUserFromContext().getId());
+    }
+
+    private void requireDeletePermission(LectureNote lectureNote) {
+        if (isAdmin() || isUploader(lectureNote)) {
             return;
         }
 
-        logger.warn("User {} is not allowed to delete lecture note {}", user.getId(), lectureNote.getId());
+        logger.warn("User is not allowed to delete lecture note {}", lectureNote.getId());
         throw new PermissionDeniedException(LectureNoteMessages.LECTURE_NOTE_DELETE_FORBIDDEN);
     }
 }
