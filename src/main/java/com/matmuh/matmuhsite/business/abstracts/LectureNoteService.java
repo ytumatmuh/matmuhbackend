@@ -31,6 +31,8 @@ public interface LectureNoteService {
 
     LectureNoteDto getLectureNoteById(UUID lectureNoteId);
 
+    void recordView(String storageKey);
+
     void deleteLectureNote(UUID lectureNoteId);
 
 }

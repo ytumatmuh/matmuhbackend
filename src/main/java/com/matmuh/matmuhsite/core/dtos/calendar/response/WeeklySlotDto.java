@@ -22,6 +22,7 @@ public record WeeklySlotDto(
         Integer groupNumber,
         Integer term,
         InstructionLanguage language,
+        UUID staffId,
         String staffName
 ) {
 }

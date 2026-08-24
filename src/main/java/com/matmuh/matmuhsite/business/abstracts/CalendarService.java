@@ -14,5 +14,5 @@ public interface CalendarService {
 
     List<CalendarOccurrenceDto> getMyCalendar(UUID userId, LocalDate from, LocalDate to);
 
-    List<WeeklySlotDto> getWeeklySchedule(String academicYear, Semester semester, Integer term);
+    List<WeeklySlotDto> getWeeklySchedule(String academicYear, Semester semester, Integer term, UUID staffId);
 }

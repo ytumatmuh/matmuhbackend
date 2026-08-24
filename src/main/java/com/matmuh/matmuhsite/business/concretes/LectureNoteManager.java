@@ -161,6 +161,28 @@ public class LectureNoteManager implements LectureNoteService {
         return lectureNoteMapper.toLectureNoteDto(lectureNote);
     }
 
+
+    @Override
+    @Transactional
+    public void recordView(String storageKey) {
+        var noteId = lectureNoteDao.findIdByFileKey(storageKey).orElse(null);
+        if (noteId == null) {
+            return;
+        }
+
+        var viewer = securityService.getAuthenticatedUserFromContext();
+        var uploaderId = lectureNoteDao.findById(noteId)
+                .map(LectureNote::getCreatedBy)
+                .map(User::getId)
+                .orElse(null);
+
+        if (viewer.getId().equals(uploaderId)) {
+            return;
+        }
+
+        lectureNoteDao.incrementViewCount(noteId);
+    }
+
     @Override
     @Transactional
     public void deleteLectureNote(UUID lectureNoteId) {

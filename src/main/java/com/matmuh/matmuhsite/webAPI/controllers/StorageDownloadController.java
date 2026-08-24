@@ -1,5 +1,6 @@
 package com.matmuh.matmuhsite.webAPI.controllers;
 
+import com.matmuh.matmuhsite.business.abstracts.LectureNoteService;
 import com.matmuh.matmuhsite.core.helpers.StorageUrlResolver;
 import com.matmuh.matmuhsite.core.utilities.storage.S3StorageService;
 import com.matmuh.matmuhsite.core.utilities.storage.StorageKeys;
@@ -25,17 +26,22 @@ public class StorageDownloadController {
 
     private final S3StorageService storageService;
     private final StorageUrlResolver storageUrlResolver;
+    private final LectureNoteService lectureNoteService;
 
-    public StorageDownloadController(S3StorageService storageService, StorageUrlResolver storageUrlResolver) {
+    public StorageDownloadController(S3StorageService storageService, StorageUrlResolver storageUrlResolver,
+                                     LectureNoteService lectureNoteService) {
         this.storageService = storageService;
         this.storageUrlResolver = storageUrlResolver;
+        this.lectureNoteService = lectureNoteService;
     }
 
     @Operation(summary = "Korumalı dosyayı indir",
             description = "Giriş yapmış kullanıcıyı, kısa süreli imzalı bir depolama bağlantısına yönlendirir. Süre dolduğunda bağlantı çalışmaz.")
     @GetMapping("/files/**")
     public ResponseEntity<Void> downloadPrivate(HttpServletRequest request) {
-        return redirect(storageService.presignedUrl(keyOf(request)));
+        var key = keyOf(request);
+        lectureNoteService.recordView(key);
+        return redirect(storageService.presignedUrl(key));
     }
 
     @Operation(summary = "Public dosyaya yönlendir",

@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 @Tag(name = "Calendar", description = "Ders programı ve takvim")
 @RestController
@@ -53,14 +54,16 @@ public class CalendarController {
     @Operation(summary = "Haftalık ders programı",
             description = "Tarihe açılmamış haftalık ders saatleri: gün, başlangıç/bitiş saati, derslik, ders, grup ve hoca. "
                     + "/egitim/ders-programi gibi gün-saat ızgarası çizen sayfalar için. Güne ve saate göre sıralı döner. "
-                    + "academicYear ve semester boş bırakılırsa bugünü kapsayan dönem kullanılır; term ile tek bir yarıyıla daraltılır.")
+                    + "academicYear ve semester boş bırakılırsa bugünü kapsayan dönem kullanılır; term ile tek bir yarıyıla, "
+                    + "staffId ile tek bir hocanın programına daraltılır.")
     @GetMapping("/weekly")
     public ResponseEntity<DataResult<List<WeeklySlotDto>>> getWeeklySchedule(
             @RequestParam(required = false) @AcademicYear String academicYear,
             @RequestParam(required = false) Semester semester,
-            @RequestParam(required = false) Integer term) {
+            @RequestParam(required = false) Integer term,
+            @RequestParam(required = false) UUID staffId) {
 
-        var slots = calendarService.getWeeklySchedule(academicYear, semester, term);
+        var slots = calendarService.getWeeklySchedule(academicYear, semester, term, staffId);
         return ResponseEntity.ok(new SuccessDataResult<>(slots,
                 messageResolver.resolve(EnrollmentMessages.LISTED), HttpStatus.OK));
     }

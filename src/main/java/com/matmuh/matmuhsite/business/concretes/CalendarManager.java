@@ -123,14 +123,15 @@ public class CalendarManager implements CalendarService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<WeeklySlotDto> getWeeklySchedule(String academicYear, Semester semester, Integer term) {
+    public List<WeeklySlotDto> getWeeklySchedule(String academicYear, Semester semester, Integer term, UUID staffId) {
         var resolved = resolveTerm(academicYear, semester);
 
-        logger.info("Retrieving weekly schedule for {} {} term={}",
-                resolved.getAcademicYear(), resolved.getSemester(), term);
+        logger.info("Retrieving weekly schedule for {} {} term={} staffId={}",
+                resolved.getAcademicYear(), resolved.getSemester(), term, staffId);
 
         return scheduleSlotDao.findByTerm(resolved.getAcademicYear(), resolved.getSemester()).stream()
                 .filter(slot -> term == null || term.equals(slot.getLectureOffering().getLecture().getTerm()))
+                .filter(slot -> staffId == null || matchesStaff(slot, staffId))
                 .sorted(Comparator.comparing(ScheduleSlot::getDayOfWeek)
                         .thenComparing(ScheduleSlot::getStartTime)
                         .thenComparing(slot -> slot.getLectureOffering().getLecture().getCode(),
@@ -139,6 +140,11 @@ public class CalendarManager implements CalendarService {
                 .toList();
     }
 
+
+    private boolean matchesStaff(ScheduleSlot slot, UUID staffId) {
+        var staff = slot.getLectureOffering().getStaff();
+        return staff != null && staffId.equals(staff.getId());
+    }
 
     private AcademicTerm resolveTerm(String academicYear, Semester semester) {
         if (academicYear != null && !academicYear.isBlank() && semester != null) {
@@ -169,6 +175,7 @@ public class CalendarManager implements CalendarService {
                 offering.getGroupNumber(),
                 lecture == null ? null : lecture.getTerm(),
                 offering.getLanguage(),
+                offering.getStaff() == null ? null : offering.getStaff().getId(),
                 InstructorNames.of(offering));
     }
 }
