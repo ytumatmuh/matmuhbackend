@@ -13,9 +13,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import tools.jackson.databind.exc.InvalidFormatException;
+import tools.jackson.databind.exc.UnrecognizedPropertyException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
@@ -27,6 +30,8 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 import java.util.List;
 
 @RestControllerAdvice
@@ -60,7 +65,8 @@ public class GlobalExceptionConfig {
 
     @ExceptionHandler(BusinessRuleException.class)
     public ResponseEntity<ErrorResult> handleBusinessRule(BusinessRuleException exception) {
-        return error(exception.getMessage(), HttpStatus.BAD_REQUEST, ErrorCodes.BUSINESS_RULE_VIOLATION);
+        return error(exception.getMessage(), HttpStatus.BAD_REQUEST, ErrorCodes.BUSINESS_RULE_VIOLATION,
+                exception.getMessageArguments());
     }
 
     @ExceptionHandler(PermissionDeniedException.class)
@@ -110,11 +116,60 @@ public class GlobalExceptionConfig {
 
     @ExceptionHandler({HttpMessageNotReadableException.class, MethodArgumentTypeMismatchException.class})
     public ResponseEntity<ErrorResult> handleMalformedRequest(Exception exception) {
+        if (exception instanceof HttpMessageNotReadableException notReadable
+                && notReadable.getCause() instanceof InvalidFormatException invalidFormat
+                && invalidFormat.getTargetType() != null && invalidFormat.getTargetType().isEnum()) {
+            var field = fieldNameOf(invalidFormat);
+            var allowed = Arrays.stream(invalidFormat.getTargetType().getEnumConstants())
+                    .map(String::valueOf)
+                    .collect(Collectors.joining(", "));
+            var message = messageResolver.resolve("request.parameter.value.invalid",
+                    field, String.valueOf(invalidFormat.getValue()), allowed);
+            return errorMessage(message, HttpStatus.BAD_REQUEST, ErrorCodes.REQUEST_MALFORMED,
+                    List.of(new ErrorDetail(field, message)));
+        }
+
+        if (exception instanceof HttpMessageNotReadableException notReadable
+                && notReadable.getCause() instanceof UnrecognizedPropertyException unrecognized) {
+            var field = unrecognized.getPropertyName();
+            var message = messageResolver.resolve("request.body.field.unknown", field);
+            return errorMessage(message, HttpStatus.BAD_REQUEST, ErrorCodes.REQUEST_MALFORMED,
+                    List.of(new ErrorDetail(field, message)));
+        }
+
+        if (exception instanceof MethodArgumentTypeMismatchException mismatch) {
+            var allowed = allowedValuesOf(mismatch);
+            var message = allowed == null
+                    ? messageResolver.resolve("error.request.malformed")
+                    : messageResolver.resolve("request.parameter.value.invalid",
+                            mismatch.getName(), String.valueOf(mismatch.getValue()), allowed);
+            return errorMessage(message, HttpStatus.BAD_REQUEST, ErrorCodes.REQUEST_MALFORMED,
+                    List.of(new ErrorDetail(mismatch.getName(), message)));
+        }
+
         var message = messageResolver.resolve("error.request.malformed");
-        var details = exception instanceof MethodArgumentTypeMismatchException mismatch
-                ? List.of(new ErrorDetail(mismatch.getName(), message))
-                : List.<ErrorDetail>of();
-        return errorMessage(message, HttpStatus.BAD_REQUEST, ErrorCodes.REQUEST_MALFORMED, details);
+        return errorMessage(message, HttpStatus.BAD_REQUEST, ErrorCodes.REQUEST_MALFORMED, List.of());
+    }
+
+    private String fieldNameOf(InvalidFormatException exception) {
+        var path = exception.getPath();
+        return path.isEmpty() ? "body" : path.get(path.size() - 1).getPropertyName();
+    }
+
+    // Enum bekleyen bir parametreye geçersiz değer geldiğinde geçerli değerleri de
+    // söylüyoruz; "alan tiplerini kontrol ediniz" ile istemci ne yapacağını bilemiyordu.
+    private String allowedValuesOf(MethodArgumentTypeMismatchException mismatch) {
+        for (Throwable cause = mismatch; cause != null; cause = cause.getCause()) {
+            if (cause instanceof ConversionFailedException conversion) {
+                var target = conversion.getTargetType().getType();
+                if (target.isEnum()) {
+                    return Arrays.stream(target.getEnumConstants())
+                            .map(String::valueOf)
+                            .collect(Collectors.joining(", "));
+                }
+            }
+        }
+        return null;
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
@@ -218,9 +273,10 @@ public class GlobalExceptionConfig {
                 .orElseGet(() -> messageResolver.resolve("error.validation"));
     }
 
-    private ResponseEntity<ErrorResult> error(String messageKey, HttpStatus status, String errorCode) {
+    private ResponseEntity<ErrorResult> error(String messageKey, HttpStatus status, String errorCode,
+                                              Object... messageArguments) {
         return ResponseEntity.status(status)
-                .body(new ErrorResult(messageResolver.resolve(messageKey), status, errorCode));
+                .body(new ErrorResult(messageResolver.resolve(messageKey, messageArguments), status, errorCode));
     }
 
     private ResponseEntity<ErrorResult> errorMessage(String message, HttpStatus status, String errorCode,

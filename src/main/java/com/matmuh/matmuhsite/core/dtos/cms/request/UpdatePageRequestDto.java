@@ -1,5 +1,7 @@
 package com.matmuh.matmuhsite.core.dtos.cms.request;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import com.matmuh.matmuhsite.business.constants.CmsMessages;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -16,6 +18,7 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class UpdatePageRequestDto {
 
     @NotBlank(message = CmsMessages.SLUG_NOT_BLANK)

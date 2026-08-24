@@ -1,5 +1,7 @@
 package com.matmuh.matmuhsite.core.dtos.cms.request;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import com.matmuh.matmuhsite.business.constants.CmsMessages;
 import com.matmuh.matmuhsite.entities.cms.BlockType;
 import jakarta.validation.Valid;
@@ -17,6 +19,7 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class SyncManifestRequestDto {
 
     @NotBlank(message = CmsMessages.SLUG_NOT_BLANK)

@@ -22,7 +22,7 @@ spring:
   jackson:
     deserialization:
       fail-on-null-for-primitives: false
-      fail-on-unknown-properties: false
+      fail-on-unknown-properties: true
 
   servlet:
     multipart:

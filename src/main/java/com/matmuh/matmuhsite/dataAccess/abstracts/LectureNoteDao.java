@@ -34,7 +34,7 @@ public interface LectureNoteDao extends JpaRepository<LectureNote, UUID> {
             SELECT n FROM LectureNote n
             LEFT JOIN n.lectureOffering o
             LEFT JOIN o.staff i
-            WHERE (:status IS NULL OR n.status = :status)
+            WHERE n.status IN :statuses
               AND (:lectureId IS NULL OR n.lecture.id = :lectureId)
               AND (:offeringId IS NULL OR o.id = :offeringId)
               AND (:staffId IS NULL OR i.id = :staffId)
@@ -43,7 +43,7 @@ public interface LectureNoteDao extends JpaRepository<LectureNote, UUID> {
                    OR LOWER(n.title) LIKE LOWER(CONCAT('%', CAST(:search AS String), '%'))
                    OR LOWER(n.description) LIKE LOWER(CONCAT('%', CAST(:search AS String), '%')))
             """)
-    Page<LectureNote> search(@Param("status") NoteReviewStatus status,
+    Page<LectureNote> search(@Param("statuses") Collection<NoteReviewStatus> statuses,
                              @Param("lectureId") UUID lectureId,
                              @Param("offeringId") UUID offeringId,
                              @Param("staffId") UUID staffId,

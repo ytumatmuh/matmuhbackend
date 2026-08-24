@@ -26,6 +26,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @Tag(name = "Lecture Notes", description = "Ders notu yönetimi")
@@ -44,11 +45,11 @@ public class LectureNoteController {
     }
 
     @Operation(summary = "Notları listele",
-            description = "Sayfalı liste. Filtreler: status (PENDING/APPROVED/REJECTED), lectureId, lectureOfferingId, staffId, uploaderId (yükleyen kullanıcı), search (başlık/açıklama). "
+            description = "Sayfalı liste. Filtreler: status (PENDING/APPROVED/REJECTED; çoklu: status=PENDING,REJECTED veya tekrarlı status parametresi), lectureId, lectureOfferingId, staffId, uploaderId (yükleyen kullanıcı), search (başlık/açıklama). "
                     + "Sayfalama: page, size, sort. Sıralanabilir alanlar: title, createdAt, viewCount, status (ADMIN).")
     @GetMapping
     public ResponseEntity<DataResult<PageDto<LectureNoteWithLectureDto>>> getLectureNotes(
-            @RequestParam(required = false) NoteReviewStatus status,
+            @RequestParam(required = false) List<NoteReviewStatus> status,
             @RequestParam(required = false) UUID lectureId,
             @RequestParam(required = false) UUID lectureOfferingId,
             @RequestParam(required = false) UUID staffId,
@@ -61,11 +62,12 @@ public class LectureNoteController {
 
     @Operation(summary = "Kendi yüklediğim notlar",
             description = "Giriş yapmış kullanıcının kendi yüklediği ders notlarını sayfalı döner; onay bekleyenler ve reddedilenler dahil. "
-                    + "status alanı durumu gösterir (PENDING/APPROVED/REJECTED) ve aynı adla süzülür. "
+                    + "status alanı durumu gösterir ve aynı adla süzülür; birden çok değer verilebilir "
+                    + "(status=PENDING,REJECTED ya da tekrarlı status parametresi). Hiç verilmezse tüm durumlar döner. "
                     + "Filtre: search (başlık/açıklama). Sıralanabilir alanlar: title, createdAt, viewCount, status.")
     @GetMapping("/me")
     public ResponseEntity<DataResult<PageDto<LectureNoteWithLectureDto>>> getMyLectureNotes(
-            @RequestParam(required = false) NoteReviewStatus status,
+            @RequestParam(required = false) List<NoteReviewStatus> status,
             @RequestParam(required = false) UUID lectureId,
             @RequestParam(required = false) String search,
             @ParameterObject @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
@@ -91,7 +93,9 @@ public class LectureNoteController {
         return ResponseEntity.ok(new SuccessDataResult<>(updated, messageResolver.resolve(LectureNoteMessages.LECTURE_NOTE_APPROVE_SUCCESS), HttpStatus.OK));
     }
 
-    @Operation(summary = "Notu sil", description = "Ders notunu soft-delete eder (ADMIN).")
+    @Operation(summary = "Notu sil",
+            description = "Ders notunu soft-delete eder. Notu yükleyen kişi veya ADMIN silebilir; durumu (PENDING/APPROVED/REJECTED) fark etmez. "
+                    + "Olmayan not 404, başkasının notu 403 döner.")
     @DeleteMapping("/{id}")
     public ResponseEntity<Result> deleteLectureNote(@PathVariable UUID id) {
         lectureNoteService.deleteLectureNote(id);

@@ -12,6 +12,7 @@ import com.matmuh.matmuhsite.core.dtos.lectureNote.request.LectureNoteCreateRequ
 import com.matmuh.matmuhsite.core.dtos.lectureNote.response.LectureNoteDto;
 import com.matmuh.matmuhsite.core.dtos.lectureNote.response.LectureNoteWithLectureDto;
 import com.matmuh.matmuhsite.core.exceptions.BusinessRuleException;
+import com.matmuh.matmuhsite.core.exceptions.PermissionDeniedException;
 import com.matmuh.matmuhsite.core.exceptions.ResourceNotFoundException;
 import com.matmuh.matmuhsite.core.mappers.LectureNoteMapper;
 import com.matmuh.matmuhsite.dataAccess.abstracts.LectureNoteDao;
@@ -19,6 +20,7 @@ import com.matmuh.matmuhsite.dataAccess.abstracts.LectureOfferingDao;
 import com.matmuh.matmuhsite.entities.File;
 import com.matmuh.matmuhsite.entities.Lecture;
 import com.matmuh.matmuhsite.entities.NoteReviewStatus;
+import com.matmuh.matmuhsite.entities.Role;
 import com.matmuh.matmuhsite.entities.LectureNote;
 import com.matmuh.matmuhsite.entities.LectureOffering;
 import com.matmuh.matmuhsite.entities.User;
@@ -28,6 +30,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Collection;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.UUID;
@@ -117,12 +121,12 @@ public class LectureNoteManager implements LectureNoteService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageDto<LectureNoteWithLectureDto> getAllNotes(NoteReviewStatus status, UUID lectureId, UUID lectureOfferingId,
+    public PageDto<LectureNoteWithLectureDto> getAllNotes(Collection<NoteReviewStatus> statuses, UUID lectureId, UUID lectureOfferingId,
                                                           UUID staffId, UUID uploaderId, String search, Pageable pageable) {
-        logger.info("Getting lecture notes status={} lectureId={} offeringId={} staffId={} uploaderId={} search={} page={}",
-                status, lectureId, lectureOfferingId, staffId, uploaderId, search, pageable.getPageNumber());
+        logger.info("Getting lecture notes statuses={} lectureId={} offeringId={} staffId={} uploaderId={} search={} page={}",
+                statuses, lectureId, lectureOfferingId, staffId, uploaderId, search, pageable.getPageNumber());
 
-        var page = lectureNoteDao.search(status, lectureId, lectureOfferingId, staffId, uploaderId,
+        var page = lectureNoteDao.search(requestedStatuses(statuses), lectureId, lectureOfferingId, staffId, uploaderId,
                 search == null || search.isBlank() ? null : search.trim(), pageable);
 
         return PageDto.of(page, lectureNoteMapper::toLectureNoteWithLectureDto);
@@ -130,11 +134,11 @@ public class LectureNoteManager implements LectureNoteService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageDto<LectureNoteWithLectureDto> getMyNotes(NoteReviewStatus status, UUID lectureId, String search, Pageable pageable) {
+    public PageDto<LectureNoteWithLectureDto> getMyNotes(Collection<NoteReviewStatus> statuses, UUID lectureId, String search, Pageable pageable) {
         var user = securityService.getAuthenticatedUserFromContext();
         logger.info("Getting own lecture notes for user {} lectureId={}", user.getId(), lectureId);
 
-        return getAllNotes(status, lectureId, null, null, user.getId(), search, pageable);
+        return getAllNotes(statuses, lectureId, null, null, user.getId(), search, pageable);
     }
 
     @Override
@@ -160,7 +164,34 @@ public class LectureNoteManager implements LectureNoteService {
             return new ResourceNotFoundException(LectureNoteMessages.LECTURE_NOTE_NOT_FOUND);
         });
 
+        requireDeletePermission(lectureNote);
+
         lectureNoteDao.delete(lectureNote);
         logger.info("Lecture note with ID: {} deleted", lectureNoteId);
+    }
+
+
+
+    private Collection<NoteReviewStatus> requestedStatuses(Collection<NoteReviewStatus> statuses) {
+        return statuses == null || statuses.isEmpty()
+                ? EnumSet.allOf(NoteReviewStatus.class)
+                : EnumSet.copyOf(statuses);
+    }
+
+    private void requireDeletePermission(LectureNote lectureNote) {
+        var user = securityService.getAuthenticatedUserFromContext();
+
+        var authorities = user.getAuthorities();
+        if (authorities != null && authorities.contains(Role.ROLE_ADMIN)) {
+            return;
+        }
+
+        var uploader = lectureNote.getCreatedBy();
+        if (uploader != null && uploader.getId().equals(user.getId())) {
+            return;
+        }
+
+        logger.warn("User {} is not allowed to delete lecture note {}", user.getId(), lectureNote.getId());
+        throw new PermissionDeniedException(LectureNoteMessages.LECTURE_NOTE_DELETE_FORBIDDEN);
     }
 }

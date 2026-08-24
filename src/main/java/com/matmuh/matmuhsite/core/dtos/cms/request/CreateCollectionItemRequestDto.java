@@ -1,5 +1,7 @@
 package com.matmuh.matmuhsite.core.dtos.cms.request;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import tools.jackson.databind.JsonNode;
 import com.matmuh.matmuhsite.business.constants.CmsMessages;
 import jakarta.validation.constraints.NotNull;
@@ -12,6 +14,7 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class CreateCollectionItemRequestDto {
 
     @NotNull(message = CmsMessages.DATA_NOT_NULL)

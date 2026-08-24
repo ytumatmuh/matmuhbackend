@@ -100,7 +100,7 @@ public class StaffController {
             @RequestParam(required = false) String search,
             @ParameterObject @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         staffService.getStaffById(id);
-        var notes = lectureNoteService.getAllNotes(NoteReviewStatus.APPROVED, null, null, id, null, search,
+        var notes = lectureNoteService.getAllNotes(List.of(NoteReviewStatus.APPROVED), null, null, id, null, search,
                 PageableSanitizer.sanitize(pageable, NOTE_SORTABLE, "createdAt"));
         return ResponseEntity.ok(new SuccessDataResult<>(notes, messageResolver.resolve(StaffMessages.STAFF_NOTES_FETCHED_SUCCESSFULLY), HttpStatus.OK));
     }
