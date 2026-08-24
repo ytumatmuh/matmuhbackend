@@ -13,6 +13,7 @@ import com.matmuh.matmuhsite.core.dtos.lectureNote.response.LectureNoteDto;
 import com.matmuh.matmuhsite.core.dtos.lectureNote.response.LectureNoteWithLectureDto;
 import com.matmuh.matmuhsite.core.exceptions.BusinessRuleException;
 import com.matmuh.matmuhsite.core.exceptions.PermissionDeniedException;
+import com.matmuh.matmuhsite.core.properties.UploadProperties;
 import com.matmuh.matmuhsite.core.exceptions.ResourceNotFoundException;
 import com.matmuh.matmuhsite.core.mappers.LectureNoteMapper;
 import com.matmuh.matmuhsite.dataAccess.abstracts.LectureNoteDao;
@@ -46,12 +47,16 @@ public class LectureNoteManager implements LectureNoteService {
     private final SecurityService securityService;
     private final LectureOfferingDao lectureOfferingDao;
 
-    public LectureNoteManager(LectureNoteDao lectureNoteDao, FileService fileService, LectureNoteMapper lectureNoteMapper, SecurityService securityService, LectureOfferingDao lectureOfferingDao) {
+    private final UploadProperties uploadProperties;
+
+    public LectureNoteManager(LectureNoteDao lectureNoteDao, FileService fileService, LectureNoteMapper lectureNoteMapper, SecurityService securityService, LectureOfferingDao lectureOfferingDao,
+                              UploadProperties uploadProperties) {
         this.lectureNoteDao = lectureNoteDao;
         this.fileService = fileService;
         this.lectureNoteMapper = lectureNoteMapper;
         this.securityService = securityService;
         this.lectureOfferingDao = lectureOfferingDao;
+        this.uploadProperties = uploadProperties;
     }
 
     @Override
@@ -67,6 +72,8 @@ public class LectureNoteManager implements LectureNoteService {
                 throw new BusinessRuleException(LectureOfferingMessages.OFFERING_NOT_BELONGS_TO_LECTURE);
             }
         }
+
+        requirePendingQuota();
 
         FileDto fileDto = fileService.uploadFile(file);
 
@@ -171,6 +178,22 @@ public class LectureNoteManager implements LectureNoteService {
     }
 
 
+
+
+    private void requirePendingQuota() {
+        var limit = uploadProperties.getMaxPendingNotesPerUser();
+        if (limit <= 0) {
+            return;
+        }
+
+        var user = securityService.getAuthenticatedUserFromContext();
+        var pending = lectureNoteDao.countByCreatedByIdAndStatus(user.getId(), NoteReviewStatus.PENDING);
+
+        if (pending >= limit) {
+            logger.warn("User {} reached the pending note limit ({})", user.getId(), limit);
+            throw new BusinessRuleException(LectureNoteMessages.PENDING_LIMIT_REACHED, limit);
+        }
+    }
 
     private Collection<NoteReviewStatus> requestedStatuses(Collection<NoteReviewStatus> statuses) {
         return statuses == null || statuses.isEmpty()

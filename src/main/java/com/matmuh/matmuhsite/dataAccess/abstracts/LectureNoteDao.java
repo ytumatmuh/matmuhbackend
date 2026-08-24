@@ -21,6 +21,8 @@ public interface LectureNoteDao extends JpaRepository<LectureNote, UUID> {
     @EntityGraph(attributePaths = {"lectureOffering", "lectureOffering.staff", "createdBy", "approvedBy", "file"})
     List<LectureNote> findByLectureAndStatus(Lecture lecture, NoteReviewStatus status);
 
+    long countByCreatedByIdAndStatus(UUID createdById, NoteReviewStatus status);
+
     @Query("""
             SELECT n.lecture.id, COUNT(n)
             FROM LectureNote n

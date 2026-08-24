@@ -19,6 +19,8 @@ public class UploadProperties {
 
     private int maxImageSizeMb = 10;
 
+    private int maxPendingNotesPerUser = 10;
+
     private Set<String> fileExtensions = new LinkedHashSet<>(List.of(
             "pdf", "doc", "docx", "ppt", "pptx", "xls", "xlsx",
             "txt", "md", "zip", "rar", "7z", "png", "jpg", "jpeg", "webp"));

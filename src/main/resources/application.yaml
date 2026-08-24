@@ -117,3 +117,4 @@ app:
 upload:
   max-file-size-mb: ${UPLOAD_MAX_FILE_SIZE_MB:25}
   max-image-size-mb: ${UPLOAD_MAX_IMAGE_SIZE_MB:10}
+  max-pending-notes-per-user: ${UPLOAD_MAX_PENDING_NOTES:10}
