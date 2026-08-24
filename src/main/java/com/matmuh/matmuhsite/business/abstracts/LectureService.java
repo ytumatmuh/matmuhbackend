@@ -13,8 +13,10 @@ import com.matmuh.matmuhsite.core.dtos.lectureNote.request.LectureNoteCreateRequ
 import com.matmuh.matmuhsite.core.dtos.lectureNote.response.LectureNoteDto;
 import com.matmuh.matmuhsite.core.dtos.lecture.response.LectureStatisticsDto;
 import com.matmuh.matmuhsite.entities.Lecture;
+import com.matmuh.matmuhsite.entities.NoteType;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -30,7 +32,7 @@ public interface LectureService {
 
     LectureDto getLectureByCode(String code);
 
-    List<LectureNoteDto> getLectureNotes(UUID lectureId);
+    List<LectureNoteDto> getLectureNotes(UUID lectureId, Collection<NoteType> types);
 
     LectureDto updateLecture(UUID lectureId, UpdateLectureRequestDto updateLectureRequestDto);
 

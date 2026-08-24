@@ -21,6 +21,7 @@ import com.matmuh.matmuhsite.dataAccess.abstracts.LectureOfferingDao;
 import com.matmuh.matmuhsite.entities.File;
 import com.matmuh.matmuhsite.entities.Lecture;
 import com.matmuh.matmuhsite.entities.NoteReviewStatus;
+import com.matmuh.matmuhsite.entities.NoteType;
 import com.matmuh.matmuhsite.entities.Role;
 import com.matmuh.matmuhsite.entities.LectureNote;
 import com.matmuh.matmuhsite.entities.LectureOffering;
@@ -84,6 +85,11 @@ public class LectureNoteManager implements LectureNoteService {
         lectureNote.setLecture(lecture);
         lectureNote.setLectureOffering(offering);
 
+
+        if (lectureNote.getType() == null) {
+            lectureNote.setType(NoteType.OTHER);
+        }
+
         LectureNote savedLectureNote = lectureNoteDao.save(lectureNote);
         logger.info("Lecture note created with ID: {}", savedLectureNote.getId());
 
@@ -97,43 +103,51 @@ public class LectureNoteManager implements LectureNoteService {
     }
 
     @Override
-    public List<LectureNote> getLectureNotesByLecture(Lecture lecture) {
-        logger.info("Getting lecture notes for lecture ID: {}", lecture.getId());
-        return lectureNoteDao.findByLectureAndStatus(lecture, NoteReviewStatus.APPROVED);
+    public List<LectureNote> getLectureNotesByLecture(Lecture lecture, Collection<NoteType> types) {
+        logger.info("Getting lecture notes for lecture ID: {} types={}", lecture.getId(), types);
+        return lectureNoteDao.findByLectureAndStatusAndTypeIn(lecture, NoteReviewStatus.APPROVED, requestedTypes(types));
     }
 
     @Override
-    public LectureNoteDto setReviewStatus(UUID lectureNoteId, NoteReviewStatus status) {
-        logger.info("Setting review status of lecture note {} to {}", lectureNoteId, status);
+    public LectureNoteDto updateLectureNote(UUID lectureNoteId, NoteReviewStatus status, NoteType type) {
+        logger.info("Updating lecture note {} status={} type={}", lectureNoteId, status, type);
 
         LectureNote lectureNote = lectureNoteDao.findById(lectureNoteId).orElseThrow(() -> {
             logger.error("Lecture note not found with ID: {}", lectureNoteId);
             throw new ResourceNotFoundException(LectureNoteMessages.LECTURE_NOTE_NOT_FOUND);
         });
 
-        lectureNote.setStatus(status);
+        // Kısmi güncelleme: gönderilmeyen alan korunur. Onaylayan yalnız durum
+        // değiştiğinde dokunulur, tür düzeltmesi inceleyeni değiştirmemeli.
+        if (type != null) {
+            lectureNote.setType(type);
+        }
 
-        if (NoteReviewStatus.PENDING.equals(status)) {
-            lectureNote.setApprovedBy(null);
-        } else {
-            User reviewer = securityService.getAuthenticatedUserFromContext();
-            lectureNote.setApprovedBy(reviewer);
+        if (status != null) {
+            lectureNote.setStatus(status);
+
+            if (NoteReviewStatus.PENDING.equals(status)) {
+                lectureNote.setApprovedBy(null);
+            } else {
+                User reviewer = securityService.getAuthenticatedUserFromContext();
+                lectureNote.setApprovedBy(reviewer);
+            }
         }
 
         LectureNote updatedLectureNote = lectureNoteDao.save(lectureNote);
-        logger.info("Lecture note {} review status set to {}", lectureNoteId, status);
+        logger.info("Lecture note {} updated", lectureNoteId);
 
         return lectureNoteMapper.toLectureNoteDto(updatedLectureNote);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public PageDto<LectureNoteWithLectureDto> getAllNotes(Collection<NoteReviewStatus> statuses, UUID lectureId, UUID lectureOfferingId,
+    public PageDto<LectureNoteWithLectureDto> getAllNotes(Collection<NoteReviewStatus> statuses, Collection<NoteType> types, UUID lectureId, UUID lectureOfferingId,
                                                           UUID staffId, UUID uploaderId, String search, Pageable pageable) {
-        logger.info("Getting lecture notes statuses={} lectureId={} offeringId={} staffId={} uploaderId={} search={} page={}",
-                statuses, lectureId, lectureOfferingId, staffId, uploaderId, search, pageable.getPageNumber());
+        logger.info("Getting lecture notes statuses={} types={} lectureId={} offeringId={} staffId={} uploaderId={} search={} page={}",
+                statuses, types, lectureId, lectureOfferingId, staffId, uploaderId, search, pageable.getPageNumber());
 
-        var page = lectureNoteDao.search(requestedStatuses(statuses), lectureId, lectureOfferingId, staffId, uploaderId,
+        var page = lectureNoteDao.search(requestedStatuses(statuses), requestedTypes(types), lectureId, lectureOfferingId, staffId, uploaderId,
                 search == null || search.isBlank() ? null : search.trim(), pageable);
 
         return PageDto.of(page, lectureNoteMapper::toLectureNoteWithLectureDto);
@@ -141,11 +155,11 @@ public class LectureNoteManager implements LectureNoteService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageDto<LectureNoteWithLectureDto> getMyNotes(Collection<NoteReviewStatus> statuses, UUID lectureId, String search, Pageable pageable) {
+    public PageDto<LectureNoteWithLectureDto> getMyNotes(Collection<NoteReviewStatus> statuses, Collection<NoteType> types, UUID lectureId, String search, Pageable pageable) {
         var user = securityService.getAuthenticatedUserFromContext();
         logger.info("Getting own lecture notes for user {} lectureId={}", user.getId(), lectureId);
 
-        return getAllNotes(statuses, lectureId, null, null, user.getId(), search, pageable);
+        return getAllNotes(statuses, types, lectureId, null, null, user.getId(), search, pageable);
     }
 
     @Override
@@ -215,6 +229,12 @@ public class LectureNoteManager implements LectureNoteService {
             logger.warn("User {} reached the pending note limit ({})", user.getId(), limit);
             throw new BusinessRuleException(LectureNoteMessages.PENDING_LIMIT_REACHED, limit);
         }
+    }
+
+    private Collection<NoteType> requestedTypes(Collection<NoteType> types) {
+        return types == null || types.isEmpty()
+                ? EnumSet.allOf(NoteType.class)
+                : EnumSet.copyOf(types);
     }
 
     private Collection<NoteReviewStatus> requestedStatuses(Collection<NoteReviewStatus> statuses) {

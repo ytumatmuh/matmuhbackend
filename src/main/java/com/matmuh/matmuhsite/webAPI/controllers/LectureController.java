@@ -34,6 +34,7 @@ import com.matmuh.matmuhsite.core.dtos.electiveGroup.response.ElectiveGroupDto;
 import com.matmuh.matmuhsite.entities.DegreeLevel;
 import com.matmuh.matmuhsite.entities.LectureCategory;
 import com.matmuh.matmuhsite.entities.LectureType;
+import com.matmuh.matmuhsite.entities.NoteType;
 import com.matmuh.matmuhsite.entities.Semester;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -156,10 +157,12 @@ public class LectureController {
                 .body(new SuccessDataResult<>(created, messageResolver.resolve(LectureOfferingMessages.OFFERING_CREATED_SUCCESSFULLY), HttpStatus.CREATED));
     }
 
-    @Operation(summary = "Dersin notlarını listele", description = "Sadece onaylanmış notları döner. Giriş yapmış kullanıcılar erişebilir.")
+    @Operation(summary = "Dersin notlarını listele",
+            description = "Sadece onaylanmış notları döner. type ile not türüne göre süzülür (çoklu: type=PAST_EXAM,SOLUTION). Giriş yapmış kullanıcılar erişebilir.")
     @GetMapping("/{id}/notes")
-    public ResponseEntity<DataResult<List<LectureNoteDto>>> getLectureNotes(@PathVariable UUID id) {
-        var lectureNotes = lectureService.getLectureNotes(id);
+    public ResponseEntity<DataResult<List<LectureNoteDto>>> getLectureNotes(@PathVariable UUID id,
+                                                                            @RequestParam(required = false) List<NoteType> type) {
+        var lectureNotes = lectureService.getLectureNotes(id, type);
         return ResponseEntity.ok(new SuccessDataResult<>(lectureNotes, messageResolver.resolve(LectureNoteMessages.LECTURE_NOTES_FETCH_SUCCESS), HttpStatus.OK));
     }
 

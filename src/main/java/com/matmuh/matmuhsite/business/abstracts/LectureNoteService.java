@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import com.matmuh.matmuhsite.core.dtos.lectureNote.response.LectureNoteDto;
 import com.matmuh.matmuhsite.entities.Lecture;
 import com.matmuh.matmuhsite.entities.NoteReviewStatus;
+import com.matmuh.matmuhsite.entities.NoteType;
 import com.matmuh.matmuhsite.entities.LectureNote;
 import com.matmuh.matmuhsite.core.dtos.lectureNote.response.LectureNoteWithLectureDto;
 import org.springframework.web.multipart.MultipartFile;
@@ -19,15 +20,15 @@ public interface LectureNoteService {
 
     LectureNote getReference(UUID id);
 
-    List<LectureNote> getLectureNotesByLecture(Lecture lecture);
+    List<LectureNote> getLectureNotesByLecture(Lecture lecture, Collection<NoteType> types);
 
-    LectureNoteDto setReviewStatus(UUID lectureNoteId, NoteReviewStatus status);
+    LectureNoteDto updateLectureNote(UUID lectureNoteId, NoteReviewStatus status, NoteType type);
 
-    PageDto<LectureNoteWithLectureDto> getAllNotes(Collection<NoteReviewStatus> statuses, UUID lectureId, UUID lectureOfferingId,
+    PageDto<LectureNoteWithLectureDto> getAllNotes(Collection<NoteReviewStatus> statuses, Collection<NoteType> types, UUID lectureId, UUID lectureOfferingId,
                                                   UUID staffId, UUID uploaderId, String search, Pageable pageable);
 
 
-    PageDto<LectureNoteWithLectureDto> getMyNotes(Collection<NoteReviewStatus> statuses, UUID lectureId, String search, Pageable pageable);
+    PageDto<LectureNoteWithLectureDto> getMyNotes(Collection<NoteReviewStatus> statuses, Collection<NoteType> types, UUID lectureId, String search, Pageable pageable);
 
     LectureNoteDto getLectureNoteById(UUID lectureNoteId);
 

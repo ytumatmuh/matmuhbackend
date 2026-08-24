@@ -5,11 +5,13 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import com.matmuh.matmuhsite.business.abstracts.LectureNoteService;
 import com.matmuh.matmuhsite.business.constants.LectureNoteMessages;
 import com.matmuh.matmuhsite.core.dtos.common.PageDto;
-import com.matmuh.matmuhsite.core.dtos.lectureNote.request.LectureNoteReviewRequestDto;
+import com.matmuh.matmuhsite.core.dtos.lectureNote.request.LectureNoteUpdateRequestDto;
+import com.matmuh.matmuhsite.core.exceptions.BusinessRuleException;
 import com.matmuh.matmuhsite.core.dtos.lectureNote.response.LectureNoteDto;
 import com.matmuh.matmuhsite.core.dtos.lectureNote.response.LectureNoteWithLectureDto;
 import com.matmuh.matmuhsite.core.helpers.MessageResolver;
 import com.matmuh.matmuhsite.entities.NoteReviewStatus;
+import com.matmuh.matmuhsite.entities.NoteType;
 import com.matmuh.matmuhsite.core.helpers.PageableSanitizer;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
@@ -45,18 +47,19 @@ public class LectureNoteController {
     }
 
     @Operation(summary = "Notları listele",
-            description = "Sayfalı liste. Filtreler: status (PENDING/APPROVED/REJECTED; çoklu: status=PENDING,REJECTED veya tekrarlı status parametresi), lectureId, lectureOfferingId, staffId, uploaderId (yükleyen kullanıcı), search (başlık/açıklama). "
+            description = "Sayfalı liste. Filtreler: status (PENDING/APPROVED/REJECTED; çoklu), type (not türü; çoklu), lectureId, lectureOfferingId, staffId, uploaderId (yükleyen kullanıcı), search (başlık/açıklama). "
                     + "Sayfalama: page, size, sort. Sıralanabilir alanlar: title, createdAt, viewCount, status (ADMIN).")
     @GetMapping
     public ResponseEntity<DataResult<PageDto<LectureNoteWithLectureDto>>> getLectureNotes(
             @RequestParam(required = false) List<NoteReviewStatus> status,
+            @RequestParam(required = false) List<NoteType> type,
             @RequestParam(required = false) UUID lectureId,
             @RequestParam(required = false) UUID lectureOfferingId,
             @RequestParam(required = false) UUID staffId,
             @RequestParam(required = false) UUID uploaderId,
             @RequestParam(required = false) String search,
             @ParameterObject @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        var result = lectureNoteService.getAllNotes(status, lectureId, lectureOfferingId, staffId, uploaderId, search, PageableSanitizer.sanitize(pageable, SORTABLE, "createdAt"));
+        var result = lectureNoteService.getAllNotes(status, type, lectureId, lectureOfferingId, staffId, uploaderId, search, PageableSanitizer.sanitize(pageable, SORTABLE, "createdAt"));
         return ResponseEntity.ok(new SuccessDataResult<>(result, messageResolver.resolve(LectureNoteMessages.LECTURE_NOTES_FETCH_SUCCESS), HttpStatus.OK));
     }
 
@@ -64,14 +67,15 @@ public class LectureNoteController {
             description = "Giriş yapmış kullanıcının kendi yüklediği ders notlarını sayfalı döner; onay bekleyenler ve reddedilenler dahil. "
                     + "status alanı durumu gösterir ve aynı adla süzülür; birden çok değer verilebilir "
                     + "(status=PENDING,REJECTED ya da tekrarlı status parametresi). Hiç verilmezse tüm durumlar döner. "
-                    + "Filtre: search (başlık/açıklama). Sıralanabilir alanlar: title, createdAt, viewCount, status.")
+                    + "Filtre: type (not türü, çoklu), search (başlık/açıklama). Sıralanabilir alanlar: title, createdAt, viewCount, status.")
     @GetMapping("/me")
     public ResponseEntity<DataResult<PageDto<LectureNoteWithLectureDto>>> getMyLectureNotes(
             @RequestParam(required = false) List<NoteReviewStatus> status,
+            @RequestParam(required = false) List<NoteType> type,
             @RequestParam(required = false) UUID lectureId,
             @RequestParam(required = false) String search,
             @ParameterObject @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        var result = lectureNoteService.getMyNotes(status, lectureId, search, PageableSanitizer.sanitize(pageable, SORTABLE, "createdAt"));
+        var result = lectureNoteService.getMyNotes(status, type, lectureId, search, PageableSanitizer.sanitize(pageable, SORTABLE, "createdAt"));
         return ResponseEntity.ok(new SuccessDataResult<>(result, messageResolver.resolve(LectureNoteMessages.LECTURE_NOTES_FETCH_SUCCESS), HttpStatus.OK));
     }
 
@@ -85,11 +89,15 @@ public class LectureNoteController {
     }
 
     @Operation(summary = "Notu güncelle",
-            description = "Kısmi güncelleme; onay durumunu değiştirir. Gövde: {\"status\": \"APPROVED\"} — PENDING, APPROVED veya REJECTED (ADMIN).")
+            description = "Kısmi güncelleme. Gövde: {\"status\": \"APPROVED\"} ve/veya {\"type\": \"PAST_EXAM\"}. "
+                    + "Gönderilmeyen alan korunur; en az biri gerekir. Tür düzeltmesi onaylayanı değiştirmez (ADMIN).")
     @PatchMapping("/{id}")
     public ResponseEntity<DataResult<LectureNoteDto>> updateLectureNote(@PathVariable UUID id,
-                                                                        @Valid @RequestBody LectureNoteReviewRequestDto request) {
-        var updated = lectureNoteService.setReviewStatus(id, request.getStatus());
+                                                                        @Valid @RequestBody LectureNoteUpdateRequestDto request) {
+        if (request.isEmpty()) {
+            throw new BusinessRuleException(LectureNoteMessages.UPDATE_FIELDS_REQUIRED);
+        }
+        var updated = lectureNoteService.updateLectureNote(id, request.getStatus(), request.getType());
         return ResponseEntity.ok(new SuccessDataResult<>(updated, messageResolver.resolve(LectureNoteMessages.LECTURE_NOTE_APPROVE_SUCCESS), HttpStatus.OK));
     }
 

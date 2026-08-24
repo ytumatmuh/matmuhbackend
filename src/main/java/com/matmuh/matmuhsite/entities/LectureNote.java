@@ -34,6 +34,10 @@ public class LectureNote extends BaseEntity{
 
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "type", length = 32)
+    private NoteType type = NoteType.OTHER;
+
+    @Enumerated(EnumType.STRING)
     @Column(name = "review_status", length = 16)
     private NoteReviewStatus status = NoteReviewStatus.PENDING;
 

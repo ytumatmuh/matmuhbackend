@@ -1,6 +1,7 @@
 package com.matmuh.matmuhsite.core.dtos.lectureNote.response;
 
 import com.matmuh.matmuhsite.entities.NoteReviewStatus;
+import com.matmuh.matmuhsite.entities.NoteType;
 
 import com.matmuh.matmuhsite.core.dtos.file.response.FileDto;
 import com.matmuh.matmuhsite.core.dtos.lectureOfferings.response.OfferingSummaryDto;
@@ -33,6 +34,8 @@ public class LectureNoteDto {
     private LocalDateTime updatedAt;
 
     private Integer viewCount;
+
+    private NoteType type;
 
     private NoteReviewStatus status;
 

@@ -1,8 +1,7 @@
 package com.matmuh.matmuhsite.core.dtos.lectureNote.request;
 
-import com.matmuh.matmuhsite.business.constants.LectureNoteMessages;
 import com.matmuh.matmuhsite.entities.NoteReviewStatus;
-import jakarta.validation.constraints.NotNull;
+import com.matmuh.matmuhsite.entities.NoteType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,8 +11,13 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class LectureNoteReviewRequestDto {
+public class LectureNoteUpdateRequestDto {
 
-    @NotNull(message = LectureNoteMessages.REVIEW_STATUS_REQUIRED)
     private NoteReviewStatus status;
+
+    private NoteType type;
+
+    public boolean isEmpty() {
+        return status == null && type == null;
+    }
 }

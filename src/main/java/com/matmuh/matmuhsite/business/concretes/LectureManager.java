@@ -24,6 +24,7 @@ import com.matmuh.matmuhsite.entities.DegreeLevel;
 import com.matmuh.matmuhsite.entities.LectureCategory;
 import com.matmuh.matmuhsite.entities.LectureType;
 import com.matmuh.matmuhsite.entities.Lecture;
+import com.matmuh.matmuhsite.entities.NoteType;
 import com.matmuh.matmuhsite.entities.SyllabusWeek;
 import com.matmuh.matmuhsite.core.dtos.lecture.response.LectureStatisticsDto;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,6 +37,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -183,7 +185,7 @@ public class LectureManager implements LectureService {
     }
 
     @Override
-    public List<LectureNoteDto> getLectureNotes(UUID lectureId) {
+    public List<LectureNoteDto> getLectureNotes(UUID lectureId, Collection<NoteType> types) {
         logger.info("Retrieving notes for lecture with ID: {}", lectureId);
 
 
@@ -192,7 +194,7 @@ public class LectureManager implements LectureService {
             return new ResourceNotFoundException(LectureMessages.LECTURE_NOT_FOUND);
         });
 
-        var notes = lectureNoteService.getLectureNotesByLecture(lecture);
+        var notes = lectureNoteService.getLectureNotesByLecture(lecture, types);
 
         logger.info("Retrieved {} notes for lecture with ID: {}", notes.size(), lectureId);
 

@@ -45,6 +45,7 @@ public class GlobalExceptionConfig {
 
     private static final String CHECK_VIOLATION = "23514";
     private static final String FOREIGN_KEY_VIOLATION = "23503";
+    private static final String NOT_NULL_VIOLATION = "23502";
 
     private final Logger logger = LoggerFactory.getLogger(GlobalExceptionConfig.class);
 
@@ -274,6 +275,14 @@ public class GlobalExceptionConfig {
                 logger.warn("Check constraint violation: {}", name);
                 var message = messageResolver.resolve("error.value.not.allowed");
                 return errorMessage(message, HttpStatus.BAD_REQUEST, ErrorCodes.VALUE_NOT_ALLOWED,
+                        List.of(new ErrorDetail(name, message)));
+            }
+
+
+            if (NOT_NULL_VIOLATION.equals(state)) {
+                logger.warn("Not-null violation: {}", name);
+                var message = messageResolver.resolve("error.field.required", name);
+                return errorMessage(message, HttpStatus.BAD_REQUEST, ErrorCodes.REQUEST_MALFORMED,
                         List.of(new ErrorDetail(name, message)));
             }
 
