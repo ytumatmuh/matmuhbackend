@@ -105,7 +105,7 @@ public class LectureNoteManager implements LectureNoteService {
     @Override
     public List<LectureNote> getLectureNotesByLecture(Lecture lecture, Collection<NoteType> types) {
         logger.info("Getting lecture notes for lecture ID: {} types={}", lecture.getId(), types);
-        return lectureNoteDao.findByLectureAndStatusAndTypeIn(lecture, NoteReviewStatus.APPROVED, requestedTypes(types));
+        return lectureNoteDao.findVisibleByLecture(lecture, NoteReviewStatus.APPROVED, filtersByType(types), requestedTypes(types));
     }
 
     @Override
@@ -147,7 +147,7 @@ public class LectureNoteManager implements LectureNoteService {
         logger.info("Getting lecture notes statuses={} types={} lectureId={} offeringId={} staffId={} uploaderId={} search={} page={}",
                 statuses, types, lectureId, lectureOfferingId, staffId, uploaderId, search, pageable.getPageNumber());
 
-        var page = lectureNoteDao.search(requestedStatuses(statuses), requestedTypes(types), lectureId, lectureOfferingId, staffId, uploaderId,
+        var page = lectureNoteDao.search(requestedStatuses(statuses), filtersByType(types), requestedTypes(types), lectureId, lectureOfferingId, staffId, uploaderId,
                 search == null || search.isBlank() ? null : search.trim(), pageable);
 
         return PageDto.of(page, lectureNoteMapper::toLectureNoteWithLectureDto);
@@ -229,6 +229,10 @@ public class LectureNoteManager implements LectureNoteService {
             logger.warn("User {} reached the pending note limit ({})", user.getId(), limit);
             throw new BusinessRuleException(LectureNoteMessages.PENDING_LIMIT_REACHED, limit);
         }
+    }
+
+    private boolean filtersByType(Collection<NoteType> types) {
+        return types != null && !types.isEmpty();
     }
 
     private Collection<NoteType> requestedTypes(Collection<NoteType> types) {

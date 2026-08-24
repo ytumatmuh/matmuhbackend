@@ -24,8 +24,18 @@ public interface LectureNoteDao extends JpaRepository<LectureNote, UUID> {
     @EntityGraph(attributePaths = {"lectureOffering", "lectureOffering.staff", "createdBy", "approvedBy", "file"})
     List<LectureNote> findByLectureAndStatus(Lecture lecture, NoteReviewStatus status);
 
+
     @EntityGraph(attributePaths = {"lectureOffering", "lectureOffering.staff", "createdBy", "approvedBy", "file"})
-    List<LectureNote> findByLectureAndStatusAndTypeIn(Lecture lecture, NoteReviewStatus status, Collection<NoteType> types);
+    @Query("""
+            SELECT n FROM LectureNote n
+            WHERE n.lecture = :lecture
+              AND n.status = :status
+              AND (:filterByType = false OR n.type IN :types)
+            """)
+    List<LectureNote> findVisibleByLecture(@Param("lecture") Lecture lecture,
+                                           @Param("status") NoteReviewStatus status,
+                                           @Param("filterByType") boolean filterByType,
+                                           @Param("types") Collection<NoteType> types);
 
     long countByCreatedByIdAndStatus(UUID createdById, NoteReviewStatus status);
 
@@ -56,7 +66,7 @@ public interface LectureNoteDao extends JpaRepository<LectureNote, UUID> {
             LEFT JOIN FETCH n.approvedBy
             LEFT JOIN FETCH n.file
             WHERE n.status IN :statuses
-              AND n.type IN :types
+              AND (:filterByType = false OR n.type IN :types)
               AND (:lectureId IS NULL OR n.lecture.id = :lectureId)
               AND (:offeringId IS NULL OR o.id = :offeringId)
               AND (:staffId IS NULL OR i.id = :staffId)
@@ -70,8 +80,7 @@ public interface LectureNoteDao extends JpaRepository<LectureNote, UUID> {
             LEFT JOIN n.lectureOffering o
             LEFT JOIN o.staff i
             WHERE n.status IN :statuses
-              AND n.type IN :types
-              AND n.type IN :types
+              AND (:filterByType = false OR n.type IN :types)
               AND (:lectureId IS NULL OR n.lecture.id = :lectureId)
               AND (:offeringId IS NULL OR o.id = :offeringId)
               AND (:staffId IS NULL OR i.id = :staffId)
@@ -81,6 +90,7 @@ public interface LectureNoteDao extends JpaRepository<LectureNote, UUID> {
                    OR LOWER(n.description) LIKE LOWER(CONCAT('%', CAST(:search AS String), '%')))
             """)
     Page<LectureNote> search(@Param("statuses") Collection<NoteReviewStatus> statuses,
+                             @Param("filterByType") boolean filterByType,
                              @Param("types") Collection<NoteType> types,
                              @Param("lectureId") UUID lectureId,
                              @Param("offeringId") UUID offeringId,
