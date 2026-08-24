@@ -6,6 +6,8 @@ import com.matmuh.matmuhsite.core.dtos.lectureNote.response.LectureNoteDto;
 import com.matmuh.matmuhsite.core.dtos.lectureNote.response.LectureNoteWithLectureDto;
 import com.matmuh.matmuhsite.entities.File;
 import com.matmuh.matmuhsite.entities.LectureNote;
+import com.matmuh.matmuhsite.core.dtos.lectureOfferings.response.OfferingSummaryDto;
+import com.matmuh.matmuhsite.core.helpers.InstructorNames;
 import com.matmuh.matmuhsite.core.helpers.StorageUrlResolver;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -36,7 +38,23 @@ public abstract class LectureNoteMapper {
 
     public abstract File toFileEntity(FileDto fileDto);
 
+    @Mapping(target = "offering", expression = "java(offeringOf(lectureNote))")
     public abstract LectureNoteDto toLectureNoteDto(LectureNote lectureNote);
+
+
+    protected OfferingSummaryDto offeringOf(LectureNote lectureNote) {
+        if (lectureNote == null || lectureNote.getLectureOffering() == null) {
+            return null;
+        }
+
+        var offering = lectureNote.getLectureOffering();
+        return new OfferingSummaryDto(
+                offering.getId(),
+                offering.getAcademicYear(),
+                offering.getSemester(),
+                offering.getGroupNumber(),
+                InstructorNames.of(offering));
+    }
 
 
     public abstract LectureNote toLectureNote(LectureNoteDto lectureNoteDto);
@@ -45,6 +63,7 @@ public abstract class LectureNoteMapper {
 
     @Mapping(source = "file", target = "file")
     @Mapping(source = "lecture", target = "lecture")
+    @Mapping(target = "offering", expression = "java(offeringOf(lectureNote))")
     public abstract LectureNoteWithLectureDto toLectureNoteWithLectureDto(LectureNote lectureNote);
 
 }

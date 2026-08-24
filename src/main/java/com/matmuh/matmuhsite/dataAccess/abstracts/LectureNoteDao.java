@@ -5,6 +5,7 @@ import com.matmuh.matmuhsite.entities.LectureNote;
 import com.matmuh.matmuhsite.entities.NoteReviewStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,6 +18,7 @@ import java.util.UUID;
 @Repository
 public interface LectureNoteDao extends JpaRepository<LectureNote, UUID> {
 
+    @EntityGraph(attributePaths = {"lectureOffering", "lectureOffering.staff", "createdBy", "approvedBy", "file"})
     List<LectureNote> findByLectureAndStatus(Lecture lecture, NoteReviewStatus status);
 
     @Query("""
@@ -30,8 +32,24 @@ public interface LectureNoteDao extends JpaRepository<LectureNote, UUID> {
 
     Page<LectureNote> findByLectureAndStatus(Lecture lecture, NoteReviewStatus status, Pageable pageable);
 
-    @Query("""
+    @Query(value = """
             SELECT n FROM LectureNote n
+            LEFT JOIN FETCH n.lectureOffering o
+            LEFT JOIN FETCH o.staff i
+            LEFT JOIN FETCH n.createdBy
+            LEFT JOIN FETCH n.approvedBy
+            LEFT JOIN FETCH n.file
+            WHERE n.status IN :statuses
+              AND (:lectureId IS NULL OR n.lecture.id = :lectureId)
+              AND (:offeringId IS NULL OR o.id = :offeringId)
+              AND (:staffId IS NULL OR i.id = :staffId)
+              AND (:uploaderId IS NULL OR n.createdBy.id = :uploaderId)
+              AND (CAST(:search AS String) IS NULL
+                   OR LOWER(n.title) LIKE LOWER(CONCAT('%', CAST(:search AS String), '%'))
+                   OR LOWER(n.description) LIKE LOWER(CONCAT('%', CAST(:search AS String), '%')))
+            """,
+            countQuery = """
+            SELECT COUNT(n) FROM LectureNote n
             LEFT JOIN n.lectureOffering o
             LEFT JOIN o.staff i
             WHERE n.status IN :statuses

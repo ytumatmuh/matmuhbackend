@@ -3,6 +3,7 @@ package com.matmuh.matmuhsite.core.dtos.lectureNote.response;
 import com.matmuh.matmuhsite.entities.NoteReviewStatus;
 
 import com.matmuh.matmuhsite.core.dtos.file.response.FileDto;
+import com.matmuh.matmuhsite.core.dtos.lectureOfferings.response.OfferingSummaryDto;
 import com.matmuh.matmuhsite.core.dtos.user.response.SimpleUserDto;
 import com.matmuh.matmuhsite.core.dtos.user.response.UserDto;
 import lombok.AllArgsConstructor;
@@ -36,6 +37,8 @@ public class LectureNoteDto {
     private NoteReviewStatus status;
 
     private SimpleUserDto approvedBy;
+
+    private OfferingSummaryDto offering;
 
     private FileDto file;
 
