@@ -65,6 +65,9 @@ public final class LectureOfferingCollectionSchema {
                     .withHelp("Personel dizinindeki slug, ör. muslum-hoca. Personel kaydı yoksa boş bırakıp aşağıdaki ham adı doldurun."),
             FieldDefinition.of(FIELD_INSTRUCTOR_RAW_NAME, FieldType.SHORT_TEXT, "Eğitmen (ham ad)")
                     .withHelp("Personel dizininde olmayan hocalar için, ör. Erasmus veya başka bölümden gelen. İkisinden en az biri dolu olmalı."),
+            FieldDefinition.readOnly("lectureName", FieldType.SHORT_TEXT, "Ders adı")
+                    .asComputed()
+                    .withHelp("Katalogdan gelir. Listede kodun yanında okunabilir bir ad görünsün diye var."),
             FieldDefinition.readOnly("instructorName", FieldType.SHORT_TEXT, "Görünen eğitmen adı")
                     .asComputed()
                     .withHelp("Personel kaydı varsa adı, yoksa ham ad. Okuma anında türetilir."),

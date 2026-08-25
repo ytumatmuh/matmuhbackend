@@ -321,6 +321,7 @@ public class LectureOfferingCollectionProvider implements CmsCollectionProvider 
         var data = objectMapper.createObjectNode();
 
         data.put(LectureOfferingCollectionSchema.FIELD_LECTURE_CODE, lecture == null ? null : lecture.getCode());
+        data.put("lectureName", lecture == null ? null : lecture.getName());
         data.put(LectureOfferingCollectionSchema.FIELD_ACADEMIC_YEAR, offering.getAcademicYear());
         data.put(LectureOfferingCollectionSchema.FIELD_SEMESTER, offering.getSemester().name());
         data.put(LectureOfferingCollectionSchema.FIELD_GROUP_NUMBER, offering.getGroupNumber());
