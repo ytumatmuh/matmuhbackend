@@ -30,9 +30,10 @@ public final class AnnouncementCollectionSchema {
                     .withItemFields(List.of(
                             FieldDefinition.required("url", FieldType.URL, "Dosya bağlantısı"),
                             FieldDefinition.required("name", FieldType.SHORT_TEXT, "Dosya adı"),
+                            FieldDefinition.of("previewUrl", FieldType.URL, "Önizleme (PDF)"),
                             FieldDefinition.of("type", FieldType.SHORT_TEXT, "Dosya türü"),
                             FieldDefinition.of("size", FieldType.NUMBER, "Boyut (bayt)")))
-                    .withHelp("Dosyalar POST /api/cms/media ile yüklenir, dönen url buraya yazılır."),
+                    .withHelp("Dosyalar POST /api/cms/media ile yüklenir; yanıttaki url ve (ofis belgelerinde) previewUrl buraya yazılır. previewUrl doluysa arayüz dosyayı indirmeden gösterebilir."),
             FieldDefinition.of("publishedAt", FieldType.DATE, "Yayın tarihi")
                     .asFilterable()
                     .asSortable(),
