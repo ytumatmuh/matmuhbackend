@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.DayOfWeek;
+import java.time.LocalTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
@@ -29,4 +31,22 @@ public interface ScheduleSlotDao extends JpaRepository<ScheduleSlot, UUID> {
 
     @EntityGraph(attributePaths = {"lectureOffering", "lectureOffering.lecture", "lectureOffering.staff"})
     List<ScheduleSlot> findByLectureOfferingIdIn(Collection<UUID> offeringIds);
+
+
+    @EntityGraph(attributePaths = {"lectureOffering", "lectureOffering.lecture", "lectureOffering.staff"})
+    @Query("""
+            SELECT s FROM ScheduleSlot s
+            WHERE s.lectureOffering.academicYear = :academicYear
+              AND s.lectureOffering.semester = :semester
+              AND s.dayOfWeek = :dayOfWeek
+              AND s.startTime < :endTime
+              AND s.endTime > :startTime
+              AND (:excludedId IS NULL OR s.id <> :excludedId)
+            """)
+    List<ScheduleSlot> findOverlapping(@Param("academicYear") String academicYear,
+                                       @Param("semester") Semester semester,
+                                       @Param("dayOfWeek") DayOfWeek dayOfWeek,
+                                       @Param("startTime") LocalTime startTime,
+                                       @Param("endTime") LocalTime endTime,
+                                       @Param("excludedId") UUID excludedId);
 }

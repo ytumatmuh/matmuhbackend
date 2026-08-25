@@ -44,13 +44,15 @@ public class LectureOfferingImportRowWriter {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         LectureMessages.LECTURE_NOT_FOUND + " (" + row.getLectureCode() + ")"));
 
-        var staff = staffDao.findById(row.getStaffId())
+        var staff = row.getStaffId() == null ? null : staffDao.findById(row.getStaffId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         StaffMessages.STAFF_NOT_FOUND + " (" + row.getStaffId() + ")"));
 
-        var groups = staff.getGroups();
-        if (groups != null && !groups.isEmpty() && groups.stream().noneMatch(com.matmuh.matmuhsite.entities.StaffGroup::canTeach)) {
-            throw new com.matmuh.matmuhsite.core.exceptions.BusinessRuleException(StaffMessages.STAFF_CANNOT_TEACH);
+        if (staff != null) {
+            var groups = staff.getGroups();
+            if (groups != null && !groups.isEmpty() && groups.stream().noneMatch(com.matmuh.matmuhsite.entities.StaffGroup::canTeach)) {
+                throw new com.matmuh.matmuhsite.core.exceptions.BusinessRuleException(StaffMessages.STAFF_CANNOT_TEACH);
+            }
         }
 
         var existing = lectureOfferingDao.findByLectureIdAndAcademicYearAndSemesterAndGroupNumber(
@@ -67,6 +69,7 @@ public class LectureOfferingImportRowWriter {
         });
 
         offering.setStaff(staff);
+        offering.setInstructorRawName(normalize(row.getInstructorRawName()));
         if (row.getLanguage() != null) {
             offering.setLanguage(row.getLanguage());
         }
@@ -157,5 +160,9 @@ public class LectureOfferingImportRowWriter {
                     request.getFailedByAbsenceCount() == null ? 0 : request.getFailedByAbsenceCount());
             statistic.setAverageScore(request.getAverageScore());
         }
+    }
+
+    private String normalize(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
     }
 }

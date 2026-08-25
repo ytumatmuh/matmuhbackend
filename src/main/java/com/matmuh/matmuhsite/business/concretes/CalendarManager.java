@@ -62,7 +62,7 @@ public class CalendarManager implements CalendarService {
         calendarEventDao.findInRange(from.atStartOfDay(), to.plusDays(1).atStartOfDay())
                 .forEach(event -> occurrences.add(CalendarExpander.toOccurrence(event)));
 
-        return CalendarExpander.sorted(occurrences);
+        return CalendarExpander.sorted(CalendarExpander.withoutLecturesOnHolidays(occurrences));
     }
 
     @Override
@@ -93,7 +93,7 @@ public class CalendarManager implements CalendarService {
                 .findInRangeForOfferings(from.atStartOfDay(), to.plusDays(1).atStartOfDay(), offeringIds)
                 .forEach(event -> occurrences.add(CalendarExpander.toOccurrence(event)));
 
-        return CalendarExpander.sorted(occurrences);
+        return CalendarExpander.sorted(CalendarExpander.withoutLecturesOnHolidays(occurrences));
     }
 
     private List<CalendarOccurrenceDto> generalEvents(LocalDate from, LocalDate to) {

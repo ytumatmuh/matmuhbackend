@@ -64,7 +64,8 @@ public class GlobalExceptionConfig {
 
     @ExceptionHandler(ResourceAlreadyExistsException.class)
     public ResponseEntity<ErrorResult> handleResourceAlreadyExists(ResourceAlreadyExistsException exception) {
-        return error(exception.getMessage(), HttpStatus.CONFLICT, ErrorCodes.RESOURCE_ALREADY_EXISTS);
+        return error(exception.getMessage(), HttpStatus.CONFLICT, ErrorCodes.RESOURCE_ALREADY_EXISTS,
+                exception.getMessageArguments());
     }
 
     @ExceptionHandler(ArchivedException.class)

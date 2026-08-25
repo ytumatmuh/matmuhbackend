@@ -7,6 +7,7 @@ import com.matmuh.matmuhsite.entities.ExamType;
 import com.matmuh.matmuhsite.entities.InstructionLanguage;
 import com.matmuh.matmuhsite.entities.Semester;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -34,6 +35,11 @@ public class ImportOfferingsRequestDto {
     @NoArgsConstructor
     public static class Row {
 
+        @AssertTrue(message = "{import.instructor.required}")
+        public boolean isInstructorProvided() {
+            return staffId != null || (instructorRawName != null && !instructorRawName.isBlank());
+        }
+
         @NotBlank(message = "{import.lecture.code.not.blank}")
         private String lectureCode;
 
@@ -46,8 +52,10 @@ public class ImportOfferingsRequestDto {
         @NotNull(message = "{import.group.number.not.null}")
         private Integer groupNumber;
 
-        @NotNull(message = "{import.staff.not.null}")
+
         private UUID staffId;
+
+        private String instructorRawName;
 
         private InstructionLanguage language;
 

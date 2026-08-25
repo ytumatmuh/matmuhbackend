@@ -6,6 +6,9 @@ import com.matmuh.matmuhsite.core.dtos.calendar.request.SaveAcademicTermRequestD
 import com.matmuh.matmuhsite.core.dtos.calendar.request.SaveCalendarEventRequestDto;
 import com.matmuh.matmuhsite.core.dtos.calendar.request.SaveScheduleSlotRequestDto;
 import com.matmuh.matmuhsite.core.exceptions.BusinessRuleException;
+import com.matmuh.matmuhsite.core.exceptions.ResourceAlreadyExistsException;
+import com.matmuh.matmuhsite.core.helpers.InstructorNames;
+import com.matmuh.matmuhsite.entities.LectureOffering;
 import com.matmuh.matmuhsite.core.exceptions.ResourceNotFoundException;
 import com.matmuh.matmuhsite.dataAccess.abstracts.*;
 import com.matmuh.matmuhsite.entities.*;
@@ -61,6 +64,47 @@ public class CalendarAdminManager implements CalendarAdminService {
         return academicTermDao.save(term);
     }
 
+
+    private void requireNoConflict(UUID slotId, LectureOffering offering, SaveScheduleSlotRequestDto request) {
+        var overlapping = scheduleSlotDao.findOverlapping(
+                offering.getAcademicYear(), offering.getSemester(), request.getDayOfWeek(),
+                request.getStartTime(), request.getEndTime(), slotId);
+
+        if (overlapping.isEmpty()) {
+            return;
+        }
+
+        var classroom = request.isOnline() ? null : normalize(request.getClassroom());
+        var staffId = offering.getStaff() == null ? null : offering.getStaff().getId();
+
+        for (var other : overlapping) {
+            if (classroom != null && classroom.equalsIgnoreCase(normalize(other.getClassroom()))) {
+                throw new ResourceAlreadyExistsException(CalendarMessages.SLOT_CLASSROOM_CONFLICT,
+                        classroom, request.getDayOfWeek(), request.getStartTime(), request.getEndTime(),
+                        describe(other));
+            }
+
+            var otherStaff = other.getLectureOffering().getStaff();
+            if (staffId != null && otherStaff != null && staffId.equals(otherStaff.getId())) {
+                throw new ResourceAlreadyExistsException(CalendarMessages.SLOT_STAFF_CONFLICT,
+                        InstructorNames.of(offering), request.getDayOfWeek(),
+                        request.getStartTime(), request.getEndTime(), describe(other));
+            }
+        }
+    }
+
+    private String describe(ScheduleSlot slot) {
+        var offering = slot.getLectureOffering();
+        var lecture = offering.getLecture();
+        var code = lecture == null ? "?" : lecture.getCode();
+        return code + " grup " + offering.getGroupNumber()
+                + " (" + slot.getStartTime() + "-" + slot.getEndTime() + ")";
+    }
+
+    private String normalize(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
+    }
+
     @Override
     @Transactional(readOnly = true)
     public List<AcademicTerm> listTerms() {
@@ -90,6 +134,8 @@ public class CalendarAdminManager implements CalendarAdminService {
                 ? new ScheduleSlot()
                 : scheduleSlotDao.findById(id)
                         .orElseThrow(() -> new ResourceNotFoundException(CalendarMessages.SLOT_NOT_FOUND));
+
+        requireNoConflict(id, offering, request);
 
         slot.setLectureOffering(offering);
         slot.setDayOfWeek(request.getDayOfWeek());

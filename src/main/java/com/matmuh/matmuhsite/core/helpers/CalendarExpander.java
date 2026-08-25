@@ -11,6 +11,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Haftalık slotları gerçek günlere açar ve tek seferlik kayıtlarla birleştirir.
@@ -76,6 +77,23 @@ public final class CalendarExpander {
                 offering == null ? null : offering.getLanguage(),
                 InstructorNames.of(offering),
                 event.getExamType());
+    }
+
+
+    public static List<CalendarOccurrenceDto> withoutLecturesOnHolidays(List<CalendarOccurrenceDto> occurrences) {
+        var holidays = occurrences.stream()
+                .filter(occurrence -> occurrence.kind() == CalendarOccurrenceKind.HOLIDAY && occurrence.allDay())
+                .map(CalendarOccurrenceDto::date)
+                .collect(Collectors.toSet());
+
+        if (holidays.isEmpty()) {
+            return occurrences;
+        }
+
+        return occurrences.stream()
+                .filter(occurrence -> occurrence.kind() != CalendarOccurrenceKind.LECTURE
+                        || !holidays.contains(occurrence.date()))
+                .toList();
     }
 
     public static List<CalendarOccurrenceDto> sorted(List<CalendarOccurrenceDto> occurrences) {
