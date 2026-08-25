@@ -44,6 +44,14 @@ public class StorageDownloadController {
         return redirect(storageService.presignedUrl(key));
     }
 
+    @Operation(summary = "Herkese açık belgeyi indir",
+            description = "Form, dilekçe, sınav takvimi gibi giriş istemeyen belgeler. Nesne S3'te private kalır; "
+                    + "kısa ömürlü imzalı adrese yönlendirilir (anonim).")
+    @GetMapping("/public/**")
+    public ResponseEntity<Void> downloadPublicFile(HttpServletRequest request) {
+        return redirect(storageService.presignedUrl(keyOf(request)));
+    }
+
     @Operation(summary = "Public dosyaya yönlendir",
             description = "Eski bağlantılar için CDN adresine yönlendirir.")
     @GetMapping("/images/**")
@@ -54,7 +62,8 @@ public class StorageDownloadController {
     private String keyOf(HttpServletRequest request) {
         var uri = request.getRequestURI();
         var key = StorageKeys.fromRequestPath(uri.substring(uri.indexOf(BASE_PATH) + BASE_PATH.length()));
-        if (!StorageKeys.isPrivate(key) && !key.startsWith(StorageKeys.PUBLIC_PREFIX)) {
+        if (!StorageKeys.isPrivate(key) && !StorageKeys.isPublicFile(key)
+                && !key.startsWith(StorageKeys.PUBLIC_PREFIX)) {
             throw new IllegalArgumentException("Unsupported storage key: " + key);
         }
         return key;

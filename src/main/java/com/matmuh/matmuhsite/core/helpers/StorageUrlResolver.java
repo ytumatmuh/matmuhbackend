@@ -26,9 +26,10 @@ public class StorageUrlResolver {
 
         var normalized = key.startsWith("/") ? key.substring(1) : key;
 
-        return StorageKeys.isPrivate(normalized)
-                ? apiUrl + "/api/uploads/" + normalized
-                : publicDomain + "/" + normalized;
+        if (StorageKeys.isPrivate(normalized) || StorageKeys.isPublicFile(normalized)) {
+            return apiUrl + "/api/uploads/" + normalized;
+        }
+        return publicDomain + "/" + normalized;
     }
 
     private String trimTrailingSlash(String value) {

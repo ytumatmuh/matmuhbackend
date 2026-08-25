@@ -64,9 +64,11 @@ public class UploadValidator {
     }
 
     private Set<String> allowedExtensions(FolderType folderType) {
-        return folderType == FolderType.IMAGE
-                ? uploadProperties.getImageExtensions()
-                : uploadProperties.getFileExtensions();
+        return switch (folderType) {
+            case IMAGE -> uploadProperties.getImageExtensions();
+            case PUBLIC_FILE -> uploadProperties.getPublicFileExtensions();
+            case FILE -> uploadProperties.getFileExtensions();
+        };
     }
 
     private long maximumBytes(FolderType folderType) {

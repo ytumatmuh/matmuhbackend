@@ -10,6 +10,7 @@ public final class StorageKeys {
 
     public static final String PUBLIC_PREFIX = "images/";
     public static final String PRIVATE_PREFIX = "files/";
+    public static final String PUBLIC_FILE_PREFIX = "public/";
 
     private static final String TURKISH = "çÇğĞıİöÖşŞüÜ";
     private static final String ASCII = "cCgGiIoOsSuU";
@@ -40,7 +41,15 @@ public final class StorageKeys {
     }
 
     public static String prefix(FolderType folderType) {
-        return folderType == FolderType.IMAGE ? PUBLIC_PREFIX : PRIVATE_PREFIX;
+        return switch (folderType) {
+            case IMAGE -> PUBLIC_PREFIX;
+            case PUBLIC_FILE -> PUBLIC_FILE_PREFIX;
+            case FILE -> PRIVATE_PREFIX;
+        };
+    }
+
+    public static boolean isPublicFile(String key) {
+        return key != null && key.startsWith(PUBLIC_FILE_PREFIX);
     }
 
     public static boolean isPrivate(String key) {

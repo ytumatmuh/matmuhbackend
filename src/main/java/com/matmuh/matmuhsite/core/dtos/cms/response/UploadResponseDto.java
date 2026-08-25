@@ -1,5 +1,6 @@
 package com.matmuh.matmuhsite.core.dtos.cms.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,11 +18,13 @@ public class UploadResponseDto {
     @Setter
     @AllArgsConstructor
     @NoArgsConstructor
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class UploadDataDto {
         private String url;
+        private String previewUrl;
     }
 
-    public static UploadResponseDto of(String url) {
-        return new UploadResponseDto(new UploadDataDto(url));
+    public static UploadResponseDto of(String url, String previewUrl) {
+        return new UploadResponseDto(new UploadDataDto(url, previewUrl));
     }
 }

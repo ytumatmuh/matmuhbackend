@@ -72,6 +72,7 @@ public class SecurityConfig {
                         ).permitAll()
                         .requestMatchers("/api/auth/login", "/api/auth/refresh", "/api/auth/logout").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/uploads/images/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/uploads/public/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/uploads/files/**").authenticated()
                         .requestMatchers("/api/swagger-ui.html", "/api/swagger-ui/**", "/api/v3/api-docs/**").permitAll()
                         .requestMatchers("/cdn/**").permitAll()

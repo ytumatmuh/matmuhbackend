@@ -15,6 +15,7 @@ import com.matmuh.matmuhsite.core.dtos.cms.response.UploadResponseDto;
 import com.matmuh.matmuhsite.core.exceptions.CmsValidationException;
 import com.matmuh.matmuhsite.core.helpers.StorageUrlResolver;
 import com.matmuh.matmuhsite.core.helpers.UploadValidator;
+import com.matmuh.matmuhsite.core.utilities.preview.DocumentPreviewService;
 import com.matmuh.matmuhsite.core.utilities.storage.StorageService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -38,16 +39,19 @@ public class CmsContentController {
     private final StorageService storageService;
     private final StorageUrlResolver storageUrlResolver;
     private final UploadValidator uploadValidator;
+    private final DocumentPreviewService documentPreviewService;
 
 
     public CmsContentController(ContentService contentService,
                                 StorageService storageService,
                                 StorageUrlResolver storageUrlResolver,
-                                UploadValidator uploadValidator) {
+                                UploadValidator uploadValidator,
+                                DocumentPreviewService documentPreviewService) {
         this.contentService = contentService;
         this.storageService = storageService;
         this.storageUrlResolver = storageUrlResolver;
         this.uploadValidator = uploadValidator;
+        this.documentPreviewService = documentPreviewService;
     }
 
     @Operation(summary = "Public içerik", description = "Yayınlanmış blokları döner (anonim).")
@@ -119,9 +123,12 @@ public class CmsContentController {
         return contentService.sync(manifests, locales);
     }
 
-    @Operation(summary = "Medya yükle", description = "CMS görseli veya duyuru/haber eki yükler, {data:{url}} döner. Yüklenen dosya herkese açık okunabilir (ADMIN).")
+    @Operation(summary = "Medya yükle", description = "CMS görseli veya belge eki yükler. Görseller images/ (CDN) altına gider. Belgeler publicAccess=true ise "
+                    + "giriş istemeyen public/ altına, false ise giriş isteyen files/ altına yazılır. Ofis belgelerinde PDF önizlemesi "
+                    + "üretilirse yanıt {data:{url, previewUrl}} taşır (ADMIN/EDITOR).")
     @PostMapping("/media")
-    public UploadResponseDto upload(@RequestParam("file") MultipartFile file) {
+    public UploadResponseDto upload(@RequestParam("file") MultipartFile file,
+                                    @RequestParam(required = false, defaultValue = "true") boolean publicAccess) {
         if (file.isEmpty()) {
             throw new CmsValidationException(CmsMessages.FILE_EMPTY);
         }
@@ -129,21 +136,27 @@ public class CmsContentController {
             throw new CmsValidationException(CmsMessages.FILE_TOO_LARGE);
         }
 
-        if (!uploadValidator.isAllowed(file, FolderType.IMAGE)) {
+        var folderType = folderTypeFor(file, publicAccess);
+        if (!uploadValidator.isAllowed(file, folderType)) {
             throw new CmsValidationException(CmsMessages.FILE_TYPE_NOT_SUPPORTED);
         }
 
         try {
-            var key = storageService.uploadFile(
-                    file.getBytes(),
-                    file.getOriginalFilename(),
-                    file.getContentType(),
-                    FolderType.IMAGE);
-            var url = storageUrlResolver.urlFor(key);
-            return UploadResponseDto.of(url);
+            var bytes = file.getBytes();
+            var key = storageService.uploadFile(bytes, file.getOriginalFilename(), file.getContentType(), folderType);
+            var previewKey = documentPreviewService.createPdfPreview(bytes, file.getOriginalFilename(), folderType);
+
+            return UploadResponseDto.of(storageUrlResolver.urlFor(key), storageUrlResolver.urlFor(previewKey));
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
+    }
+
+    private FolderType folderTypeFor(MultipartFile file, boolean publicAccess) {
+        if (uploadValidator.isAllowed(file, FolderType.IMAGE)) {
+            return FolderType.IMAGE;
+        }
+        return publicAccess ? FolderType.PUBLIC_FILE : FolderType.FILE;
     }
 
     private boolean isEditor(Authentication authentication) {

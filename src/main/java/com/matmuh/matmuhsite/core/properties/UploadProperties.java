@@ -26,6 +26,10 @@ public class UploadProperties {
             "txt", "md", "zip", "rar", "7z", "png", "jpg", "jpeg", "webp"));
 
 
+
+    private Set<String> publicFileExtensions = new LinkedHashSet<>(List.of(
+            "pdf", "doc", "docx", "ppt", "pptx", "xls", "xlsx", "txt", "png", "jpg", "jpeg", "webp"));
+
     private Set<String> imageExtensions = new LinkedHashSet<>(List.of(
             "png", "jpg", "jpeg", "webp", "gif"));
 }

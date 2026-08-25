@@ -36,6 +36,11 @@ public class DocumentPreviewService {
 
 
     public String createPdfPreview(byte[] source, String originalFileName) {
+        return createPdfPreview(source, originalFileName, FolderType.FILE);
+    }
+
+
+    public String createPdfPreview(byte[] source, String originalFileName, FolderType folderType) {
         if (!previewProperties.isEnabled() || !previewProperties.isConvertible(extensionOf(originalFileName))) {
             return null;
         }
@@ -57,7 +62,7 @@ public class DocumentPreviewService {
             }
 
             var key = storageService.uploadFile(pdf, previewFileName(originalFileName),
-                    MediaType.APPLICATION_PDF_VALUE, FolderType.FILE);
+                    MediaType.APPLICATION_PDF_VALUE, folderType);
             logger.info("Preview generated for {} -> {}", originalFileName, key);
             return key;
         } catch (RuntimeException exception) {
