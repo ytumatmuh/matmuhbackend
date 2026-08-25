@@ -21,6 +21,8 @@ public interface LectureDao extends JpaRepository<Lecture, UUID> {
 
     Optional<Lecture> findByCode(String code);
 
+    Optional<Lecture> findByCodeIgnoreCase(String code);
+
     boolean existsByCode(String code);
 
     Optional<Lecture> findBySlug(String slug);

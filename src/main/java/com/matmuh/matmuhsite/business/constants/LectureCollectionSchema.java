@@ -98,6 +98,6 @@ public final class LectureCollectionSchema {
             FieldDefinition.of("staff", FieldType.OBJECT_ARRAY, "Personel")
                     .asReadOnly()
                     .withItemFields(STAFF_FIELDS)
-                    .withHelp("Personel ataması dönem kayıtlarından gelir, buradan düzenlenemez.")
+                    .withHelp("Personel ataması dönem kayıtlarından gelir. Düzenlemek için Dönem Kayıtları koleksiyonunu açın.")
     ));
 }

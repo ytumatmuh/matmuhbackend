@@ -50,6 +50,14 @@ public class CollectionRegistry {
                     false,
                     false),
             new CollectionDefinition(
+                    LectureOfferingCollectionSchema.KEY,
+                    LectureOfferingCollectionSchema.SCHEMA,
+                    SlugSource.AUTO_GENERATED,
+                    LectureOfferingCollectionSchema.SLUG_SOURCE_FIELD,
+                    true,
+                    false,
+                    false),
+            new CollectionDefinition(
                     AcademicTermCollectionSchema.KEY,
                     AcademicTermCollectionSchema.SCHEMA,
                     SlugSource.AUTO_GENERATED,
