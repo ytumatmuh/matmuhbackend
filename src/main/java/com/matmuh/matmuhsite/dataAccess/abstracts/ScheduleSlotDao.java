@@ -29,6 +29,9 @@ public interface ScheduleSlotDao extends JpaRepository<ScheduleSlot, UUID> {
     List<ScheduleSlot> findByTerm(@Param("academicYear") String academicYear,
                                   @Param("semester") Semester semester);
 
+    // Güvenliği kendi sorgusundan değil girdisinden geliyor: id'ler her zaman
+    // EnrollmentDao.findByUserId'den (join'li, soft-delete süzgeci uygulanmış) geliyor.
+    // Başka bir yerden beslenirse silinmiş grupların slot'ları da döner.
     @EntityGraph(attributePaths = {"lectureOffering", "lectureOffering.lecture", "lectureOffering.staff"})
     List<ScheduleSlot> findByLectureOfferingIdIn(Collection<UUID> offeringIds);
 
