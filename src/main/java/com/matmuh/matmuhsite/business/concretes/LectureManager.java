@@ -111,7 +111,7 @@ public class LectureManager implements LectureService {
 
 
 
-        boolean exists = lectureDao.existsByCode(createLectureRequestDto.getCode());
+        boolean exists = lectureDao.existsByCodeIgnoreCase(createLectureRequestDto.getCode());
         if (exists) {
             logger.error("Lecture creation failed: Lecture with code {} already exists.", createLectureRequestDto.getCode());
             throw new ResourceAlreadyExistsException(LectureMessages.LECTURE_CODE_EXISTS);
@@ -174,7 +174,7 @@ public class LectureManager implements LectureService {
     public LectureDto getLectureByCode(String code) {
         logger.debug("Retrieving lecture with code: {}", code);
 
-        var lecture = lectureDao.findWithDetailsByCode(code).orElseThrow(() -> {
+        var lecture = lectureDao.findWithDetailsByCodeIgnoreCase(code).orElseThrow(() -> {
             logger.error("Lecture with code {} not found.", code);
             return new ResourceNotFoundException(LectureMessages.LECTURE_NOT_FOUND);
         });
@@ -212,8 +212,9 @@ public class LectureManager implements LectureService {
             return new ResourceNotFoundException(LectureMessages.LECTURE_NOT_FOUND);
         });
 
-        if (request.getCode() != null && !request.getCode().equals(lecture.getCode())
-                && lectureDao.existsByCode(request.getCode())) {
+
+        if (request.getCode() != null && !request.getCode().equalsIgnoreCase(lecture.getCode())
+                && lectureDao.existsByCodeIgnoreCase(request.getCode())) {
             logger.error("Lecture update failed: code {} already exists.", request.getCode());
             throw new ResourceAlreadyExistsException(LectureMessages.LECTURE_CODE_EXISTS);
         }

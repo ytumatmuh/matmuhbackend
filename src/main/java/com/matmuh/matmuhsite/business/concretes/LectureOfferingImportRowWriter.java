@@ -40,7 +40,7 @@ public class LectureOfferingImportRowWriter {
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public RowOutcome write(ImportOfferingsRequestDto.Row row) {
-        var lecture = lectureDao.findByCode(row.getLectureCode())
+        var lecture = lectureDao.findByCodeIgnoreCase(row.getLectureCode())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         LectureMessages.LECTURE_NOT_FOUND + " (" + row.getLectureCode() + ")"));
 

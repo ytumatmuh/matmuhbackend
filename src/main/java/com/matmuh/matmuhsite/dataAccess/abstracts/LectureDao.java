@@ -23,7 +23,7 @@ public interface LectureDao extends JpaRepository<Lecture, UUID> {
 
     Optional<Lecture> findByCodeIgnoreCase(String code);
 
-    boolean existsByCode(String code);
+    boolean existsByCodeIgnoreCase(String code);
 
     Optional<Lecture> findBySlug(String slug);
 
@@ -45,7 +45,7 @@ public interface LectureDao extends JpaRepository<Lecture, UUID> {
             "offerings.gradeResults.gradeDistributions",
             "offerings.examStatistics"
     })
-    Optional<Lecture> findWithDetailsByCode(String code);
+    Optional<Lecture> findWithDetailsByCodeIgnoreCase(String code);
 
     @Query("""
             SELECT l FROM Lecture l
