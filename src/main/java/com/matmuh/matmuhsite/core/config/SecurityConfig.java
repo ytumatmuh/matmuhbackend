@@ -78,7 +78,8 @@ public class SecurityConfig {
                         .requestMatchers("/cdn/**").permitAll()
 
                         .requestMatchers("/api/service-keys/**").hasRole("ADMIN")
-                        .requestMatchers("/api/calendar-admin/**").hasRole("ADMIN")
+
+                        .requestMatchers("/api/calendar-admin/**").hasAnyRole("ADMIN", "EDITOR")
 
 
                         .requestMatchers(HttpMethod.GET, "/api/calendar/me").authenticated()
@@ -101,6 +102,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/cms/collections/**").hasAnyRole("ADMIN", "EDITOR")
 
                         .requestMatchers(HttpMethod.POST, "/api/lectures/{id}/notes").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers(HttpMethod.POST, "/api/lectures/{id}/offerings").hasAnyRole("ADMIN", "EDITOR")
                         .requestMatchers(HttpMethod.GET,  "/api/lectures/{id}/notes").authenticated()
                         .requestMatchers(HttpMethod.GET,  "/api/lectures/{id}/offerings").authenticated()
                         .requestMatchers(HttpMethod.GET,  "/api/lectures/{id}/statistics").authenticated()
@@ -122,9 +124,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/lecture-notes/**").hasRole("ADMIN")
 
                         .requestMatchers(HttpMethod.GET, "/api/lecture-offerings/**").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/api/lecture-offerings/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/lecture-offerings/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PATCH, "/api/lecture-offerings/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/lecture-offerings/**").hasAnyRole("ADMIN", "EDITOR")
+                        .requestMatchers(HttpMethod.PUT, "/api/lecture-offerings/**").hasAnyRole("ADMIN", "EDITOR")
+                        .requestMatchers(HttpMethod.PATCH, "/api/lecture-offerings/**").hasAnyRole("ADMIN", "EDITOR")
                         .requestMatchers(HttpMethod.DELETE, "/api/lecture-offerings/**").hasRole("ADMIN")
 
                         .requestMatchers(HttpMethod.GET, "/api/academic-years").permitAll()
