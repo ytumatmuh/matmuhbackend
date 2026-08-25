@@ -45,6 +45,7 @@ public class LectureOfferingImportManager implements LectureOfferingImportServic
             try {
                 var outcome = rowWriter.write(row);
                 result.setOfferingId(outcome.offeringId());
+                result.setWarnings(outcome.warnings());
                 result.setStatus(outcome.created()
                         ? ImportResultDto.Status.CREATED
                         : ImportResultDto.Status.UPDATED);
@@ -63,7 +64,9 @@ public class LectureOfferingImportManager implements LectureOfferingImportServic
             results.add(result);
         }
 
-        logger.info("Import finished: {} created, {} updated, {} failed", created, updated, failed);
+        var warned = results.stream().filter(row -> row.getWarnings() != null).count();
+        logger.info("Import finished: {} created, {} updated, {} failed, {} with warnings",
+                created, updated, failed, warned);
 
         return new ImportResultDto(rows.size(), created, updated, failed, results);
     }

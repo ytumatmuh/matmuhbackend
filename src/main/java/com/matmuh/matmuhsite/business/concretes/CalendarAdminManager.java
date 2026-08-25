@@ -12,12 +12,14 @@ import com.matmuh.matmuhsite.entities.LectureOffering;
 import com.matmuh.matmuhsite.core.exceptions.ResourceNotFoundException;
 import com.matmuh.matmuhsite.dataAccess.abstracts.*;
 import com.matmuh.matmuhsite.entities.*;
+import com.matmuh.matmuhsite.core.properties.AcademicProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -29,15 +31,18 @@ public class CalendarAdminManager implements CalendarAdminService {
     private final ScheduleSlotDao scheduleSlotDao;
     private final CalendarEventDao calendarEventDao;
     private final LectureOfferingDao lectureOfferingDao;
+    private final AcademicProperties academicProperties;
 
     public CalendarAdminManager(AcademicTermDao academicTermDao,
                                 ScheduleSlotDao scheduleSlotDao,
                                 CalendarEventDao calendarEventDao,
-                                LectureOfferingDao lectureOfferingDao) {
+                                LectureOfferingDao lectureOfferingDao,
+                                AcademicProperties academicProperties) {
         this.academicTermDao = academicTermDao;
         this.scheduleSlotDao = scheduleSlotDao;
         this.calendarEventDao = calendarEventDao;
         this.lectureOfferingDao = lectureOfferingDao;
+        this.academicProperties = academicProperties;
     }
 
     // --- dönemler ---
@@ -65,32 +70,55 @@ public class CalendarAdminManager implements CalendarAdminService {
     }
 
 
-    private void requireNoConflict(UUID slotId, LectureOffering offering, SaveScheduleSlotRequestDto request) {
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<SlotConflict> findSlotConflict(UUID id, SaveScheduleSlotRequestDto request) {
+        var offering = lectureOfferingDao.findById(request.getLectureOfferingId())
+                .orElseThrow(() -> new ResourceNotFoundException(CalendarMessages.OFFERING_NOT_FOUND));
+
+        return findConflict(id, offering, request);
+    }
+
+    private Optional<SlotConflict> findConflict(UUID slotId, LectureOffering offering,
+                                                SaveScheduleSlotRequestDto request) {
         var overlapping = scheduleSlotDao.findOverlapping(
                 offering.getAcademicYear(), offering.getSemester(), request.getDayOfWeek(),
                 request.getStartTime(), request.getEndTime(), slotId);
 
         if (overlapping.isEmpty()) {
-            return;
+            return Optional.empty();
         }
 
         var classroom = request.isOnline() ? null : normalize(request.getClassroom());
         var staffId = offering.getStaff() == null ? null : offering.getStaff().getId();
 
+
+        var ownsClassroom = academicProperties.isDepartmentCode(lectureCodeOf(offering));
+
         for (var other : overlapping) {
-            if (classroom != null && classroom.equalsIgnoreCase(normalize(other.getClassroom()))) {
-                throw new ResourceAlreadyExistsException(CalendarMessages.SLOT_CLASSROOM_CONFLICT,
-                        classroom, request.getDayOfWeek(), request.getStartTime(), request.getEndTime(),
-                        describe(other));
+            if (classroom != null && ownsClassroom
+                    && academicProperties.isDepartmentCode(lectureCodeOf(other.getLectureOffering()))
+                    && classroom.equalsIgnoreCase(normalize(other.getClassroom()))) {
+                return Optional.of(new SlotConflict(CalendarMessages.SLOT_CLASSROOM_CONFLICT,
+                        new Object[]{classroom, request.getDayOfWeek(), request.getStartTime(),
+                                request.getEndTime(), describe(other)}));
             }
 
             var otherStaff = other.getLectureOffering().getStaff();
             if (staffId != null && otherStaff != null && staffId.equals(otherStaff.getId())) {
-                throw new ResourceAlreadyExistsException(CalendarMessages.SLOT_STAFF_CONFLICT,
-                        InstructorNames.of(offering), request.getDayOfWeek(),
-                        request.getStartTime(), request.getEndTime(), describe(other));
+                return Optional.of(new SlotConflict(CalendarMessages.SLOT_STAFF_CONFLICT,
+                        new Object[]{InstructorNames.of(offering), request.getDayOfWeek(),
+                                request.getStartTime(), request.getEndTime(), describe(other)}));
             }
         }
+
+        return Optional.empty();
+    }
+
+    private void requireNoConflict(UUID slotId, LectureOffering offering, SaveScheduleSlotRequestDto request) {
+        findConflict(slotId, offering, request).ifPresent(conflict -> {
+            throw new ResourceAlreadyExistsException(conflict.messageKey(), conflict.arguments());
+        });
     }
 
     private String describe(ScheduleSlot slot) {
@@ -103,6 +131,11 @@ public class CalendarAdminManager implements CalendarAdminService {
 
     private String normalize(String value) {
         return value == null || value.isBlank() ? null : value.trim();
+    }
+
+    private String lectureCodeOf(LectureOffering offering) {
+        var lecture = offering == null ? null : offering.getLecture();
+        return lecture == null ? null : lecture.getCode();
     }
 
     @Override

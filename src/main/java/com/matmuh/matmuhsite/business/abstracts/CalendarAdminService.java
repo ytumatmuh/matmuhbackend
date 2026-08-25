@@ -8,6 +8,7 @@ import com.matmuh.matmuhsite.entities.CalendarEvent;
 import com.matmuh.matmuhsite.entities.ScheduleSlot;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface CalendarAdminService {
@@ -19,6 +20,12 @@ public interface CalendarAdminService {
     void deleteTerm(UUID id);
 
     ScheduleSlot saveSlot(UUID id, SaveScheduleSlotRequestDto request);
+
+
+    record SlotConflict(String messageKey, Object[] arguments) {
+    }
+
+    Optional<SlotConflict> findSlotConflict(UUID id, SaveScheduleSlotRequestDto request);
 
     List<ScheduleSlot> listSlots(UUID lectureOfferingId);
 

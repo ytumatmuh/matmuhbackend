@@ -16,6 +16,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.DayOfWeek;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -64,6 +66,29 @@ public class ImportOfferingsRequestDto {
 
         @Valid
         private List<ExamStatisticEntry> examStatistics;
+
+        @Valid
+        private List<SlotEntry> scheduleSlots;
+    }
+
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class SlotEntry {
+
+        @NotNull(message = "{slot.day.not.null}")
+        private DayOfWeek dayOfWeek;
+
+        @NotNull(message = "{slot.start.not.null}")
+        private LocalTime startTime;
+
+        @NotNull(message = "{slot.end.not.null}")
+        private LocalTime endTime;
+
+        private String classroom;
+
+        private boolean online;
     }
 
     @Getter

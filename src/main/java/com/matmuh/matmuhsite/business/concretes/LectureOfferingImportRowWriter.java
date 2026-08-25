@@ -1,5 +1,9 @@
 package com.matmuh.matmuhsite.business.concretes;
 
+import com.matmuh.matmuhsite.business.abstracts.CalendarAdminService;
+import com.matmuh.matmuhsite.business.constants.CalendarMessages;
+import com.matmuh.matmuhsite.core.dtos.calendar.request.SaveScheduleSlotRequestDto;
+import com.matmuh.matmuhsite.core.helpers.MessageResolver;
 import com.matmuh.matmuhsite.business.constants.LectureMessages;
 import com.matmuh.matmuhsite.business.constants.StaffMessages;
 import com.matmuh.matmuhsite.core.dtos.lectureOfferings.request.ImportOfferingsRequestDto;
@@ -17,6 +21,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DayOfWeek;
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.UUID;
 
@@ -24,18 +33,24 @@ import java.util.UUID;
 @Component
 public class LectureOfferingImportRowWriter {
 
-    public record RowOutcome(UUID offeringId, boolean created) {
+    public record RowOutcome(UUID offeringId, boolean created, List<String> warnings) {
     }
 
     private final LectureDao lectureDao;
     private final StaffDao staffDao;
     private final LectureOfferingDao lectureOfferingDao;
+    private final CalendarAdminService calendarAdminService;
+    private final MessageResolver messageResolver;
 
     public LectureOfferingImportRowWriter(LectureDao lectureDao, StaffDao staffDao,
-                                          LectureOfferingDao lectureOfferingDao) {
+                                          LectureOfferingDao lectureOfferingDao,
+                                          CalendarAdminService calendarAdminService,
+                                          MessageResolver messageResolver) {
         this.lectureDao = lectureDao;
         this.staffDao = staffDao;
         this.lectureOfferingDao = lectureOfferingDao;
+        this.calendarAdminService = calendarAdminService;
+        this.messageResolver = messageResolver;
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -78,7 +93,67 @@ public class LectureOfferingImportRowWriter {
         applyExamStatistics(offering, row.getExamStatistics());
 
         var saved = lectureOfferingDao.save(offering);
-        return new RowOutcome(saved.getId(), created);
+        var warnings = applyScheduleSlots(saved.getId(), row.getScheduleSlots());
+
+        return new RowOutcome(saved.getId(), created, warnings.isEmpty() ? null : warnings);
+    }
+
+    private List<String> applyScheduleSlots(UUID offeringId, List<ImportOfferingsRequestDto.SlotEntry> entries) {
+        var warnings = new ArrayList<String>();
+        if (entries == null) {
+            return warnings;
+        }
+
+        var existing = new LinkedHashMap<String, UUID>();
+        for (var slot : calendarAdminService.listSlots(offeringId)) {
+            existing.put(slotKey(slot.getDayOfWeek(), slot.getStartTime()), slot.getId());
+        }
+
+        var keep = new HashSet<String>();
+
+        for (var index = 0; index < entries.size(); index++) {
+            var entry = entries.get(index);
+            var key = slotKey(entry.getDayOfWeek(), entry.getStartTime());
+            var current = existing.get(key);
+
+            if (!entry.getEndTime().isAfter(entry.getStartTime())) {
+                warnings.add(describe(index, messageResolver.resolve(CalendarMessages.SLOT_TIME_INVALID)));
+                keep.add(key);
+                continue;
+            }
+
+            var request = new SaveScheduleSlotRequestDto(offeringId, entry.getDayOfWeek(),
+                    entry.getStartTime(), entry.getEndTime(), entry.getClassroom(), entry.isOnline());
+
+
+            var conflict = calendarAdminService.findSlotConflict(current, request);
+            if (conflict.isPresent()) {
+                warnings.add(describe(index,
+                        messageResolver.resolve(conflict.get().messageKey(), conflict.get().arguments())));
+                keep.add(key);
+                continue;
+            }
+
+            calendarAdminService.saveSlot(current, request);
+            keep.add(key);
+        }
+
+
+        existing.forEach((key, slotId) -> {
+            if (!keep.contains(key)) {
+                calendarAdminService.deleteSlot(slotId);
+            }
+        });
+
+        return warnings;
+    }
+
+    private String slotKey(DayOfWeek dayOfWeek, LocalTime startTime) {
+        return dayOfWeek + "@" + startTime;
+    }
+
+    private String describe(int index, String message) {
+        return "scheduleSlots[" + index + "]: " + message;
     }
 
     private void applyGradeResults(LectureOffering offering,

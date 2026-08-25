@@ -43,5 +43,8 @@ public class ImportResultDto {
 
         private UUID offeringId;
         private String error;
+
+
+        private List<String> warnings;
     }
 }
