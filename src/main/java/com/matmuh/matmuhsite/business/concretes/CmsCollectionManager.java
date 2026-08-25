@@ -128,7 +128,7 @@ public class CmsCollectionManager implements CmsCollectionService {
 
         var showArchived = archived && userId != null;
 
-        logger.info("Listing collection {} filters={} sort={} archived={} offset={} limit={} editor={}",
+        logger.debug("Listing collection {} filters={} sort={} archived={} offset={} limit={} editor={}",
                 key, filters == null ? Set.of() : filters.keySet(), sort, showArchived, offset, limit, userId != null);
 
         var filterNode = CollectionFilterParser.build(def.schema(), filters);

@@ -27,6 +27,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import com.matmuh.matmuhsite.core.helpers.LogMasks;
 
 @Service
 public class UserManager implements UserService {
@@ -50,7 +51,7 @@ public class UserManager implements UserService {
 
     @Override
     public UserDto getUserById(UUID id) {
-        logger.info("Getting user by id: {}", id);
+        logger.debug("Getting user by id: {}", id);
         User user = userDao.findById(id).orElseThrow(() -> {
             logger.warn("User not found with id: {}", id);
             return new ResourceNotFoundException(UserMessages.USER_NOT_FOUND_WITH_ID);
@@ -61,7 +62,7 @@ public class UserManager implements UserService {
 
     @Override
     public UserDto createUser(CreateUserRequestDto createUserRequestDto) {
-        logger.info("Creating user with email: {}", createUserRequestDto.getEmail());
+        logger.info("Creating user with email: {}", LogMasks.email(createUserRequestDto.getEmail()));
 
         User user = new User();
         user.setFirstName(createUserRequestDto.getFirstName());
@@ -73,7 +74,7 @@ public class UserManager implements UserService {
             user.setPassword(passwordEncoder.encode(createUserRequestDto.getPassword()));
         }
 
-        logger.info("User created with email: {}, userId: {}", createUserRequestDto.getEmail(), user.getId());
+        logger.info("User created with id: {}", user.getId());
 
         var savedUser = userDao.save(user);
 
@@ -88,32 +89,32 @@ public class UserManager implements UserService {
 
     @Override
     public UserDto createUserFromOauth2(User user) {
-        logger.info("Creating user from OAuth2 with email: {}", user.getEmail());
+        logger.info("Creating user from OAuth2 with email: {}", LogMasks.email(user.getEmail()));
         var savedUser = userDao.save(user);
         UserDto userDto = new UserDto();
         userDto.setId(savedUser.getId());
         userDto.setEmail(savedUser.getEmail());
         userDto.setFirstName(savedUser.getFirstName());
         userDto.setLastName(savedUser.getLastName());
-        logger.info("User created from OAuth2 with email: {}, userId: {}", user.getEmail(), savedUser.getId());
+        logger.info("User created from OAuth2 with id: {}", savedUser.getId());
         return userDto;
     }
 
     @Override
     public User getUserEntityByEmail(String email) {
-        logger.info("Getting user entity by email: {}", email);
+        logger.debug("Getting user entity by email: {}", LogMasks.email(email));
         return userDao.findByEmail(email).orElseThrow(() -> {
-            logger.warn("User entity not found with email: {}", email);
+            logger.warn("User entity not found with email: {}", LogMasks.email(email));
             return new ResourceNotFoundException(UserMessages.USER_NOT_FOUND_WITH_EMAIL);
         });
     }
 
     @Override
     public UserDto getUserByEmail(String email) {
-        logger.info("Getting user by email: {}", email);
+        logger.debug("Getting user by email: {}", LogMasks.email(email));
 
         User user = userDao.findByEmail(email).orElseThrow(() -> {
-            logger.info("User not found with email: {}", email);
+            logger.info("User not found with email: {}", LogMasks.email(email));
             throw new  ResourceNotFoundException(UserMessages.USER_NOT_FOUND_WITH_EMAIL);
         });
 
@@ -123,7 +124,7 @@ public class UserManager implements UserService {
 
     @Override
     public List<UserDto> getUsers() {
-        logger.info("Getting all users");
+        logger.debug("Getting all users");
         List<User> users = userDao.findAll();
         return userMapper.toDtoList(users);
     }
@@ -131,7 +132,7 @@ public class UserManager implements UserService {
 
     @Override
     public PageDto<UserDto> getUsers(Role role, String search, Pageable pageable) {
-        logger.info("Getting users role={} search={} page={}", role, search, pageable.getPageNumber());
+        logger.debug("Getting users role={} search={} page={}", role, search, pageable.getPageNumber());
         var page = userDao.search(role, search == null || search.isBlank() ? null : search.trim(), pageable);
         return PageDto.of(page, userMapper::toDto);
     }

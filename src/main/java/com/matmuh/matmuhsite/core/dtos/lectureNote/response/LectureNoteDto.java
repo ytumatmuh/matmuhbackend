@@ -41,6 +41,8 @@ public class LectureNoteDto {
 
     private SimpleUserDto approvedBy;
 
+    private String previewUrl;
+
     private OfferingSummaryDto offering;
 
     private FileDto file;

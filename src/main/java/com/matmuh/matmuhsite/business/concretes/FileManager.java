@@ -128,7 +128,7 @@ public class FileManager implements FileService {
 
     @Override
     public File getReference(UUID id) {
-        logger.info("Getting reference for file with ID: {}", id);
+        logger.debug("Getting reference for file with ID: {}", id);
 
         return fileDao.getReferenceById(id);
     }

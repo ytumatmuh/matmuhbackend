@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
+import com.matmuh.matmuhsite.core.helpers.LogMasks;
 
 @Service
 public class EnrollmentManager implements EnrollmentService {
@@ -54,7 +55,7 @@ public class EnrollmentManager implements EnrollmentService {
                 .lectureOffering(offering)
                 .build());
 
-        logger.info("User {} enrolled in offering {}", email, offering.getId());
+        logger.info("User {} enrolled in offering {}", LogMasks.email(email), offering.getId());
         return toDto(saved);
     }
 
@@ -79,7 +80,7 @@ public class EnrollmentManager implements EnrollmentService {
                 .orElseThrow(() -> new ResourceNotFoundException(EnrollmentMessages.NOT_ENROLLED));
 
         enrollmentDao.delete(enrollment);
-        logger.info("User {} unenrolled from offering {}", email, lectureOfferingId);
+        logger.info("User {} unenrolled from offering {}", LogMasks.email(email), lectureOfferingId);
     }
 
     private EnrollmentDto toDto(Enrollment enrollment) {

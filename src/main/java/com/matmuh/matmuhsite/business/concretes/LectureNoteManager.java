@@ -14,6 +14,7 @@ import com.matmuh.matmuhsite.core.dtos.lectureNote.response.LectureNoteWithLectu
 import com.matmuh.matmuhsite.core.exceptions.BusinessRuleException;
 import com.matmuh.matmuhsite.core.exceptions.PermissionDeniedException;
 import com.matmuh.matmuhsite.core.properties.UploadProperties;
+import com.matmuh.matmuhsite.core.utilities.preview.DocumentPreviewService;
 import com.matmuh.matmuhsite.core.exceptions.ResourceNotFoundException;
 import com.matmuh.matmuhsite.core.mappers.LectureNoteMapper;
 import com.matmuh.matmuhsite.dataAccess.abstracts.LectureNoteDao;
@@ -32,6 +33,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
@@ -50,14 +52,18 @@ public class LectureNoteManager implements LectureNoteService {
 
     private final UploadProperties uploadProperties;
 
+    private final DocumentPreviewService documentPreviewService;
+
     public LectureNoteManager(LectureNoteDao lectureNoteDao, FileService fileService, LectureNoteMapper lectureNoteMapper, SecurityService securityService, LectureOfferingDao lectureOfferingDao,
-                              UploadProperties uploadProperties) {
+                              UploadProperties uploadProperties,
+                              DocumentPreviewService documentPreviewService) {
         this.lectureNoteDao = lectureNoteDao;
         this.fileService = fileService;
         this.lectureNoteMapper = lectureNoteMapper;
         this.securityService = securityService;
         this.lectureOfferingDao = lectureOfferingDao;
         this.uploadProperties = uploadProperties;
+        this.documentPreviewService = documentPreviewService;
     }
 
     @Override
@@ -77,6 +83,7 @@ public class LectureNoteManager implements LectureNoteService {
         requirePendingQuota();
 
         FileDto fileDto = fileService.uploadFile(file);
+        var previewKey = previewFor(file);
 
         LectureNote lectureNote = lectureNoteMapper.toLectureNote(lectureNoteCreateRequestDto, null);
 
@@ -90,6 +97,8 @@ public class LectureNoteManager implements LectureNoteService {
             lectureNote.setType(NoteType.OTHER);
         }
 
+        lectureNote.setPreviewUrl(previewKey);
+
         LectureNote savedLectureNote = lectureNoteDao.save(lectureNote);
         logger.info("Lecture note created with ID: {}", savedLectureNote.getId());
 
@@ -98,13 +107,13 @@ public class LectureNoteManager implements LectureNoteService {
 
     @Override
     public LectureNote getReference(UUID id) {
-        logger.info("Getting reference for lecture note with ID: {}", id);
+        logger.debug("Getting reference for lecture note with ID: {}", id);
         return lectureNoteDao.getReferenceById(id);
     }
 
     @Override
     public List<LectureNote> getLectureNotesByLecture(Lecture lecture, Collection<NoteType> types) {
-        logger.info("Getting lecture notes for lecture ID: {} types={}", lecture.getId(), types);
+        logger.debug("Getting lecture notes for lecture ID: {} types={}", lecture.getId(), types);
         return lectureNoteDao.findVisibleByLecture(lecture, NoteReviewStatus.APPROVED, filtersByType(types), requestedTypes(types));
     }
 
@@ -146,7 +155,7 @@ public class LectureNoteManager implements LectureNoteService {
     @Transactional(readOnly = true)
     public PageDto<LectureNoteWithLectureDto> getAllNotes(Collection<NoteReviewStatus> statuses, Collection<NoteType> types, UUID lectureId, UUID lectureOfferingId,
                                                           UUID staffId, UUID uploaderId, String search, Pageable pageable) {
-        logger.info("Getting lecture notes statuses={} types={} lectureId={} offeringId={} staffId={} uploaderId={} search={} page={}",
+        logger.debug("Getting lecture notes statuses={} types={} lectureId={} offeringId={} staffId={} uploaderId={} search={} page={}",
                 statuses, types, lectureId, lectureOfferingId, staffId, uploaderId, search, pageable.getPageNumber());
 
         var page = lectureNoteDao.search(requestedStatuses(statuses), filtersByType(types), requestedTypes(types), lectureId, lectureOfferingId, staffId, uploaderId,
@@ -159,7 +168,7 @@ public class LectureNoteManager implements LectureNoteService {
     @Transactional(readOnly = true)
     public PageDto<LectureNoteWithLectureDto> getMyNotes(Collection<NoteReviewStatus> statuses, Collection<NoteType> types, UUID lectureId, String search, Pageable pageable) {
         var user = securityService.getAuthenticatedUserFromContext();
-        logger.info("Getting own lecture notes for user {} lectureId={}", user.getId(), lectureId);
+        logger.debug("Getting own lecture notes for user {} lectureId={}", user.getId(), lectureId);
 
         return getAllNotes(statuses, types, lectureId, null, null, user.getId(), search, pageable);
     }
@@ -167,7 +176,7 @@ public class LectureNoteManager implements LectureNoteService {
     @Override
     @Transactional(readOnly = true)
     public LectureNoteDto getLectureNoteById(UUID lectureNoteId) {
-        logger.info("Getting lecture note with ID: {}", lectureNoteId);
+        logger.debug("Getting lecture note with ID: {}", lectureNoteId);
 
         var lectureNote = lectureNoteDao.findById(lectureNoteId).orElseThrow(() -> {
             logger.error("Lecture note not found with ID: {}", lectureNoteId);
@@ -217,6 +226,15 @@ public class LectureNoteManager implements LectureNoteService {
 
 
 
+
+    private String previewFor(MultipartFile file) {
+        try {
+            return documentPreviewService.createPdfPreview(file.getBytes(), file.getOriginalFilename());
+        } catch (IOException exception) {
+            logger.warn("Preview source could not be read for {}: {}", file.getOriginalFilename(), exception.getMessage());
+            return null;
+        }
+    }
 
     private void requirePendingQuota() {
         var limit = uploadProperties.getMaxPendingNotesPerUser();

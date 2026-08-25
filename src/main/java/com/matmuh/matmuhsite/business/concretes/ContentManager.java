@@ -53,7 +53,7 @@ public class ContentManager implements ContentService {
     public ContentResponseDto getPublishedBySlug(String slug, String locale) {
         var normalizedSlug = SlugNormalizer.normalizeSlug(slug);
         var resolved = localeResolver.resolveForRead(locale);
-        logger.info("Fetching published content for slug: {} locale: {}", normalizedSlug, resolved);
+        logger.debug("Fetching published content for slug: {} locale: {}", normalizedSlug, resolved);
 
         var blocks = contentBlockDao.findPublished(normalizedSlug, resolved);
 
@@ -65,7 +65,7 @@ public class ContentManager implements ContentService {
     public ContentResponseDto getBySlugForEditor(String userId, String slug, String locale) {
         var normalizedSlug = SlugNormalizer.normalizeSlug(slug);
         var resolved = localeResolver.resolveForRead(locale);
-        logger.info("Fetching editor content for slug: {} locale: {} user: {}", normalizedSlug, resolved, userId);
+        logger.debug("Fetching editor content for slug: {} locale: {} user: {}", normalizedSlug, resolved, userId);
 
         var blocks = contentBlockDao.findPublished(normalizedSlug, resolved);
         var blockDtos = toBlockDtos(blocks);
@@ -78,7 +78,7 @@ public class ContentManager implements ContentService {
                     dto.setDraftValue(draftValue);
                 }
             }
-            logger.info("Resolved draft with {} block(s) for slug: {}", draftValues.size(), normalizedSlug);
+            logger.debug("Resolved draft with {} block(s) for slug: {}", draftValues.size(), normalizedSlug);
         });
 
         return new ContentResponseDto(normalizedSlug, resolved, blockDtos);

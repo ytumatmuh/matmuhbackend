@@ -157,7 +157,7 @@ public class LectureManager implements LectureService {
 
     @Override
     public LectureDto getLectureById(UUID lectureId) {
-        logger.info("Retrieving lecture with ID: {}", lectureId);
+        logger.debug("Retrieving lecture with ID: {}", lectureId);
 
         var lecture = lectureDao.findById(lectureId).orElseThrow(() -> {
             logger.error("Lecture with ID {} not found.", lectureId);
@@ -172,7 +172,7 @@ public class LectureManager implements LectureService {
     @Override
     @Transactional(readOnly = true)
     public LectureDto getLectureByCode(String code) {
-        logger.info("Retrieving lecture with code: {}", code);
+        logger.debug("Retrieving lecture with code: {}", code);
 
         var lecture = lectureDao.findWithDetailsByCode(code).orElseThrow(() -> {
             logger.error("Lecture with code {} not found.", code);
@@ -186,7 +186,7 @@ public class LectureManager implements LectureService {
 
     @Override
     public List<LectureNoteDto> getLectureNotes(UUID lectureId, Collection<NoteType> types) {
-        logger.info("Retrieving notes for lecture with ID: {}", lectureId);
+        logger.debug("Retrieving notes for lecture with ID: {}", lectureId);
 
 
         var lecture = lectureDao.findById(lectureId).orElseThrow(() -> {
@@ -245,7 +245,7 @@ public class LectureManager implements LectureService {
     @Transactional(readOnly = true)
     public PageDto<LectureDto> getLectures(Integer term, Semester semester, DegreeLevel degreeLevel,
                                           LectureType type, LectureCategory category, String search, Pageable pageable) {
-        logger.info("Retrieving lectures term={} semester={} degreeLevel={} search={} page={}", term, semester, degreeLevel, search, pageable.getPageNumber());
+        logger.debug("Retrieving lectures term={} semester={} degreeLevel={} search={} page={}", term, semester, degreeLevel, search, pageable.getPageNumber());
 
         var page = lectureDao.search(term, semester, degreeLevel, type, category,
                 search == null || search.isBlank() ? null : search.trim(), pageable);
@@ -259,7 +259,7 @@ public class LectureManager implements LectureService {
 
     @Override
     public LectureStatisticsDto getLectureStatistics(UUID lectureId) {
-        logger.info("Retrieving statistics for lecture with ID: {}", lectureId);
+        logger.debug("Retrieving statistics for lecture with ID: {}", lectureId);
 
         Lecture lecture = lectureDao.findById(lectureId).orElseThrow(() -> {
             logger.error("Lecture with ID {} not found.", lectureId);
@@ -274,7 +274,7 @@ public class LectureManager implements LectureService {
 
     @Override
     public Lecture getLectureReferenceById(UUID lectureId) {
-        logger.info("Retrieving reference for lecture with ID: {}", lectureId);
+        logger.debug("Retrieving reference for lecture with ID: {}", lectureId);
 
         return lectureDao.getReferenceById(lectureId);
     }

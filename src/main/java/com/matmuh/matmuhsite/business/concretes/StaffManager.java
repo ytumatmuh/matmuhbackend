@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
+import com.matmuh.matmuhsite.core.helpers.LogMasks;
 
 @Service
 @Slf4j
@@ -34,7 +35,7 @@ public class StaffManager implements StaffService {
 
     @Override
     public StaffDto getStaffById(UUID id) {
-        log.info("Fetching staff with ID: {}", id);
+        log.debug("Fetching staff with ID: {}", id);
 
         Staff staff  = staffDao.findById(id).orElseThrow(()->{
             log.error("Staff not found with ID: {}", id);
@@ -80,7 +81,7 @@ public class StaffManager implements StaffService {
 
     @Override
     public Staff getStaffReferenceById(UUID id) {
-        log.info("Fetching staff reference with ID: {}", id);
+        log.debug("Fetching staff reference with ID: {}", id);
 
         return staffDao.getReferenceById(id);
 
@@ -88,7 +89,7 @@ public class StaffManager implements StaffService {
 
     @Override
     public StaffDto createStaff(CreateStaffRequestDto createStaffRequestDto) {
-        log.info("Creating new staff with email: {}", createStaffRequestDto.getEmail());
+        log.info("Creating new staff with email: {}", LogMasks.email(createStaffRequestDto.getEmail()));
 
         Staff staff = staffMapper.toStaff(createStaffRequestDto);
 
@@ -112,7 +113,7 @@ public class StaffManager implements StaffService {
 
     @Override
     public PageDto<StaffDto> getStaff(String search, StaffGroup group, String academicTitle, Pageable pageable) {
-        log.info("Fetching staff search={} group={} academicTitle={} page={}", search, group, academicTitle, pageable.getPageNumber());
+        log.debug("Fetching staff search={} group={} academicTitle={} page={}", search, group, academicTitle, pageable.getPageNumber());
 
         var page = staffDao.search(normalize(search), group, normalize(academicTitle), pageable);
 

@@ -32,6 +32,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import com.matmuh.matmuhsite.core.helpers.LogMasks;
 
 @Component
 public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
@@ -94,7 +95,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         String rawDepartment = fetchDepartmentFromGraph(authentication);
         String department = normalizeDepartment(rawDepartment);
 
-        logger.info("Raw department from graph: {}, Normalized department: {}", rawDepartment, department);
+        logger.debug("Raw department from graph: {}, Normalized department: {}", rawDepartment, department);
 
         if (department == null){
             logger.warn("Yetkisiz bölüm girişi saptandı: {}", rawDepartment);
@@ -116,10 +117,10 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         try {
             account = userService.getUserEntityByEmail(email);
             account.setDepartment(department);
-            logger.info("Mevcut kullanıcı ile oturum açılıyor: {}", email);
+            logger.info("Mevcut kullanıcı ile oturum açılıyor: {}", LogMasks.email(email));
 
         } catch (ResourceNotFoundException e) {
-            logger.info("Yeni kullanıcı kaydediliyor: {}", email);
+            logger.info("Yeni kullanıcı kaydediliyor: {}", LogMasks.email(email));
             User newUser = User.builder()
                     .email(email)
                     .firstName(firstName)
@@ -211,7 +212,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
             );
 
             if (response.getBody() != null) {
-                logger.info("Graph API tüm response: {}", response.getBody());
+                logger.debug("Graph API response received");
                 return (String) response.getBody().get("department");
             }
         } catch (Exception e) {

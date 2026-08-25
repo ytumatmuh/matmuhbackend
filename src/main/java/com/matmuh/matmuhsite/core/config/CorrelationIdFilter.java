@@ -19,6 +19,8 @@ public class CorrelationIdFilter implements Filter {
     private static final String CORRELATION_ID_HEADER_NAME = "X-Correlation-Id";
     private static final String MDC_KEY = "correlationId";
 
+    private static final String ECS_TRACE_KEY = "trace.id";
+
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
@@ -33,6 +35,7 @@ public class CorrelationIdFilter implements Filter {
 
 
         MDC.put(MDC_KEY, correlationId);
+        MDC.put(ECS_TRACE_KEY, correlationId);
 
 
 
@@ -43,6 +46,7 @@ public class CorrelationIdFilter implements Filter {
             filterChain.doFilter(request, response);
         }finally {
             MDC.remove(MDC_KEY);
+            MDC.remove(ECS_TRACE_KEY);
         }
 
     }

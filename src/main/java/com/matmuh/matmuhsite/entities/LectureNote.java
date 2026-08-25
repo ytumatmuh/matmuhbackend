@@ -29,6 +29,10 @@ public class LectureNote extends BaseEntity{
     @Column(name = "description")
     private String description;
 
+
+    @Column(name = "preview_url")
+    private String previewUrl;
+
     @Column(name = "view_count")
     private int viewCount = 0;
 

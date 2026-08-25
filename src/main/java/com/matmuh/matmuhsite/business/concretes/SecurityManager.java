@@ -27,7 +27,7 @@ public class SecurityManager implements SecurityService {
 
     @Override
     public User getAuthenticatedUserFromContext() {
-        logger.info("Getting authenticated user");
+        logger.debug("Getting authenticated user");
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {

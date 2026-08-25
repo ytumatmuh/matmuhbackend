@@ -51,7 +51,7 @@ public class ElectiveGroupManager implements ElectiveGroupService {
     @Transactional(readOnly = true)
     public PageDto<ElectiveGroupDto> getElectiveGroups(Integer term, Semester semester, DegreeLevel degreeLevel,
                                                        String search, Pageable pageable) {
-        log.info("Retrieving elective groups term={} semester={} degreeLevel={} search={} page={}",
+        log.debug("Retrieving elective groups term={} semester={} degreeLevel={} search={} page={}",
                 term, semester, degreeLevel, search, pageable.getPageNumber());
 
         var page = electiveGroupDao.search(term, semester, degreeLevel, normalize(search), pageable);
@@ -62,14 +62,14 @@ public class ElectiveGroupManager implements ElectiveGroupService {
     @Override
     @Transactional(readOnly = true)
     public ElectiveGroupDto getElectiveGroupById(UUID id) {
-        log.info("Retrieving elective group with ID: {}", id);
+        log.debug("Retrieving elective group with ID: {}", id);
         return toDto(require(id));
     }
 
     @Override
     @Transactional(readOnly = true)
     public ElectiveGroupDto getElectiveGroupByCode(String code) {
-        log.info("Retrieving elective group with code: {}", code);
+        log.debug("Retrieving elective group with code: {}", code);
 
         var group = electiveGroupDao.findByCodeIgnoreCase(code).orElseThrow(() -> {
             log.error("Elective group with code {} not found.", code);
@@ -82,14 +82,14 @@ public class ElectiveGroupManager implements ElectiveGroupService {
     @Override
     @Transactional(readOnly = true)
     public List<ElectiveGroupOptionDto> getOptions(UUID id) {
-        log.info("Retrieving options of elective group with ID: {}", id);
+        log.debug("Retrieving options of elective group with ID: {}", id);
         return sortedOptions(require(id));
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<ElectiveGroupDto> getGroupsContainingLecture(UUID lectureId) {
-        log.info("Retrieving elective groups containing lecture with ID: {}", lectureId);
+        log.debug("Retrieving elective groups containing lecture with ID: {}", lectureId);
 
         if (!lectureDao.existsById(lectureId)) {
             log.error("Lecture with ID {} not found.", lectureId);

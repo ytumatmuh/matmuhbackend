@@ -13,6 +13,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import com.matmuh.matmuhsite.core.helpers.LogMasks;
 
 @Service
 public class AuthManager implements AuthService {
@@ -32,7 +33,7 @@ public class AuthManager implements AuthService {
 
     @Override
     public AuthLoginResponseDto login(AuthLoginRequestDto authLoginRequestDto) {
-        logger.info("Attempting to authenticate user with email: {}", authLoginRequestDto.getEmail());
+        logger.debug("Attempting to authenticate user with email: {}", LogMasks.email(authLoginRequestDto.getEmail()));
 
         User user;
         try {

@@ -39,6 +39,7 @@ public abstract class LectureNoteMapper {
     public abstract File toFileEntity(FileDto fileDto);
 
     @Mapping(target = "offering", expression = "java(offeringOf(lectureNote))")
+    @Mapping(target = "previewUrl", expression = "java(generateFullUrl(lectureNote.getPreviewUrl()))")
     public abstract LectureNoteDto toLectureNoteDto(LectureNote lectureNote);
 
 
@@ -64,6 +65,7 @@ public abstract class LectureNoteMapper {
     @Mapping(source = "file", target = "file")
     @Mapping(source = "lecture", target = "lecture")
     @Mapping(target = "offering", expression = "java(offeringOf(lectureNote))")
+    @Mapping(target = "previewUrl", expression = "java(generateFullUrl(lectureNote.getPreviewUrl()))")
     public abstract LectureNoteWithLectureDto toLectureNoteWithLectureDto(LectureNote lectureNote);
 
 }

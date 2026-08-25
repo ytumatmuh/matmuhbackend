@@ -50,7 +50,7 @@ public class CalendarManager implements CalendarService {
     @Transactional(readOnly = true)
     public List<CalendarOccurrenceDto> getCalendar(LocalDate from, LocalDate to) {
         var terms = overlappingTerms(from, to);
-        logger.info("Building calendar {}..{} across {} term(s)", from, to, terms.size());
+        logger.debug("Building calendar {}..{} across {} term(s)", from, to, terms.size());
 
         var occurrences = new ArrayList<CalendarOccurrenceDto>();
 
@@ -72,7 +72,7 @@ public class CalendarManager implements CalendarService {
                 .map(enrollment -> enrollment.getLectureOffering().getId())
                 .toList();
 
-        logger.info("Building personal calendar {}..{} for {} enrollment(s)", from, to, offeringIds.size());
+        logger.debug("Building personal calendar {}..{} for {} enrollment(s)", from, to, offeringIds.size());
 
         if (offeringIds.isEmpty()) {
             // Kayıt yoksa bile genel takvim (tatil, akademik takvim) görünmeli.
@@ -126,7 +126,7 @@ public class CalendarManager implements CalendarService {
     public List<WeeklySlotDto> getWeeklySchedule(String academicYear, Semester semester, Integer term, UUID staffId) {
         var resolved = resolveTerm(academicYear, semester);
 
-        logger.info("Retrieving weekly schedule for {} {} term={} staffId={}",
+        logger.debug("Retrieving weekly schedule for {} {} term={} staffId={}",
                 resolved.getAcademicYear(), resolved.getSemester(), term, staffId);
 
         return scheduleSlotDao.findByTerm(resolved.getAcademicYear(), resolved.getSemester()).stream()

@@ -21,6 +21,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import com.matmuh.matmuhsite.core.config.RequestLoggingFilter;
 
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
@@ -49,7 +50,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         if (isOAuthPath(path)) {
             logger.debug("Skipping JWT filter for OAuth path: {}", path);
-            filterChain.doFilter(request, response);
+
+        publishUserIdForLogging(request);
+
+        filterChain.doFilter(request, response);
             return;
         }
 
@@ -79,7 +83,17 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             }
         }
 
+
+        publishUserIdForLogging(request);
+
         filterChain.doFilter(request, response);
+    }
+
+    private void publishUserIdForLogging(HttpServletRequest request) {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof User user && user.getId() != null) {
+            request.setAttribute(RequestLoggingFilter.USER_ID_ATTRIBUTE, user.getId().toString());
+        }
     }
 
     private boolean isAlreadyAuthenticatedByToken() {

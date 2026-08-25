@@ -79,6 +79,17 @@ springdoc:
 logging:
   level:
     org.springframework.security: ${SECURITY_LOG_LEVEL:INFO}
+    com.matmuh.matmuhsite: ${APP_LOG_LEVEL:INFO}
+    http.access: ${ACCESS_LOG_LEVEL:INFO}
+  structured:
+    ecs:
+      service:
+        name: ${SERVICE_NAME:matmuhsite}
+        version: ${SERVICE_VERSION:}
+        environment: ${SERVICE_ENVIRONMENT:}
+    json:
+      context:
+        include: true
 
 api:
   url: ${API_URL:http://localhost:9001}
@@ -118,3 +129,7 @@ upload:
   max-file-size-mb: ${UPLOAD_MAX_FILE_SIZE_MB:25}
   max-image-size-mb: ${UPLOAD_MAX_IMAGE_SIZE_MB:10}
   max-pending-notes-per-user: ${UPLOAD_MAX_PENDING_NOTES:10}
+
+preview:
+  converter-url: ${PREVIEW_CONVERTER_URL:}
+  timeout-seconds: ${PREVIEW_TIMEOUT_SECONDS:30}
