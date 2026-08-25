@@ -17,7 +17,7 @@ public final class NewsCollectionSchema {
             FieldDefinition.required(SLUG_SOURCE_FIELD, FieldType.SHORT_TEXT, "Başlık")
                     .asSearchable()
                     .asSortable()
-                    .withHelp("Slug bu başlıktan üretilir. Çeviri kendi başlığından kendi slug'ını alır."),
+                    .withHelp("Sayfa adresi bu başlıktan üretilir. Çevirinin adresi kendi başlığından oluşur."),
             FieldDefinition.of("summary", FieldType.LONG_TEXT, "Özet").asSearchable(),
             FieldDefinition.of("body", FieldType.RICH_TEXT, "İçerik"),
             FieldDefinition.of("coverImage", FieldType.IMAGE, "Kapak görseli"),
@@ -33,7 +33,7 @@ public final class NewsCollectionSchema {
                             FieldDefinition.of("previewUrl", FieldType.URL, "Önizleme (PDF)"),
                             FieldDefinition.of("type", FieldType.SHORT_TEXT, "Dosya türü"),
                             FieldDefinition.of("size", FieldType.NUMBER, "Boyut (bayt)")))
-                    .withHelp("Dosyalar POST /api/cms/media ile yüklenir; yanıttaki url ve (ofis belgelerinde) previewUrl buraya yazılır. previewUrl doluysa arayüz dosyayı indirmeden gösterebilir."),
+                    .withHelp("Habere eklenecek dosyalar: dilekçe, form, sınav takvimi. Word ve Excel dosyaları okuyucuya indirmeden gösterilir."),
             FieldDefinition.of("publishedAt", FieldType.DATE, "Yayın tarihi")
                     .asFilterable()
                     .asSortable(),

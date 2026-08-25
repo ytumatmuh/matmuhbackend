@@ -51,7 +51,7 @@ public final class LectureCollectionSchema {
             FieldDefinition.required("name", FieldType.SHORT_TEXT, "Ders adı"),
             FieldDefinition.required(FIELD_CODE, FieldType.SHORT_TEXT, "Ders kodu")
                     .asFilterable()
-                    .withHelp("Slug bu koddan üretilir. Filtre olarak kullanıldığında ad, kod ve içerikte arama yapar."),
+                    .withHelp("Sayfa adresi bu koddan üretilir. Filtre olarak kullanıldığında ad, kod ve içerikte arama yapar."),
             FieldDefinition.of("language", FieldType.SHORT_TEXT, "Dil"),
             FieldDefinition.of("about", FieldType.LONG_TEXT, "Ders içeriği"),
             FieldDefinition.of("gradingPolicy", FieldType.LONG_TEXT, "Değerlendirme"),
@@ -63,7 +63,7 @@ public final class LectureCollectionSchema {
             FieldDefinition.of(FIELD_TYPE, FieldType.SHORT_TEXT, "Ders türü")
                     .withOptions(TYPE_OPTIONS)
                     .asFilterable()
-                    .withHelp("Müfredatta zorunlu ve seçmeli bloklarını ayırmak için kullanılır. Bir ders seçmeli bir slota eklendiğinde boşsa otomatik ELECTIVE olur."),
+                    .withHelp("Müfredatta zorunlu ve seçmeli bloklarını ayırmak için kullanılır. Bir ders seçmeli bir slota eklendiğinde boşsa otomatik Seçmeli olur."),
             FieldDefinition.of(FIELD_CATEGORY, FieldType.SHORT_TEXT, "Ders kategorisi")
                     .withOptions(CATEGORY_OPTIONS)
                     .asFilterable()
@@ -88,13 +88,13 @@ public final class LectureCollectionSchema {
             FieldDefinition.of("notesLink", FieldType.URL, "Not bağlantısı"),
             FieldDefinition.of("noteCount", FieldType.NUMBER, "Not sayısı")
                     .asComputed()
-                    .withHelp("Onaylanmış ders notu sayısı, okuma anında hesaplanır."),
+                    .withHelp("Onaylanmış ders notu sayısı. Otomatik hesaplanır."),
             FieldDefinition.of("electiveGroupCount", FieldType.NUMBER, "Seçmeli grup sayısı")
                     .asComputed()
-                    .withHelp("Bu dersin seçenek olarak yer aldığı seçmeli slot sayısı. Ders türü ELECTIVE ise burası 0 olmamalı."),
+                    .withHelp("Bu dersin seçenek olarak yer aldığı seçmeli slot sayısı. Ders türü Seçmeli ise burası 0 olmamalı."),
             FieldDefinition.of("statisticsTermCount", FieldType.NUMBER, "İstatistik dönem sayısı")
                     .asComputed()
-                    .withHelp("Sınav istatistiği bulunan dönem sayısı, okuma anında hesaplanır."),
+                    .withHelp("Sınav istatistiği bulunan dönem sayısı. Otomatik hesaplanır."),
             FieldDefinition.of("staff", FieldType.OBJECT_ARRAY, "Personel")
                     .asReadOnly()
                     .withItemFields(STAFF_FIELDS)

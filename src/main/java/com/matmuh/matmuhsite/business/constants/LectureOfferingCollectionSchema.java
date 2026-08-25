@@ -50,7 +50,7 @@ public final class LectureOfferingCollectionSchema {
     public static final CollectionSchema SCHEMA = new CollectionSchema(List.of(
             FieldDefinition.required(FIELD_LECTURE_CODE, FieldType.SHORT_TEXT, "Ders kodu")
                     .asFilterable().asSearchable()
-                    .withHelp("Katalogdaki ders kodu, ör. MTM1501. Slug bu koddan, yıldan, dönemden ve grup numarasından üretilir."),
+                    .withHelp("Katalogdaki ders kodu, ör. MTM1501. Sayfa adresi bu koddan, yıldan, dönemden ve gruptan oluşur."),
             FieldDefinition.required(FIELD_ACADEMIC_YEAR, FieldType.SHORT_TEXT, "Akademik yıl")
                     .asFilterable()
                     .withHelp("2026-2027 biçiminde."),
@@ -62,15 +62,15 @@ public final class LectureOfferingCollectionSchema {
                     .withHelp("Aynı dersin aynı dönemdeki farklı grupları için."),
             FieldDefinition.of(FIELD_STAFF_SLUG, FieldType.SHORT_TEXT, "Eğitmen (personel)")
                     .asFilterable()
-                    .withHelp("Personel dizinindeki slug, ör. muslum-hoca. Personel kaydı yoksa boş bırakıp aşağıdaki ham adı doldurun."),
+                    .withHelp("Personel sayfasındaki adres, ör. muslum-hoca. Hoca personel listesinde yoksa burayı boş bırakıp alttaki adı yazın."),
             FieldDefinition.of(FIELD_INSTRUCTOR_RAW_NAME, FieldType.SHORT_TEXT, "Eğitmen (ham ad)")
                     .withHelp("Personel dizininde olmayan hocalar için, ör. Erasmus veya başka bölümden gelen. İkisinden en az biri dolu olmalı."),
             FieldDefinition.readOnly("lectureName", FieldType.SHORT_TEXT, "Ders adı")
                     .asComputed()
-                    .withHelp("Katalogdan gelir. Listede kodun yanında okunabilir bir ad görünsün diye var."),
+                    .withHelp("Ders kataloğundan gelir, buradan değiştirilemez."),
             FieldDefinition.readOnly("instructorName", FieldType.SHORT_TEXT, "Görünen eğitmen adı")
                     .asComputed()
-                    .withHelp("Personel kaydı varsa adı, yoksa ham ad. Okuma anında türetilir."),
+                    .withHelp("Personel kaydı varsa oradan, yoksa yazdığınız addan gelir."),
             FieldDefinition.of(FIELD_LANGUAGE, FieldType.SHORT_TEXT, "Öğretim dili")
                     .withOptions("TURKISH", "ENGLISH"),
             FieldDefinition.of(FIELD_EXAM_WEIGHTS, FieldType.OBJECT_ARRAY, "Sınav ağırlıkları")

@@ -35,7 +35,7 @@ public final class ElectiveGroupCollectionSchema {
     public static final CollectionSchema SCHEMA = new CollectionSchema(List.of(
             FieldDefinition.required(FIELD_CODE, FieldType.SHORT_TEXT, "Slot kodu")
                     .asFilterable()
-                    .withHelp("Bologna müfredatındaki seçmeli slot kodu, ör. MES2-3G. Slug bu koddan üretilir."),
+                    .withHelp("Bologna müfredatındaki seçmeli slot kodu, ör. MES2-3G. Sayfa adresi bu koddan üretilir."),
             FieldDefinition.required(FIELD_NAME, FieldType.SHORT_TEXT, "Slot adı")
                     .asFilterable()
                     .withHelp("Müfredatta görünen ad, ör. Mesleki Seçmeli 2."),
@@ -47,17 +47,17 @@ public final class ElectiveGroupCollectionSchema {
             FieldDefinition.of(FIELD_DEGREE_LEVELS, FieldType.STRING_ARRAY, "Öğrenim düzeyi")
                     .withOptions(DEGREE_LEVEL_OPTIONS)
                     .asFilterable()
-                    .withHelp("Boş bırakılırsa seçenek derslerin düzeylerinden türetilir."),
+                    .withHelp("Boş bırakılırsa seçenek derslerin düzeylerinden alınır."),
             FieldDefinition.of("weeklyHours", FieldType.NUMBER, "Haftalık saat"),
             FieldDefinition.of("localCredit", FieldType.NUMBER, "Yerel kredi"),
             FieldDefinition.of("ects", FieldType.NUMBER, "AKTS"),
             FieldDefinition.of("selectionCount", FieldType.NUMBER, "Seçilecek ders sayısı")
                     .withHelp("Öğrencinin bu slottan kaç ders seçeceği. Varsayılan 1."),
             FieldDefinition.of(FIELD_OPTION_LECTURE_IDS, FieldType.STRING_ARRAY, "Seçenek ders ID'leri")
-                    .withHelp("Bu slotun yerine alınabilecek derslerin ID listesi. Gönderilirse mevcut liste tamamen değiştirilir."),
+                    .withHelp("Bu slot yerine sayılabilecek dersler. Listeyi her kaydedişte baştan yazar: çıkarmak istediğiniz dersi listeden silin."),
             FieldDefinition.of("optionCount", FieldType.NUMBER, "Seçenek sayısı")
                     .asComputed()
-                    .withHelp("Havuzdaki ders sayısı, okuma anında hesaplanır."),
+                    .withHelp("Havuzdaki ders sayısı. Otomatik hesaplanır."),
             FieldDefinition.of("options", FieldType.OBJECT_ARRAY, "Seçenek dersler")
                     .asReadOnly()
                     .withItemFields(OPTION_FIELDS)

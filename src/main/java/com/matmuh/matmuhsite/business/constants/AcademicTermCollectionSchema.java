@@ -21,7 +21,7 @@ public final class AcademicTermCollectionSchema {
     public static final CollectionSchema SCHEMA = new CollectionSchema(List.of(
             FieldDefinition.required(FIELD_ACADEMIC_YEAR, FieldType.SHORT_TEXT, "Akademik yıl")
                     .asFilterable()
-                    .withHelp("2026-2027 biçiminde. Slug bu alandan ve dönemden üretilir."),
+                    .withHelp("2026-2027 biçiminde yazın."),
             FieldDefinition.required(FIELD_SEMESTER, FieldType.SHORT_TEXT, "Yarıyıl")
                     .asFilterable()
                     .withOptions("FALL", "SPRING", "SUMMER"),

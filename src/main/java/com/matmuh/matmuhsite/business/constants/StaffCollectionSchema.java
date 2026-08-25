@@ -40,7 +40,7 @@ public final class StaffCollectionSchema {
             FieldDefinition.of("phone", FieldType.SHORT_TEXT, "Telefon"),
             FieldDefinition.of("office", FieldType.SHORT_TEXT, "Ofis"),
             FieldDefinition.of("photo", FieldType.IMAGE, "Fotoğraf")
-                    .withHelp("Opsiyonel. Boş bırakılırsa arayüz ad-soyad baş harflerini gösterir. Görsel POST /api/cms/media ile yüklenir, dönen url src alanına yazılır."),
+                    .withHelp("Boş bırakılırsa ad-soyad baş harfleri gösterilir."),
             FieldDefinition.of(FIELD_AVESIS_LINK, FieldType.URL, "AVESİS").asFilterable()
     ));
 }
