@@ -8,9 +8,18 @@ public enum BlockType {
     SHORT_TEXT("ShortText"),
     LONG_TEXT("LongText"),
     RICH_TEXT("RichText"),
+    NUMBER("Number"),
+    BOOL("Bool"),
+    URL("Url"),
+    DATE("Date"),
     IMAGE("Image"),
     LINK("Link"),
-    DATE("Date"),
+    SELECT("Select"),
+    STRING_ARRAY("StringArray"),
+    OBJECT_ARRAY("ObjectArray"),
+    COLLECTION("Collection"),
+
+
     LIST("List");
 
     private final String wireName;
@@ -32,6 +41,9 @@ public enum BlockType {
         if (value.equalsIgnoreCase("Text")) {
             return LONG_TEXT;
         }
+        if (value.equalsIgnoreCase(LIST.wireName)) {
+            return OBJECT_ARRAY;
+        }
         for (BlockType type : values()) {
             if (type.wireName.equalsIgnoreCase(value)) {
                 return type;
@@ -39,6 +51,4 @@ public enum BlockType {
         }
         throw new IllegalArgumentException("Unknown blockType: " + value);
     }
-
-
 }
