@@ -20,4 +20,10 @@ public class MyCollectionDto {
     private SlugSource slugSource;
 
     private List<String> locales;
+    private boolean slugEditable;
+
+    // Bir kaydı insana tanıtan alan. Referans veren tarafta değil koleksiyonda
+    // durur ki aynı koleksiyona işaret eden beş alan kaydın adı konusunda
+    // birbirinden ayrılamasın.
+    private String displayField;
 }

@@ -1,6 +1,7 @@
 package com.matmuh.matmuhsite.business.constants;
 
 import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionSchema;
+import com.matmuh.matmuhsite.core.dtos.cms.response.ChoiceSource;
 import com.matmuh.matmuhsite.core.dtos.cms.response.FieldDefinition;
 import com.matmuh.matmuhsite.entities.DegreeLevel;
 import com.matmuh.matmuhsite.entities.LectureCategory;
@@ -16,6 +17,7 @@ public final class LectureCollectionSchema {
 
     public static final String KEY = "lectures";
     public static final String SLUG_SOURCE_FIELD = "code";
+    public static final String DISPLAY_FIELD = "name";
 
     public static final String FIELD_TERM = "term";
     public static final String FIELD_SEMESTER = "semester";
@@ -57,21 +59,18 @@ public final class LectureCollectionSchema {
             FieldDefinition.of("gradingPolicy", FieldType.LONG_TEXT, "Değerlendirme"),
             FieldDefinition.of("resources", FieldType.LONG_TEXT, "Kaynaklar"),
             FieldDefinition.of(FIELD_DEGREE_LEVELS, FieldType.STRING_ARRAY, "Öğrenim düzeyi")
-                    .withOptions(DEGREE_LEVEL_OPTIONS)
+                    .withSource(ChoiceSource.ofValues(DEGREE_LEVEL_OPTIONS))
                     .asFilterable()
                     .withHelp("Bir ders birden fazla programda okutulabilir; lisansüstü seçmeli havuzu hem yüksek lisansta hem doktorada geçerlidir. Boş bırakılırsa ders kodundan türetilir."),
-            FieldDefinition.of(FIELD_TYPE, FieldType.SHORT_TEXT, "Ders türü")
-                    .withOptions(TYPE_OPTIONS)
+            FieldDefinition.select(FIELD_TYPE, "Ders türü", ChoiceSource.ofValues(TYPE_OPTIONS))
                     .asFilterable()
                     .withHelp("Müfredatta zorunlu ve seçmeli bloklarını ayırmak için kullanılır. Bir ders seçmeli bir slota eklendiğinde boşsa otomatik Seçmeli olur."),
-            FieldDefinition.of(FIELD_CATEGORY, FieldType.SHORT_TEXT, "Ders kategorisi")
-                    .withOptions(CATEGORY_OPTIONS)
+            FieldDefinition.select(FIELD_CATEGORY, "Ders kategorisi", ChoiceSource.ofValues(CATEGORY_OPTIONS))
                     .asFilterable()
                     .withHelp("YÖK ders kategorisi; kategori bazlı kredi dağılımı buradan çıkarılır."),
             FieldDefinition.of(FIELD_TERM, FieldType.NUMBER, "Yarıyıl").asFilterable(),
-            FieldDefinition.of(FIELD_SEMESTER, FieldType.SHORT_TEXT, "Dönem")
-                    .asFilterable()
-                    .withOptions("FALL", "SPRING", "SUMMER"),
+            FieldDefinition.select(FIELD_SEMESTER, "Dönem", ChoiceSource.ofValues("FALL", "SPRING", "SUMMER"))
+                    .asFilterable(),
             FieldDefinition.of("syllabus", FieldType.OBJECT_ARRAY, "Haftalık program")
                     .withItemFields(SYLLABUS_FIELDS)
                     .withHelp("Her satır bir haftanın konusu. Hafta numarasına göre sıralı döner."),

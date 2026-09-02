@@ -8,6 +8,7 @@ import com.matmuh.matmuhsite.core.dtos.cms.request.UpsertCollectionItemRequestDt
 import com.matmuh.matmuhsite.core.dtos.cms.response.ArchiveResultDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionItemDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionListDto;
+import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionLookupDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.MyCollectionDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionSchema;
 import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionSchemaResponseDto;
@@ -28,6 +29,8 @@ public interface CmsCollectionService {
                            String sort, boolean archived, String locale, String search, int offset, int limit);
 
     CollectionItemDto getBySlug(String collectionKey, String slug, String userId, String locale);
+
+    CollectionLookupDto lookup(String collectionKey, String query, List<String> slugs, String locale, int limit);
 
     CollectionItemDto upsert(String collectionKey, String slug, UpsertCollectionItemRequestDto request, String updatedBy, String locale, UUID translationGroup);
 

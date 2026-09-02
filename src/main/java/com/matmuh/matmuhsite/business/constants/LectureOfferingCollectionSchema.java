@@ -1,6 +1,7 @@
 package com.matmuh.matmuhsite.business.constants;
 
 import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionSchema;
+import com.matmuh.matmuhsite.core.dtos.cms.response.ChoiceSource;
 import com.matmuh.matmuhsite.core.dtos.cms.response.FieldDefinition;
 import com.matmuh.matmuhsite.entities.ExamType;
 import com.matmuh.matmuhsite.entities.cms.FieldType;
@@ -15,6 +16,7 @@ public final class LectureOfferingCollectionSchema {
 
     public static final String KEY = "lecture-offerings";
     public static final String SLUG_SOURCE_FIELD = "lectureCode";
+    public static final String DISPLAY_FIELD = "lectureName";
 
     public static final String FIELD_LECTURE_CODE = "lectureCode";
     public static final String FIELD_ACADEMIC_YEAR = "academicYear";
@@ -33,7 +35,7 @@ public final class LectureOfferingCollectionSchema {
             Arrays.stream(ExamType.values()).map(Enum::name).toArray(String[]::new);
 
     private static final List<FieldDefinition> SLOT_FIELDS = List.of(
-            FieldDefinition.required("dayOfWeek", FieldType.SHORT_TEXT, "Gün").withOptions(DAY_OPTIONS),
+            FieldDefinition.requiredSelect("dayOfWeek", "Gün", ChoiceSource.ofValues(DAY_OPTIONS)),
             FieldDefinition.required("startTime", FieldType.SHORT_TEXT, "Başlangıç")
                     .withHelp("HH:mm biçiminde, ör. 09:00."),
             FieldDefinition.required("endTime", FieldType.SHORT_TEXT, "Bitiş"),
@@ -43,7 +45,7 @@ public final class LectureOfferingCollectionSchema {
     );
 
     private static final List<FieldDefinition> EXAM_WEIGHT_FIELDS = List.of(
-            FieldDefinition.required("examType", FieldType.SHORT_TEXT, "Sınav").withOptions(EXAM_TYPE_OPTIONS),
+            FieldDefinition.requiredSelect("examType", "Sınav", ChoiceSource.ofValues(EXAM_TYPE_OPTIONS)),
             FieldDefinition.required("weightPercent", FieldType.NUMBER, "Ağırlık (%)")
     );
 
@@ -54,15 +56,14 @@ public final class LectureOfferingCollectionSchema {
             FieldDefinition.required(FIELD_ACADEMIC_YEAR, FieldType.SHORT_TEXT, "Akademik yıl")
                     .asFilterable()
                     .withHelp("2026-2027 biçiminde."),
-            FieldDefinition.required(FIELD_SEMESTER, FieldType.SHORT_TEXT, "Yarıyıl")
-                    .asFilterable()
-                    .withOptions("FALL", "SPRING", "SUMMER"),
+            FieldDefinition.requiredSelect(FIELD_SEMESTER, "Yarıyıl", ChoiceSource.ofValues("FALL", "SPRING", "SUMMER"))
+                    .asFilterable(),
             FieldDefinition.required(FIELD_GROUP_NUMBER, FieldType.NUMBER, "Grup")
                     .asFilterable()
                     .withHelp("Aynı dersin aynı dönemdeki farklı grupları için."),
-            FieldDefinition.of(FIELD_STAFF_SLUG, FieldType.SHORT_TEXT, "Eğitmen (personel)")
+            FieldDefinition.select(FIELD_STAFF_SLUG, "Eğitmen", ChoiceSource.ofCollection(StaffCollectionSchema.KEY))
                     .asFilterable()
-                    .withHelp("Personel sayfasındaki adres, ör. muslum-hoca. Hoca personel listesinde yoksa burayı boş bırakıp alttaki adı yazın."),
+                    .withHelp("Listeden seçin. Hoca personel listesinde yoksa boş bırakıp alttaki adı yazın."),
             FieldDefinition.of(FIELD_INSTRUCTOR_RAW_NAME, FieldType.SHORT_TEXT, "Eğitmen (ham ad)")
                     .withHelp("Personel dizininde olmayan hocalar için, ör. Erasmus veya başka bölümden gelen. İkisinden en az biri dolu olmalı."),
             FieldDefinition.readOnly("lectureName", FieldType.SHORT_TEXT, "Ders adı")
@@ -71,8 +72,7 @@ public final class LectureOfferingCollectionSchema {
             FieldDefinition.readOnly("instructorName", FieldType.SHORT_TEXT, "Görünen eğitmen adı")
                     .asComputed()
                     .withHelp("Personel kaydı varsa oradan, yoksa yazdığınız addan gelir."),
-            FieldDefinition.of(FIELD_LANGUAGE, FieldType.SHORT_TEXT, "Öğretim dili")
-                    .withOptions("TURKISH", "ENGLISH"),
+            FieldDefinition.select(FIELD_LANGUAGE, "Öğretim dili", ChoiceSource.ofValues("TURKISH", "ENGLISH")),
             FieldDefinition.of(FIELD_EXAM_WEIGHTS, FieldType.OBJECT_ARRAY, "Sınav ağırlıkları")
                     .withItemFields(EXAM_WEIGHT_FIELDS)
                     .withHelp("Bu hocanın bu dönemdeki değerlendirme yüzdeleri. Dersteki Bologna varsayılanından bağımsızdır."),

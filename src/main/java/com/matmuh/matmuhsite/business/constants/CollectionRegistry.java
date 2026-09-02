@@ -20,7 +20,8 @@ public class CollectionRegistry {
             String slugSourceField,
             boolean allowAnonymousRead,
             boolean localized,
-            boolean slugEditable
+            boolean slugEditable,
+            String displayField
     ) {}
 
     private static final List<CollectionDefinition> DEFINITIONS = List.of(
@@ -31,7 +32,8 @@ public class CollectionRegistry {
                     LectureCollectionSchema.SLUG_SOURCE_FIELD,
                     true,
                     false,
-                    false),
+                    false,
+                    LectureCollectionSchema.DISPLAY_FIELD),
             new CollectionDefinition(
                     StaffCollectionSchema.KEY,
                     StaffCollectionSchema.SCHEMA,
@@ -39,7 +41,8 @@ public class CollectionRegistry {
                     StaffCollectionSchema.SLUG_SOURCE_FIELD,
                     true,
                     false,
-                    false
+                    false,
+                    StaffCollectionSchema.DISPLAY_FIELD
             ),
             new CollectionDefinition(
                     ElectiveGroupCollectionSchema.KEY,
@@ -48,7 +51,8 @@ public class CollectionRegistry {
                     ElectiveGroupCollectionSchema.SLUG_SOURCE_FIELD,
                     true,
                     false,
-                    false),
+                    false,
+                    ElectiveGroupCollectionSchema.DISPLAY_FIELD),
             new CollectionDefinition(
                     LectureOfferingCollectionSchema.KEY,
                     LectureOfferingCollectionSchema.SCHEMA,
@@ -56,7 +60,8 @@ public class CollectionRegistry {
                     LectureOfferingCollectionSchema.SLUG_SOURCE_FIELD,
                     true,
                     false,
-                    false),
+                    false,
+                    LectureOfferingCollectionSchema.DISPLAY_FIELD),
             new CollectionDefinition(
                     AcademicTermCollectionSchema.KEY,
                     AcademicTermCollectionSchema.SCHEMA,
@@ -64,7 +69,8 @@ public class CollectionRegistry {
                     AcademicTermCollectionSchema.SLUG_SOURCE_FIELD,
                     true,
                     false,
-                    false),
+                    false,
+                    AcademicTermCollectionSchema.DISPLAY_FIELD),
             new CollectionDefinition(
                     AnnouncementCollectionSchema.KEY,
                     AnnouncementCollectionSchema.SCHEMA,
@@ -72,7 +78,8 @@ public class CollectionRegistry {
                     AnnouncementCollectionSchema.SLUG_SOURCE_FIELD,
                     true,
                     true,
-                    true),
+                    true,
+                    AnnouncementCollectionSchema.DISPLAY_FIELD),
             new CollectionDefinition(
                     NewsCollectionSchema.KEY,
                     NewsCollectionSchema.SCHEMA,
@@ -80,7 +87,8 @@ public class CollectionRegistry {
                     NewsCollectionSchema.SLUG_SOURCE_FIELD,
                     true,
                     true,
-                    true)
+                    true,
+                    NewsCollectionSchema.DISPLAY_FIELD)
     );
 
     private final Map<String, CollectionDefinition> byKey =

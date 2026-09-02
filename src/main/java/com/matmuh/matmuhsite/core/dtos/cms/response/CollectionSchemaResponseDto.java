@@ -10,6 +10,7 @@ public record CollectionSchemaResponseDto(
         CollectionSchema schema,
         SlugSource slugSource,
         boolean slugEditable,
-        List<String> locales
+        List<String> locales,
+        String displayField
 ) {
 }

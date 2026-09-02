@@ -12,6 +12,7 @@ public final class NewsCollectionSchema {
 
     public static final String KEY = "news";
     public static final String SLUG_SOURCE_FIELD = "title";
+    public static final String DISPLAY_FIELD = "title";
 
     public static final CollectionSchema SCHEMA = new CollectionSchema(List.of(
             FieldDefinition.required(SLUG_SOURCE_FIELD, FieldType.SHORT_TEXT, "Başlık")

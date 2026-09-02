@@ -13,6 +13,8 @@ public enum FieldType {
     URL("Url"),
     DATE("Date"),
     STRING_ARRAY("StringArray"),
+    LINK("Link"),
+    SELECT("Select"),
     OBJECT_ARRAY("ObjectArray"),
     IMAGE("Image");
 

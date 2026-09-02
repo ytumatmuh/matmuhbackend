@@ -1,6 +1,7 @@
 package com.matmuh.matmuhsite.business.constants;
 
 import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionSchema;
+import com.matmuh.matmuhsite.core.dtos.cms.response.ChoiceSource;
 import com.matmuh.matmuhsite.core.dtos.cms.response.FieldDefinition;
 import com.matmuh.matmuhsite.entities.DegreeLevel;
 import com.matmuh.matmuhsite.entities.cms.FieldType;
@@ -14,6 +15,7 @@ public final class ElectiveGroupCollectionSchema {
 
     public static final String KEY = "elective-groups";
     public static final String SLUG_SOURCE_FIELD = "code";
+    public static final String DISPLAY_FIELD = "name";
 
     public static final String FIELD_CODE = "code";
     public static final String FIELD_NAME = "name";
@@ -41,11 +43,10 @@ public final class ElectiveGroupCollectionSchema {
                     .withHelp("Müfredatta görünen ad, ör. Mesleki Seçmeli 2."),
             FieldDefinition.of("about", FieldType.LONG_TEXT, "Açıklama"),
             FieldDefinition.of(FIELD_TERM, FieldType.NUMBER, "Yarıyıl").asFilterable(),
-            FieldDefinition.of(FIELD_SEMESTER, FieldType.SHORT_TEXT, "Dönem")
-                    .asFilterable()
-                    .withOptions("FALL", "SPRING", "SUMMER"),
+            FieldDefinition.select(FIELD_SEMESTER, "Dönem", ChoiceSource.ofValues("FALL", "SPRING", "SUMMER"))
+                    .asFilterable(),
             FieldDefinition.of(FIELD_DEGREE_LEVELS, FieldType.STRING_ARRAY, "Öğrenim düzeyi")
-                    .withOptions(DEGREE_LEVEL_OPTIONS)
+                    .withSource(ChoiceSource.ofValues(DEGREE_LEVEL_OPTIONS))
                     .asFilterable()
                     .withHelp("Boş bırakılırsa seçenek derslerin düzeylerinden alınır."),
             FieldDefinition.of("weeklyHours", FieldType.NUMBER, "Haftalık saat"),

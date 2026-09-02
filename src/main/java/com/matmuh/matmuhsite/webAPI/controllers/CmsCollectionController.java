@@ -12,6 +12,7 @@ import com.matmuh.matmuhsite.core.dtos.cms.request.UpsertCollectionItemRequestDt
 import com.matmuh.matmuhsite.core.dtos.cms.response.ArchiveResultDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionItemDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionListDto;
+import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionLookupDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.MyCollectionDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionSchema;
 import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionSchemaResponseDto;
@@ -58,6 +59,19 @@ public class CmsCollectionController {
                                       HttpServletResponse response) {
         requireReadAccess(key, authentication, response);
         return collectionService.getSchema(key);
+    }
+
+    @Operation(summary = "Referans seçici listesi")
+    @GetMapping("/{key}/lookup")
+    public CollectionLookupDto lookup(@PathVariable String key,
+                                      @RequestParam(required = false) String q,
+                                      @RequestParam(required = false) List<String> slugs,
+                                      @RequestParam(required = false) String locale,
+                                      @RequestParam(defaultValue = "20") int limit,
+                                      Authentication authentication,
+                                      HttpServletResponse response) {
+        requireReadAccess(key, authentication, response);
+        return collectionService.lookup(key, q, slugs, locale, limit);
     }
 
     @Operation(summary = "Listele",

@@ -127,23 +127,20 @@ public final class CollectionSchemaValidator {
         switch (field.type()) {
             case SHORT_TEXT, URL -> {
                 if (!value.isTextual()) return "expected string.";
-                if (field.options() != null && !field.options().isEmpty()
-                        && !field.options().contains(value.asText())) {
-                    return "value not in allowed options.";
-                }
-
                 if (value.asText().length() > SHORT_TEXT_MAX_LENGTH) {
                     return "must be at most " + SHORT_TEXT_MAX_LENGTH + " characters, got " + value.asText().length() + ".";
                 }
                 return null;
             }
             case LONG_TEXT, RICH_TEXT -> {
+                return value.isTextual() ? null : "expected string.";
+            }
+            case SELECT -> {
                 if (!value.isTextual()) return "expected string.";
-                if (field.options() != null && !field.options().isEmpty()
-                        && !field.options().contains(value.asText())) {
-                    return "value not in allowed options.";
-                }
-                return null;
+                return choiceError(field, value.asText());
+            }
+            case LINK -> {
+                return value.isObject() ? null : "expected object.";
             }
             case BOOL -> {
                 return value.isBoolean() ? null : "expected boolean.";
@@ -161,6 +158,8 @@ public final class CollectionSchemaValidator {
                 if (!value.isArray()) return "expected array.";
                 for (JsonNode item : value) {
                     if (!item.isTextual()) return "expected array of strings.";
+                    var error = choiceError(field, item.asText());
+                    if (error != null) return error;
                 }
                 return null;
             }
@@ -176,5 +175,20 @@ public final class CollectionSchemaValidator {
         try { LocalDateTime.parse(text); return true; } catch (Exception ignored) {}
         try { LocalDate.parse(text); return true; } catch (Exception ignored) {}
         return false;
+    }
+
+
+    private static String choiceError(FieldDefinition field, String value) {
+        var source = field.source();
+        if (source == null || source.pointsToCollection() || Boolean.TRUE.equals(field.allowCustom())) {
+            return null;
+        }
+
+        var values = source.values();
+        if (values == null || values.isEmpty() || values.contains(value)) {
+            return null;
+        }
+
+        return "value not in allowed options.";
     }
 }

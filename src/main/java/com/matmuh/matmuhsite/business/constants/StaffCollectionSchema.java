@@ -1,6 +1,7 @@
 package com.matmuh.matmuhsite.business.constants;
 
 import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionSchema;
+import com.matmuh.matmuhsite.core.dtos.cms.response.ChoiceSource;
 import com.matmuh.matmuhsite.core.dtos.cms.response.FieldDefinition;
 import com.matmuh.matmuhsite.entities.StaffGroup;
 import com.matmuh.matmuhsite.entities.cms.FieldType;
@@ -14,6 +15,7 @@ public final class StaffCollectionSchema {
 
     public static final String KEY = "staff";
     public static final String SLUG_SOURCE_FIELD = "lastName";
+    public static final String DISPLAY_FIELD = "fullName";
 
     public static final String FIELD_FIRST_NAME = "firstName";
     public static final String FIELD_LAST_NAME = "lastName";
@@ -29,8 +31,11 @@ public final class StaffCollectionSchema {
                     .withHelp("İçe aktarmada gelen ham ad; editörden değiştirilmez."),
             FieldDefinition.required(FIELD_FIRST_NAME, FieldType.SHORT_TEXT, "Ad").asFilterable(),
             FieldDefinition.required(FIELD_LAST_NAME, FieldType.SHORT_TEXT, "Soyad").asFilterable(),
+            FieldDefinition.readOnly(DISPLAY_FIELD, FieldType.SHORT_TEXT, "Ad Soyad")
+                    .asComputed()
+                    .withHelp("Unvan, ad ve soyaddan oluşur."),
             FieldDefinition.required(FIELD_GROUPS, FieldType.STRING_ARRAY, "Kategori")
-                    .withOptions(GROUP_OPTIONS)
+                    .withSource(ChoiceSource.ofValues(GROUP_OPTIONS))
                     .asFilterable()
                     .withHelp("Bir personel birden fazla kategoride yer alabilir; bölüm başkanı hem Yönetim hem Akademik Kadro altında listelenir."),
             FieldDefinition.of("role", FieldType.SHORT_TEXT, "Görev / Rol")

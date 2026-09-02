@@ -45,6 +45,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionLookupDto;
+import java.util.Locale;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -54,6 +56,9 @@ import java.util.stream.Collectors;
 
 @Service
 public class CmsCollectionManager implements CmsCollectionService {
+
+    private static final int LOOKUP_MAX_LIMIT = 100;
+
 
     private static final JsonNodeFactory NODES = JsonNodeFactory.instance;
 
@@ -92,7 +97,7 @@ public class CmsCollectionManager implements CmsCollectionService {
     public CollectionSchemaResponseDto getSchema(String collectionKey) {
         var def = registry.resolve(collectionKey);
         return new CollectionSchemaResponseDto(def.key(), def.schema(), def.slugSource(),
-                def.slugEditable(), localesOf(def));
+                def.slugEditable(), localesOf(def), def.displayField());
     }
 
 
@@ -114,7 +119,8 @@ public class CmsCollectionManager implements CmsCollectionService {
     @Override
     public List<MyCollectionDto> getMyCollections() {
         return registry.all().stream()
-                .map(def -> new MyCollectionDto(def.key(), def.schema(), true, def.slugSource(), localesOf(def)))
+                .map(def -> new MyCollectionDto(def.key(), def.schema(), true, def.slugSource(),
+                        localesOf(def), def.slugEditable(), def.displayField()))
                 .collect(Collectors.toList());
     }
 
@@ -754,5 +760,66 @@ public class CmsCollectionManager implements CmsCollectionService {
             dto.setArchivedAt(item.getArchivedAt());
         }
         return dto;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CollectionLookupDto lookup(String collectionKey, String query, List<String> slugs,
+                                      String locale, int limit) {
+        var def = registry.resolve(collectionKey);
+        var window = Math.max(1, Math.min(limit, LOOKUP_MAX_LIMIT));
+
+        // ?slugs= seçili kaydın adını gösterir: aramada çıkmasa da çözülmeli.
+        // Karşılığı olmayan slug yanıttan düşer, çağıran onu "bulunamadı" çizer.
+        if (slugs != null && !slugs.isEmpty()) {
+            var resolved = slugs.stream()
+                    .distinct()
+                    .filter(slug -> existsBySlug(def.key(), slug))
+                    .map(slug -> getBySlug(def.key(), slug, null, locale))
+                    .map(item -> new CollectionLookupDto.Item(item.getSlug(), labelOf(def, item)))
+                    .toList();
+
+            return new CollectionLookupDto(resolved, resolved.size());
+        }
+
+        var page = list(def.key(), null, null, null, false, locale, query, 0, window);
+        var needle = query == null || query.isBlank() ? null : query.trim().toLowerCase(Locale.ROOT);
+
+        var items = page.getItems().stream()
+                .map(item -> new CollectionLookupDto.Item(item.getSlug(), labelOf(def, item)))
+                .filter(item -> needle == null || item.label().toLowerCase(Locale.ROOT).contains(needle))
+                .toList();
+
+        // Süzgeç bellekte uygulandığında toplam da elde kalandır; aksi halde
+        // seçici olmayan bir "daha var" sayısı gösterirdi.
+        var total = needle == null ? page.getTotal() : items.size();
+        return new CollectionLookupDto(items, total);
+    }
+
+    private String labelOf(CollectionRegistry.CollectionDefinition def, CollectionItemDto item) {
+        var field = def.displayField();
+        if (field == null || item.getData() == null) {
+            return item.getSlug();
+        }
+
+        var value = item.getData().get(field);
+        if (value == null || value.isNull()) {
+            return item.getSlug();
+        }
+
+        var text = value.isTextual() ? value.stringValue() : value.toString();
+        return text.isBlank() ? item.getSlug() : text;
+    }
+
+    // Varlık önce sorulur: getBySlug'ın fırlattığı ResourceNotFoundException
+    // yakalansa bile REQUIRED transaction'ı rollback-only işaretler ve istek
+    // UnexpectedRollbackException ile 500 döner.
+    private boolean existsBySlug(String collectionKey, String slug) {
+        var normalized = SlugNormalizer.normalizeBlockPath(slug);
+        var provider = providers.get(collectionKey);
+
+        return provider != null
+                ? provider.existsBySlug(normalized)
+                : collectionItemDao.findByCollectionKeyAndSlugAndArchivedFalse(collectionKey, normalized).isPresent();
     }
 }

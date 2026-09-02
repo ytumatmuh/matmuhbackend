@@ -26,6 +26,9 @@ import org.springframework.transaction.annotation.Transactional;
 import jakarta.validation.Validator;
 import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.node.ObjectNode;
+import java.util.stream.Stream;
+import java.util.stream.Collectors;
+import tools.jackson.databind.JsonNode;
 
 @Service
 @RequiredArgsConstructor
@@ -165,7 +168,7 @@ public class StaffCollectionProvider implements CmsCollectionProvider {
         item.setId(staff.getId());
         item.setCollectionKey(StaffCollectionSchema.KEY);
         item.setSlug(staff.getSlug());
-        item.setData(objectMapper.valueToTree(staff));
+        item.setData(withDisplayName(objectMapper.valueToTree(staff), staff));
         item.setVersion(version);
         return item;
     }
@@ -177,5 +180,21 @@ public class StaffCollectionProvider implements CmsCollectionProvider {
                 ));
 
 
+    }
+
+    // displayField referans seçicilerinin okuduğu ad. StaffDto'ya konmuyor:
+    // /api/staff sözleşmesini değiştirmeden yalnız CMS tarafında türetiliyor.
+    private JsonNode withDisplayName(JsonNode node, StaffDto staff) {
+        if (!(node instanceof ObjectNode object)) {
+            return node;
+        }
+
+        var name = Stream.of(staff.getAcademicTitle(), staff.getFirstName(), staff.getLastName())
+                .filter(part -> part != null && !part.isBlank())
+                .map(String::trim)
+                .collect(Collectors.joining(" "));
+
+        object.put(StaffCollectionSchema.DISPLAY_FIELD, name.isBlank() ? staff.getSlug() : name);
+        return object;
     }
 }
