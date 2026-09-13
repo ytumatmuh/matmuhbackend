@@ -21,6 +21,7 @@ public class CollectionRegistry {
             boolean allowAnonymousRead,
             boolean localized,
             boolean slugEditable,
+            String displayName,
             String displayField
     ) {}
 
@@ -33,6 +34,7 @@ public class CollectionRegistry {
                     true,
                     false,
                     false,
+                    LectureCollectionSchema.DISPLAY_NAME,
                     LectureCollectionSchema.DISPLAY_FIELD),
             new CollectionDefinition(
                     StaffCollectionSchema.KEY,
@@ -42,6 +44,7 @@ public class CollectionRegistry {
                     true,
                     false,
                     false,
+                    StaffCollectionSchema.DISPLAY_NAME,
                     StaffCollectionSchema.DISPLAY_FIELD
             ),
             new CollectionDefinition(
@@ -52,6 +55,7 @@ public class CollectionRegistry {
                     true,
                     false,
                     false,
+                    ElectiveGroupCollectionSchema.DISPLAY_NAME,
                     ElectiveGroupCollectionSchema.DISPLAY_FIELD),
             new CollectionDefinition(
                     LectureOfferingCollectionSchema.KEY,
@@ -61,6 +65,7 @@ public class CollectionRegistry {
                     true,
                     false,
                     false,
+                    LectureOfferingCollectionSchema.DISPLAY_NAME,
                     LectureOfferingCollectionSchema.DISPLAY_FIELD),
             new CollectionDefinition(
                     AcademicTermCollectionSchema.KEY,
@@ -70,6 +75,7 @@ public class CollectionRegistry {
                     true,
                     false,
                     false,
+                    AcademicTermCollectionSchema.DISPLAY_NAME,
                     AcademicTermCollectionSchema.DISPLAY_FIELD),
             new CollectionDefinition(
                     AnnouncementCollectionSchema.KEY,
@@ -79,6 +85,7 @@ public class CollectionRegistry {
                     true,
                     true,
                     true,
+                    AnnouncementCollectionSchema.DISPLAY_NAME,
                     AnnouncementCollectionSchema.DISPLAY_FIELD),
             new CollectionDefinition(
                     NewsCollectionSchema.KEY,
@@ -88,6 +95,7 @@ public class CollectionRegistry {
                     true,
                     true,
                     true,
+                    NewsCollectionSchema.DISPLAY_NAME,
                     NewsCollectionSchema.DISPLAY_FIELD)
     );
 

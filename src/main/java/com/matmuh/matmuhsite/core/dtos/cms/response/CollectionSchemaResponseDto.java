@@ -11,6 +11,7 @@ public record CollectionSchemaResponseDto(
         SlugSource slugSource,
         boolean slugEditable,
         List<String> locales,
+        String displayName,
         String displayField
 ) {
 }

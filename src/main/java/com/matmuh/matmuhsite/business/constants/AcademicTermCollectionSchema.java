@@ -13,6 +13,7 @@ public final class AcademicTermCollectionSchema {
 
     public static final String KEY = "academic-terms";
     public static final String SLUG_SOURCE_FIELD = "academicYear";
+    public static final String DISPLAY_NAME = "Akademik Dönemler";
     public static final String DISPLAY_FIELD = "academicYear";
 
     public static final String FIELD_ACADEMIC_YEAR = "academicYear";

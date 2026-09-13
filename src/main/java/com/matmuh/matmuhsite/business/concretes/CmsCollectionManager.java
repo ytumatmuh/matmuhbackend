@@ -9,6 +9,7 @@ import com.matmuh.matmuhsite.business.constants.CollectionRegistry;
 import com.matmuh.matmuhsite.core.helpers.CollectionFilterParser;
 import com.matmuh.matmuhsite.core.helpers.CollectionSchemaValidator;
 import com.matmuh.matmuhsite.core.helpers.CmsLocaleResolver;
+import com.matmuh.matmuhsite.core.helpers.FilePreviewEnricher;
 import com.matmuh.matmuhsite.core.helpers.CollectionSortParser;
 import com.matmuh.matmuhsite.core.helpers.SlugGenerator;
 import com.matmuh.matmuhsite.core.helpers.SlugNormalizer;
@@ -69,6 +70,7 @@ public class CmsCollectionManager implements CmsCollectionService {
     private final CollectionSlugAliasDao slugAliasDao;
     private final CollectionRegistry registry;
     private final CmsLocaleResolver localeResolver;
+    private final FilePreviewEnricher filePreviewEnricher;
     private final Map<String, CmsCollectionProvider> providers;
 
     public CmsCollectionManager(CollectionItemDao collectionItemDao,
@@ -76,12 +78,14 @@ public class CmsCollectionManager implements CmsCollectionService {
                                 CollectionSlugAliasDao slugAliasDao,
                                 CollectionRegistry registry,
                                 CmsLocaleResolver localeResolver,
+                                FilePreviewEnricher filePreviewEnricher,
                                 List<CmsCollectionProvider> providers) {
         this.collectionItemDao = collectionItemDao;
         this.collectionDraftDao = collectionDraftDao;
         this.slugAliasDao = slugAliasDao;
         this.registry = registry;
         this.localeResolver = localeResolver;
+        this.filePreviewEnricher = filePreviewEnricher;
         this.providers = providers.stream()
                 .collect(Collectors.toMap(CmsCollectionProvider::collectionKey, provider -> provider));
     }
@@ -97,7 +101,7 @@ public class CmsCollectionManager implements CmsCollectionService {
     public CollectionSchemaResponseDto getSchema(String collectionKey) {
         var def = registry.resolve(collectionKey);
         return new CollectionSchemaResponseDto(def.key(), def.schema(), def.slugSource(),
-                def.slugEditable(), localesOf(def), def.displayField());
+                def.slugEditable(), localesOf(def), def.displayName(), def.displayField());
     }
 
 
@@ -120,7 +124,7 @@ public class CmsCollectionManager implements CmsCollectionService {
     public List<MyCollectionDto> getMyCollections() {
         return registry.all().stream()
                 .map(def -> new MyCollectionDto(def.key(), def.schema(), true, def.slugSource(),
-                        localesOf(def), def.slugEditable(), def.displayField()))
+                        localesOf(def), def.slugEditable(), def.displayName(), def.displayField()))
                 .collect(Collectors.toList());
     }
 
@@ -355,7 +359,8 @@ public class CmsCollectionManager implements CmsCollectionService {
 
         logger.info("Upserting collection item {}/{} by {}", key, normalizedSlug, updatedBy);
 
-        var validated = CollectionSchemaValidator.validateAndStrip(def.schema(), request.getData());
+        var validated = filePreviewEnricher.enrich(def.schema(),
+                CollectionSchemaValidator.validateAndStrip(def.schema(), request.getData()));
 
         var provider = providers.get(key);
         if (provider != null) {
@@ -440,7 +445,8 @@ public class CmsCollectionManager implements CmsCollectionService {
         }
 
         var resolvedLocale = writeLocale(def, locale);
-        var validated = CollectionSchemaValidator.validateAndStrip(def.schema(), request.getData());
+        var validated = filePreviewEnricher.enrich(def.schema(),
+                CollectionSchemaValidator.validateAndStrip(def.schema(), request.getData()));
 
         var source = validated.path(def.slugSourceField()).asText("");
         var base = SlugGenerator.slugify(source);

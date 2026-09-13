@@ -13,6 +13,7 @@ public enum BlockType {
     URL("Url"),
     DATE("Date"),
     IMAGE("Image"),
+    FILE("File"),
     LINK("Link"),
     SELECT("Select"),
     STRING_ARRAY("StringArray"),

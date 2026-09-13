@@ -16,7 +16,8 @@ public enum FieldType {
     LINK("Link"),
     SELECT("Select"),
     OBJECT_ARRAY("ObjectArray"),
-    IMAGE("Image");
+    IMAGE("Image"),
+    FILE("File");
 
     private final String wireName;
 

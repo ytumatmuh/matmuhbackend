@@ -15,6 +15,7 @@ public final class ElectiveGroupCollectionSchema {
 
     public static final String KEY = "elective-groups";
     public static final String SLUG_SOURCE_FIELD = "code";
+    public static final String DISPLAY_NAME = "Seçmeli Grupları";
     public static final String DISPLAY_FIELD = "name";
 
     public static final String FIELD_CODE = "code";

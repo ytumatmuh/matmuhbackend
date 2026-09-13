@@ -12,6 +12,7 @@ public final class AnnouncementCollectionSchema {
 
     public static final String KEY = "announcements";
     public static final String SLUG_SOURCE_FIELD = "title";
+    public static final String DISPLAY_NAME = "Duyurular";
     public static final String DISPLAY_FIELD = "title";
 
     public static final CollectionSchema SCHEMA = new CollectionSchema(List.of(
@@ -29,12 +30,8 @@ public final class AnnouncementCollectionSchema {
                     .withHelp("Ek fotoğraflar. Yazı içine gömülen görseller içerik editöründen eklenir, buraya konmaz."),
             FieldDefinition.of("attachments", FieldType.OBJECT_ARRAY, "Ekler")
                     .withItemFields(List.of(
-                            FieldDefinition.required("url", FieldType.URL, "Dosya bağlantısı"),
-                            FieldDefinition.required("name", FieldType.SHORT_TEXT, "Dosya adı"),
-                            FieldDefinition.of("previewUrl", FieldType.URL, "Önizleme (PDF)"),
-                            FieldDefinition.of("type", FieldType.SHORT_TEXT, "Dosya türü"),
-                            FieldDefinition.of("size", FieldType.NUMBER, "Boyut (bayt)")))
-                    .withHelp("Duyuruya eklenecek dosyalar: dilekçe, form, sınav takvimi. Word ve Excel dosyaları okuyucuya indirmeden gösterilir."),
+                            FieldDefinition.required("file", FieldType.FILE, "Dosya")))
+                    .withHelp("Duyuruya eklenecek dosyalar: dilekçe, form, sınav takvimi. Dosyayı sürükleyip bırakın; Word ve Excel dosyaları okuyucuya indirmeden gösterilir."),
             FieldDefinition.of("publishedAt", FieldType.DATE, "Yayın tarihi")
                     .asFilterable()
                     .asSortable(),

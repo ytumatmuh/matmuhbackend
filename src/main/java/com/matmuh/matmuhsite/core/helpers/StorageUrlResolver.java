@@ -7,6 +7,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class StorageUrlResolver {
 
+    private static final String UPLOADS_PATH = "/api/uploads/";
+
     private final String publicDomain;
     private final String apiUrl;
 
@@ -27,9 +29,24 @@ public class StorageUrlResolver {
         var normalized = key.startsWith("/") ? key.substring(1) : key;
 
         if (StorageKeys.isPrivate(normalized) || StorageKeys.isPublicFile(normalized)) {
-            return apiUrl + "/api/uploads/" + normalized;
+            return apiUrl + UPLOADS_PATH + normalized;
         }
         return publicDomain + "/" + normalized;
+    }
+
+
+    public String keyFor(String url) {
+        if (url == null) {
+            return null;
+        }
+        var marker = url.indexOf(UPLOADS_PATH);
+        if (marker < 0) {
+            return null;
+        }
+        var rest = url.substring(marker + UPLOADS_PATH.length());
+        var cut = rest.indexOf('?');
+        var key = StorageKeys.fromRequestPath(cut < 0 ? rest : rest.substring(0, cut));
+        return key.isBlank() ? null : key;
     }
 
     private String trimTrailingSlash(String value) {

@@ -2,21 +2,15 @@ package com.matmuh.matmuhsite.webAPI.controllers;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import com.matmuh.matmuhsite.business.abstracts.CmsMediaService;
 import com.matmuh.matmuhsite.business.abstracts.ContentService;
 import com.matmuh.matmuhsite.core.helpers.CmsCacheHeaders;
-import com.matmuh.matmuhsite.business.constants.CmsMessages;
-import com.matmuh.matmuhsite.core.utilities.storage.FolderType;
 import com.matmuh.matmuhsite.core.dtos.cms.request.SyncManifestRequestDto;
 import com.matmuh.matmuhsite.core.dtos.cms.request.UpdatePageRequestDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.ContentResponseDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.SyncResultDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.UpdatePageResponseDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.UploadResponseDto;
-import com.matmuh.matmuhsite.core.exceptions.CmsValidationException;
-import com.matmuh.matmuhsite.core.helpers.StorageUrlResolver;
-import com.matmuh.matmuhsite.core.helpers.UploadValidator;
-import com.matmuh.matmuhsite.core.utilities.preview.DocumentPreviewService;
-import com.matmuh.matmuhsite.core.utilities.storage.StorageService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -24,8 +18,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.util.List;
 
 @Tag(name = "CMS Content", description = "inscribed CMS sayfa içeriği endpointleri")
@@ -33,25 +25,13 @@ import java.util.List;
 @RequestMapping("/api/cms")
 public class CmsContentController {
 
-    private static final long MAX_UPLOAD_BYTES = 50L * 1024 * 1024;
-
     private final ContentService contentService;
-    private final StorageService storageService;
-    private final StorageUrlResolver storageUrlResolver;
-    private final UploadValidator uploadValidator;
-    private final DocumentPreviewService documentPreviewService;
+    private final CmsMediaService cmsMediaService;
 
 
-    public CmsContentController(ContentService contentService,
-                                StorageService storageService,
-                                StorageUrlResolver storageUrlResolver,
-                                UploadValidator uploadValidator,
-                                DocumentPreviewService documentPreviewService) {
+    public CmsContentController(ContentService contentService, CmsMediaService cmsMediaService) {
         this.contentService = contentService;
-        this.storageService = storageService;
-        this.storageUrlResolver = storageUrlResolver;
-        this.uploadValidator = uploadValidator;
-        this.documentPreviewService = documentPreviewService;
+        this.cmsMediaService = cmsMediaService;
     }
 
     @Operation(summary = "Public içerik", description = "Yayınlanmış blokları döner (anonim).")
@@ -129,34 +109,7 @@ public class CmsContentController {
     @PostMapping("/media")
     public UploadResponseDto upload(@RequestParam("file") MultipartFile file,
                                     @RequestParam(required = false, defaultValue = "true") boolean publicAccess) {
-        if (file.isEmpty()) {
-            throw new CmsValidationException(CmsMessages.FILE_EMPTY);
-        }
-        if (file.getSize() > MAX_UPLOAD_BYTES) {
-            throw new CmsValidationException(CmsMessages.FILE_TOO_LARGE);
-        }
-
-        var folderType = folderTypeFor(file, publicAccess);
-        if (!uploadValidator.isAllowed(file, folderType)) {
-            throw new CmsValidationException(CmsMessages.FILE_TYPE_NOT_SUPPORTED);
-        }
-
-        try {
-            var bytes = file.getBytes();
-            var key = storageService.uploadFile(bytes, file.getOriginalFilename(), file.getContentType(), folderType);
-            var previewKey = documentPreviewService.createPdfPreview(bytes, file.getOriginalFilename(), folderType);
-
-            return UploadResponseDto.of(storageUrlResolver.urlFor(key), storageUrlResolver.urlFor(previewKey));
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-    }
-
-    private FolderType folderTypeFor(MultipartFile file, boolean publicAccess) {
-        if (uploadValidator.isAllowed(file, FolderType.IMAGE)) {
-            return FolderType.IMAGE;
-        }
-        return publicAccess ? FolderType.PUBLIC_FILE : FolderType.FILE;
+        return cmsMediaService.upload(file, publicAccess);
     }
 
     private boolean isEditor(Authentication authentication) {

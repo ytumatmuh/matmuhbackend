@@ -34,6 +34,18 @@ public final class CollectionSchemaValidator {
             FieldDefinition.required("alt", FieldType.SHORT_TEXT, "Alt")
     );
 
+    public static final String FILE_URL = "url";
+    public static final String FILE_PREVIEW_URL = "previewUrl";
+
+
+    private static final List<FieldDefinition> FILE_FIELDS = List.of(
+            FieldDefinition.required(FILE_URL, FieldType.URL, "Url"),
+            FieldDefinition.required("name", FieldType.SHORT_TEXT, "Name"),
+            FieldDefinition.of("mime", FieldType.SHORT_TEXT, "Mime"),
+            FieldDefinition.of("size", FieldType.NUMBER, "Size"),
+            FieldDefinition.readOnly(FILE_PREVIEW_URL, FieldType.URL, "PreviewUrl")
+    );
+
     public static ObjectNode validateAndStrip(CollectionSchema schema, JsonNode data) {
         return validateAndStrip(schema, data, false);
     }
@@ -80,6 +92,11 @@ public final class CollectionSchemaValidator {
 
             if (field.type() == FieldType.IMAGE) {
                 result.set(field.name(), validateObject(IMAGE_FIELDS, value, isDraft, errors, fieldPath));
+                continue;
+            }
+
+            if (field.type() == FieldType.FILE) {
+                result.set(field.name(), validateObject(FILE_FIELDS, value, isDraft, errors, fieldPath));
                 continue;
             }
 

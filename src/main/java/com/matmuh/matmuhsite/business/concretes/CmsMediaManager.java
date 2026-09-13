@@ -1,0 +1,104 @@
+package com.matmuh.matmuhsite.business.concretes;
+
+import com.matmuh.matmuhsite.business.abstracts.CmsMediaService;
+import com.matmuh.matmuhsite.business.constants.CmsMessages;
+import com.matmuh.matmuhsite.core.dtos.cms.response.UploadResponseDto;
+import com.matmuh.matmuhsite.core.exceptions.CmsValidationException;
+import com.matmuh.matmuhsite.core.helpers.StorageUrlResolver;
+import com.matmuh.matmuhsite.core.helpers.UploadValidator;
+import com.matmuh.matmuhsite.core.utilities.preview.DocumentPreviewService;
+import com.matmuh.matmuhsite.core.utilities.storage.FolderType;
+import com.matmuh.matmuhsite.core.utilities.storage.StorageService;
+import com.matmuh.matmuhsite.dataAccess.abstracts.FileDao;
+import com.matmuh.matmuhsite.dataAccess.abstracts.ImageDao;
+import com.matmuh.matmuhsite.entities.File;
+import com.matmuh.matmuhsite.entities.Image;
+import com.matmuh.matmuhsite.entities.Media;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.io.UncheckedIOException;
+
+@Service
+public class CmsMediaManager implements CmsMediaService {
+
+    private static final long MAX_UPLOAD_BYTES = 50L * 1024 * 1024;
+
+    private final Logger logger = LoggerFactory.getLogger(CmsMediaManager.class);
+
+    private final StorageService storageService;
+    private final StorageUrlResolver storageUrlResolver;
+    private final UploadValidator uploadValidator;
+    private final DocumentPreviewService documentPreviewService;
+    private final FileDao fileDao;
+    private final ImageDao imageDao;
+
+    public CmsMediaManager(StorageService storageService,
+                           StorageUrlResolver storageUrlResolver,
+                           UploadValidator uploadValidator,
+                           DocumentPreviewService documentPreviewService,
+                           FileDao fileDao,
+                           ImageDao imageDao) {
+        this.storageService = storageService;
+        this.storageUrlResolver = storageUrlResolver;
+        this.uploadValidator = uploadValidator;
+        this.documentPreviewService = documentPreviewService;
+        this.fileDao = fileDao;
+        this.imageDao = imageDao;
+    }
+
+    @Override
+    @Transactional
+    public UploadResponseDto upload(MultipartFile file, boolean publicAccess) {
+        if (file.isEmpty()) {
+            throw new CmsValidationException(CmsMessages.FILE_EMPTY);
+        }
+        if (file.getSize() > MAX_UPLOAD_BYTES) {
+            throw new CmsValidationException(CmsMessages.FILE_TOO_LARGE);
+        }
+
+        var folderType = folderTypeFor(file, publicAccess);
+        if (!uploadValidator.isAllowed(file, folderType)) {
+            throw new CmsValidationException(CmsMessages.FILE_TYPE_NOT_SUPPORTED);
+        }
+
+        try {
+            var bytes = file.getBytes();
+            var key = storageService.uploadFile(bytes, file.getOriginalFilename(), file.getContentType(), folderType);
+            var previewKey = documentPreviewService.createPdfPreview(bytes, file.getOriginalFilename(), folderType);
+
+            record(file, key, previewKey, folderType);
+            logger.info("CMS media uploaded: {} (preview: {})", key, previewKey != null);
+
+            return UploadResponseDto.of(storageUrlResolver.urlFor(key), storageUrlResolver.urlFor(previewKey));
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+
+    private void record(MultipartFile file, String key, String previewKey, FolderType folderType) {
+        Media media = folderType == FolderType.IMAGE ? new Image() : new File();
+        media.setFileName(file.getOriginalFilename());
+        media.setFileType(file.getContentType());
+        media.setFileUrl(key);
+        media.setFileSize(file.getSize());
+        media.setPreviewUrl(previewKey);
+        if (media instanceof Image image) {
+            imageDao.save(image);
+        } else {
+            fileDao.save((File) media);
+        }
+    }
+
+    private FolderType folderTypeFor(MultipartFile file, boolean publicAccess) {
+        if (uploadValidator.isAllowed(file, FolderType.IMAGE)) {
+            return FolderType.IMAGE;
+        }
+        return publicAccess ? FolderType.PUBLIC_FILE : FolderType.FILE;
+    }
+}

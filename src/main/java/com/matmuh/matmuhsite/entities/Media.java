@@ -38,4 +38,7 @@ public abstract class Media extends BaseEntity{
     @Column(name = "file_size")
     private Long fileSize;
 
+    @Column(name = "preview_url")
+    private String previewUrl;
+
 }

@@ -15,6 +15,7 @@ public final class StaffCollectionSchema {
 
     public static final String KEY = "staff";
     public static final String SLUG_SOURCE_FIELD = "lastName";
+    public static final String DISPLAY_NAME = "Personel";
     public static final String DISPLAY_FIELD = "fullName";
 
     public static final String FIELD_FIRST_NAME = "firstName";

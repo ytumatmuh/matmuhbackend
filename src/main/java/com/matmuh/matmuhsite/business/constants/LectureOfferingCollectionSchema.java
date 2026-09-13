@@ -16,6 +16,7 @@ public final class LectureOfferingCollectionSchema {
 
     public static final String KEY = "lecture-offerings";
     public static final String SLUG_SOURCE_FIELD = "lectureCode";
+    public static final String DISPLAY_NAME = "Açılan Dersler";
     public static final String DISPLAY_FIELD = "lectureName";
 
     public static final String FIELD_LECTURE_CODE = "lectureCode";
