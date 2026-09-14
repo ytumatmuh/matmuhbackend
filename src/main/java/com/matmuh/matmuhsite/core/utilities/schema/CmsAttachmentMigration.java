@@ -42,6 +42,28 @@ public class CmsAttachmentMigration implements ApplicationRunner {
                           WHERE jsonb_exists(a, 'url') AND NOT jsonb_exists(a, 'file'))
             """;
 
+    // Adresi olmayan ek, ek değildir: editörde "Boş öğe" olarak durur, Dosya zorunlu olduğu için
+    // kayıt tıkanır, sitede de çöp olarak çizilir. Prod'da böyle "ad var, url yok" eski satırlar çıktı.
+    private static final String LIST_URLLESS = """
+            SELECT t.slug, COALESCE(att->'file'->>'name', att->>'name', '?') AS name
+            FROM %1$s t, jsonb_array_elements(t.%2$s->'attachments') att
+            WHERE t.collection_key IN ('announcements', 'news')
+              AND jsonb_typeof(t.%2$s->'attachments') = 'array'
+              AND COALESCE(att->'file'->>'url', '') = ''
+            """;
+
+    private static final String DROP_URLLESS = """
+            UPDATE %1$s t
+            SET %2$s = jsonb_set(t.%2$s, '{attachments}', COALESCE((
+                SELECT jsonb_agg(att)
+                FROM jsonb_array_elements(t.%2$s->'attachments') att
+                WHERE COALESCE(att->'file'->>'url', '') <> ''), '[]'::jsonb))
+            WHERE t.collection_key IN ('announcements', 'news')
+              AND jsonb_typeof(t.%2$s->'attachments') = 'array'
+              AND EXISTS (SELECT 1 FROM jsonb_array_elements(t.%2$s->'attachments') a
+                          WHERE COALESCE(a->'file'->>'url', '') = '')
+            """;
+
     private static final String BACKFILL_MEDIA = """
             INSERT INTO media (id, media_type, file_name, file_type, file_url, file_size, preview_url, is_deleted, created_at)
             SELECT gen_random_uuid(), 'FILE', name, mime, key, size, preview_key, false, now()
@@ -87,10 +109,22 @@ public class CmsAttachmentMigration implements ApplicationRunner {
         if (!Boolean.TRUE.equals(jdbcTemplate.queryForObject(TABLES_EXIST, Boolean.class))) {
             return new Result(0, 0, 0);
         }
-        int items = jdbcTemplate.update(WRAP_ATTACHMENTS.formatted("collection_items", "data"));
-        int drafts = jdbcTemplate.update(WRAP_ATTACHMENTS.formatted("collection_drafts", "payload"));
+        int items = jdbcTemplate.update(WRAP_ATTACHMENTS.formatted("collection_items", "data"))
+                + dropUrlless("collection_items", "data");
+        int drafts = jdbcTemplate.update(WRAP_ATTACHMENTS.formatted("collection_drafts", "payload"))
+                + dropUrlless("collection_drafts", "payload");
         int media = jdbcTemplate.update(BACKFILL_MEDIA);
         return new Result(items, drafts, media);
+    }
+
+    private int dropUrlless(String table, String column) {
+        var urlless = jdbcTemplate.query(LIST_URLLESS.formatted(table, column),
+                (rs, i) -> rs.getString("slug") + " → " + rs.getString("name"));
+        if (urlless.isEmpty()) {
+            return 0;
+        }
+        logger.warn("Dropping {} attachment(s) without a url from {}: {}", urlless.size(), table, urlless);
+        return jdbcTemplate.update(DROP_URLLESS.formatted(table, column));
     }
 
 
