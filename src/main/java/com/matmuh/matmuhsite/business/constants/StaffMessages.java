@@ -21,4 +21,9 @@ public class StaffMessages {
     public static final String ROLE_TOO_LONG = "{staff.role.too.long}";
     public static final String PHONE_TOO_LONG = "{staff.phone.too.long}";
     public static final String STAFF_CANNOT_TEACH = "staff.cannot.teach";
+    public static final String OFFICE_HOUR_DAY_NOT_NULL = "{staff.office.hour.day.not.null}";
+    public static final String OFFICE_HOUR_START_NOT_NULL = "{staff.office.hour.start.not.null}";
+    public static final String OFFICE_HOUR_END_NOT_NULL = "{staff.office.hour.end.not.null}";
+    public static final String OFFICE_HOUR_TIME_INVALID = "Bitiş saati başlangıçtan sonra olmalı.";
+    public static final String OFFICE_HOUR_DESCRIPTION_TOO_LONG = "{staff.office.hour.description.too.long}";
 }

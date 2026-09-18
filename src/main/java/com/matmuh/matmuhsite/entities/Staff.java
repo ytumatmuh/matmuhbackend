@@ -71,6 +71,12 @@ public class Staff extends BaseEntity{
     @Column(name = "office")
     private String office;
 
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "staff_office_hours", joinColumns = @JoinColumn(name = "staff_id"))
+    @OrderBy("dayOfWeek ASC, startTime ASC")
+    @BatchSize(size = 50)
+    @Builder.Default
+    private List<OfficeHour> officeHours = new ArrayList<>();
 
     @Embedded
     @AttributeOverrides({

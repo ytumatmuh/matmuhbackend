@@ -1,12 +1,15 @@
 package com.matmuh.matmuhsite.core.dtos.staff.request;
 
 import com.matmuh.matmuhsite.business.constants.StaffMessages;
+import com.matmuh.matmuhsite.core.dtos.staff.OfficeHourDto;
 import com.matmuh.matmuhsite.core.validation.NullOrNotBlank;
 import com.matmuh.matmuhsite.entities.StaffGroup;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.Nulls;
 import com.matmuh.matmuhsite.core.dtos.common.ImageRefDto;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -14,7 +17,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -51,6 +56,10 @@ public class CreateStaffRequestDto {
     private String avesisLink;
 
     private String office;
+
+    @Valid
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
+    private List<OfficeHourDto> officeHours = new ArrayList<>();
 
     @Valid
     private ImageRefDto photo;

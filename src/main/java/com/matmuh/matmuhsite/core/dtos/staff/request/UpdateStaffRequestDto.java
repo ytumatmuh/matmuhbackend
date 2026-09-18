@@ -1,6 +1,7 @@
 package com.matmuh.matmuhsite.core.dtos.staff.request;
 
 import com.matmuh.matmuhsite.business.constants.StaffMessages;
+import com.matmuh.matmuhsite.core.dtos.staff.OfficeHourDto;
 import com.matmuh.matmuhsite.core.validation.NullOrNotBlank;
 import com.matmuh.matmuhsite.entities.StaffGroup;
 import jakarta.validation.constraints.Email;
@@ -12,6 +13,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -43,6 +45,9 @@ public class UpdateStaffRequestDto {
     private String avesisLink;
 
     private String office;
+
+    @Valid
+    private List<OfficeHourDto> officeHours;
 
     @Valid
     private ImageRefDto photo;

@@ -9,6 +9,7 @@ import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionListDto;
 import com.matmuh.matmuhsite.core.dtos.staff.request.CreateStaffRequestDto;
 import com.matmuh.matmuhsite.core.dtos.staff.request.UpdateStaffRequestDto;
 import com.matmuh.matmuhsite.core.dtos.staff.response.StaffDto;
+import com.matmuh.matmuhsite.core.exceptions.BusinessRuleException;
 import com.matmuh.matmuhsite.core.exceptions.CmsValidationException;
 import com.matmuh.matmuhsite.core.exceptions.ConcurrencyConflictException;
 import com.matmuh.matmuhsite.core.exceptions.ResourceNotFoundException;
@@ -20,6 +21,7 @@ import com.matmuh.matmuhsite.entities.StaffGroup;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 
+import java.util.ArrayList;
 import java.util.Locale;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -79,8 +81,15 @@ public class StaffCollectionProvider implements CmsCollectionProvider {
     @Transactional
     public CollectionItemDto create(ObjectNode data, String locale) {
         var request = convert(data, CreateStaffRequestDto.class);
+        if (request.getOfficeHours() == null) {
+            request.setOfficeHours(new ArrayList<>());
+        }
         validate(request);
-        return toItem(staffService.createStaff(request));
+        try {
+            return toItem(staffService.createStaff(request));
+        } catch (BusinessRuleException exception) {
+            throw new CmsValidationException("Field 'officeHours': " + exception.getMessage());
+        }
     }
 
 
@@ -97,7 +106,11 @@ public class StaffCollectionProvider implements CmsCollectionProvider {
 
         var request = convert(data, UpdateStaffRequestDto.class);
         validate(request);
-        return toItem(staffService.updateStaff(staff.getId(), request));
+        try {
+            return toItem(staffService.updateStaff(staff.getId(), request));
+        } catch (BusinessRuleException exception) {
+            throw new CmsValidationException("Field 'officeHours': " + exception.getMessage());
+        }
     }
 
     @Override
