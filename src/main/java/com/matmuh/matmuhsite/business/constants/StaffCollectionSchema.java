@@ -6,6 +6,7 @@ import com.matmuh.matmuhsite.core.dtos.cms.response.FieldDefinition;
 import com.matmuh.matmuhsite.entities.StaffGroup;
 import com.matmuh.matmuhsite.entities.cms.FieldType;
 
+import java.time.DayOfWeek;
 import java.util.Arrays;
 import java.util.List;
 
@@ -23,9 +24,23 @@ public final class StaffCollectionSchema {
     public static final String FIELD_EMAIL = "email";
     public static final String FIELD_AVESIS_LINK = "avesisLink";
     public static final String FIELD_GROUPS = "groups";
+    public static final String FIELD_OFFICE_HOURS = "officeHours";
 
     private static final String[] GROUP_OPTIONS =
             Arrays.stream(StaffGroup.values()).map(Enum::name).toArray(String[]::new);
+
+    private static final String[] DAY_OPTIONS =
+            Arrays.stream(DayOfWeek.values()).map(Enum::name).toArray(String[]::new);
+
+    private static final List<FieldDefinition> OFFICE_HOUR_FIELDS = List.of(
+            FieldDefinition.requiredSelect("dayOfWeek", "Gün", ChoiceSource.ofValues(DAY_OPTIONS)),
+            FieldDefinition.required("startTime", FieldType.SHORT_TEXT, "Başlangıç Saati")
+                    .withHelp("HH:mm biçiminde, ör. 10:00."),
+            FieldDefinition.required("endTime", FieldType.SHORT_TEXT, "Bitiş Saati")
+                    .withHelp("HH:mm biçiminde, ör. 12:00."),
+            FieldDefinition.of("description", FieldType.SHORT_TEXT, "Açıklama")
+                    .withHelp("Opsiyonel not, ör. Ofis D-105 veya randevulu.")
+    );
 
     public static final CollectionSchema SCHEMA = new CollectionSchema(List.of(
             FieldDefinition.readOnly("rawName", FieldType.SHORT_TEXT, "Ham ad")
@@ -47,6 +62,9 @@ public final class StaffCollectionSchema {
             FieldDefinition.of("office", FieldType.SHORT_TEXT, "Ofis"),
             FieldDefinition.of("photo", FieldType.IMAGE, "Fotoğraf")
                     .withHelp("Boş bırakılırsa ad-soyad baş harfleri gösterilir."),
-            FieldDefinition.of(FIELD_AVESIS_LINK, FieldType.URL, "AVESİS").asFilterable()
+            FieldDefinition.of(FIELD_AVESIS_LINK, FieldType.URL, "AVESİS").asFilterable(),
+            FieldDefinition.of(FIELD_OFFICE_HOURS, FieldType.OBJECT_ARRAY, "Görüşme Saatleri")
+                    .withItemFields(OFFICE_HOUR_FIELDS)
+                    .withHelp("Haftalık ofis görüşme saatleri. Başlangıç saati bitişten önce olmalı.")
     ));
 }

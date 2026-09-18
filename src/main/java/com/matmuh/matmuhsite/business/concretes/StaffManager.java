@@ -8,9 +8,11 @@ import com.matmuh.matmuhsite.core.helpers.UniqueSlugResolver;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import com.matmuh.matmuhsite.core.dtos.staff.response.StaffDto;
+import com.matmuh.matmuhsite.core.exceptions.BusinessRuleException;
 import com.matmuh.matmuhsite.core.exceptions.ResourceNotFoundException;
 import com.matmuh.matmuhsite.core.mappers.StaffMapper;
 import com.matmuh.matmuhsite.dataAccess.abstracts.StaffDao;
+import com.matmuh.matmuhsite.entities.OfficeHour;
 import com.matmuh.matmuhsite.entities.Staff;
 import com.matmuh.matmuhsite.entities.StaffGroup;
 import org.slf4j.Logger;
@@ -34,6 +36,7 @@ public class StaffManager implements StaffService {
     }
 
     @Override
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public StaffDto getStaffById(UUID id) {
         log.debug("Fetching staff with ID: {}", id);
 
@@ -58,6 +61,7 @@ public class StaffManager implements StaffService {
         });
 
         staffMapper.updateStaffFromDto(request, staff);
+        validateOfficeHours(staff.getOfficeHours());
         applyPhotoAlt(staff);
         var saved = staffDao.save(staff);
 
@@ -88,6 +92,7 @@ public class StaffManager implements StaffService {
     }
 
     @Override
+    @org.springframework.transaction.annotation.Transactional
     public StaffDto createStaff(CreateStaffRequestDto createStaffRequestDto) {
         log.info("Creating new staff with email: {}", LogMasks.email(createStaffRequestDto.getEmail()));
 
@@ -103,6 +108,7 @@ public class StaffManager implements StaffService {
         ));
 
         applyPhotoAlt(staff);
+        validateOfficeHours(staff.getOfficeHours());
 
         Staff savedStaff = staffDao.save(staff);
 
@@ -112,6 +118,7 @@ public class StaffManager implements StaffService {
     }
 
     @Override
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public PageDto<StaffDto> getStaff(String search, StaffGroup group, String academicTitle, Pageable pageable) {
         log.debug("Fetching staff search={} group={} academicTitle={} page={}", search, group, academicTitle, pageable.getPageNumber());
 
@@ -132,6 +139,20 @@ public class StaffManager implements StaffService {
         }
         if (photo.getAlt() == null || photo.getAlt().isBlank()) {
             photo.setAlt((staff.getFirstName() + " " + staff.getLastName()).trim());
+        }
+    }
+
+    private void validateOfficeHours(List<OfficeHour> hours) {
+        if (hours == null) {
+            return;
+        }
+        for (var hour : hours) {
+            if (hour.getStartTime() == null || hour.getEndTime() == null) {
+                continue;
+            }
+            if (!hour.getEndTime().isAfter(hour.getStartTime())) {
+                throw new BusinessRuleException(StaffMessages.OFFICE_HOUR_TIME_INVALID);
+            }
         }
     }
 

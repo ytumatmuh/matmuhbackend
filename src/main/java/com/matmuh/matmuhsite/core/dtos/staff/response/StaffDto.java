@@ -1,11 +1,14 @@
 package com.matmuh.matmuhsite.core.dtos.staff.response;
 
 import com.matmuh.matmuhsite.core.dtos.common.ImageRefDto;
+import com.matmuh.matmuhsite.core.dtos.staff.OfficeHourDto;
 
 import com.matmuh.matmuhsite.entities.StaffGroup;
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -35,6 +38,9 @@ public class StaffDto {
     private String avesisLink;
 
     private String office;
+
+    @Builder.Default
+    private List<OfficeHourDto> officeHours = new ArrayList<>();
 
     private ImageRefDto photo;
 
