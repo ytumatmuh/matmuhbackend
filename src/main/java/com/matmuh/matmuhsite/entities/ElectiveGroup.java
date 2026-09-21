@@ -32,6 +32,9 @@ public class ElectiveGroup extends BaseEntity {
     @Column(name = "name", nullable = false)
     private String name;
 
+    @Column(name = "name_en")
+    private String nameEn;
+
     @Column(name = "slug")
     private String slug;
 

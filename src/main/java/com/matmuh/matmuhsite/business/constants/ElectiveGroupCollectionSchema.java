@@ -31,6 +31,7 @@ public final class ElectiveGroupCollectionSchema {
     private static final List<FieldDefinition> OPTION_FIELDS = List.of(
             FieldDefinition.of("code", FieldType.SHORT_TEXT, "Ders kodu"),
             FieldDefinition.of("name", FieldType.SHORT_TEXT, "Ders adı"),
+            FieldDefinition.of("nameEn", FieldType.SHORT_TEXT, "Ders adı (İngilizce)"),
             FieldDefinition.of("localCredit", FieldType.NUMBER, "Yerel kredi"),
             FieldDefinition.of("ects", FieldType.NUMBER, "AKTS")
     );
@@ -42,6 +43,8 @@ public final class ElectiveGroupCollectionSchema {
             FieldDefinition.required(FIELD_NAME, FieldType.SHORT_TEXT, "Slot adı")
                     .asFilterable()
                     .withHelp("Müfredatta görünen ad, ör. Mesleki Seçmeli 2."),
+            FieldDefinition.of("nameEn", FieldType.SHORT_TEXT, "Slot adı (İngilizce)")
+                    .withHelp("İngilizce müfredat sayfasında görünen ad, ör. Professional Elective 2. Boş bırakılırsa Türkçe ad gösterilir."),
             FieldDefinition.of("about", FieldType.LONG_TEXT, "Açıklama"),
             FieldDefinition.of(FIELD_TERM, FieldType.NUMBER, "Yarıyıl").asFilterable(),
             FieldDefinition.select(FIELD_SEMESTER, "Dönem", ChoiceSource.ofValues("FALL", "SPRING", "SUMMER"))

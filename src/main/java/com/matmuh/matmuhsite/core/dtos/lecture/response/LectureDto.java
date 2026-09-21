@@ -26,6 +26,8 @@ public class LectureDto {
 
     private String name;
 
+    private String nameEn;
+
     private String code;
 
     private String slug;
@@ -33,6 +35,8 @@ public class LectureDto {
     private String language;
 
     private String about;
+
+    private String aboutEn;
 
     private String gradingPolicy;
 

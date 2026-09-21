@@ -7,6 +7,7 @@ public class ElectiveGroupMessages {
     public static final String CODE_NOT_BLANK_IF_PRESENT = "{elective.group.code.not.blank.if.present}";
     public static final String NAME_CANNOT_BE_BLANK = "{elective.group.name.not.blank}";
     public static final String NAME_NOT_BLANK_IF_PRESENT = "{elective.group.name.not.blank.if.present}";
+    public static final String NAME_EN_TOO_LONG = "{elective.group.name.en.too.long}";
     public static final String SLUG_NOT_BLANK_IF_PRESENT = "{elective.group.slug.not.blank.if.present}";
     public static final String SLUG_INVALID = "elective.group.slug.invalid";
     public static final String SLUG_EXISTS = "elective.group.slug.exists";

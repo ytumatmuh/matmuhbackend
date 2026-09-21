@@ -27,5 +27,10 @@ public class SyncResultDto {
         private int deleted;
         private int unchanged;
         private int restored;
+        private int reseeded;
+
+        public SyncSlugResultDto(String slug, int created, int deleted, int unchanged, int restored) {
+            this(slug, created, deleted, unchanged, restored, 0);
+        }
     }
 }

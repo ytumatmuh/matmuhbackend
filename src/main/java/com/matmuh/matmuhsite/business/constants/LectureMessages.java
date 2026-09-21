@@ -10,6 +10,7 @@ public class LectureMessages {
     public static final String LECTURE_NOT_FOUND = "lecture.not.found";
     public static final String LECTURE_NAME_CANNOT_BE_BLANK = "{lecture.name.not.blank}";
     public static final String LECTURE_NAME_NOT_BLANK_IF_PRESENT = "{lecture.name.not.blank.if.present}";
+    public static final String LECTURE_NAME_EN_TOO_LONG = "{lecture.name.en.too.long}";
     public static final String LECTURE_CODE_NOT_BLANK_IF_PRESENT = "{lecture.code.not.blank.if.present}";
     public static final String SLUG_NOT_BLANK_IF_PRESENT = "{lecture.slug.not.blank.if.present}";
     public static final String SLUG_INVALID = "lecture.slug.invalid";

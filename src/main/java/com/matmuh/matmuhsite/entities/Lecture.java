@@ -29,6 +29,11 @@ public class Lecture extends BaseEntity{
     @Column(name = "name")
     private String name;
 
+    // İngilizce karşılıklar düz kolon: iki dilli, sabit bir site için çeviri tablosu
+    // fazla; editör ve Egehan'ın botu ikisini tek kayıtta yazar. Boşsa site Türkçeye düşer.
+    @Column(name = "name_en")
+    private String nameEn;
+
     @Column(name = "language")
     private String language;
 
@@ -44,6 +49,9 @@ public class Lecture extends BaseEntity{
 
     @Column(name = "about", columnDefinition = "TEXT")
     private String about;
+
+    @Column(name = "about_en", columnDefinition = "TEXT")
+    private String aboutEn;
 
     @Column(name = "grading_policy", columnDefinition = "TEXT")
     private String gradingPolicy;

@@ -6,6 +6,7 @@ import com.matmuh.matmuhsite.entities.DegreeLevel;
 import com.matmuh.matmuhsite.entities.Semester;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -26,6 +27,9 @@ public class CreateElectiveGroupRequestDto {
 
     @NotBlank(message = ElectiveGroupMessages.NAME_CANNOT_BE_BLANK)
     private String name;
+
+    @Size(max = 255, message = ElectiveGroupMessages.NAME_EN_TOO_LONG)
+    private String nameEn;
 
     @NullOrNotBlank(message = ElectiveGroupMessages.SLUG_NOT_BLANK_IF_PRESENT)
     private String slug;

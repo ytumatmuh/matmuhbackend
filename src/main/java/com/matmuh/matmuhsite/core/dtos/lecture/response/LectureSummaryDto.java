@@ -19,5 +19,7 @@ public class LectureSummaryDto {
 
     private String name;
 
+    private String nameEn;
+
     private String slug;
 }

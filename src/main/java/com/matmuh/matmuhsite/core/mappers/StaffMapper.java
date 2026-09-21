@@ -14,6 +14,7 @@ import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @Mapper(componentModel = "spring")
@@ -42,11 +43,17 @@ public interface StaffMapper {
         }
     }
 
+    // Kolon STRING enum olduğu için @OrderBy alfabetik sıralar (FRIDAY < MONDAY); haftalık
+    // sıra burada kurulur ki her tüketici (REST, CMS) aynı düzeni alsın.
     @AfterMapping
-    default void emptyOfficeHours(@MappingTarget StaffDto dto) {
+    default void orderOfficeHours(@MappingTarget StaffDto dto) {
         if (dto.getOfficeHours() == null) {
             dto.setOfficeHours(new ArrayList<>());
+            return;
         }
+        var ordered = new ArrayList<>(dto.getOfficeHours());
+        ordered.sort(Comparator.comparing(OfficeHourDto::getDayOfWeek).thenComparing(OfficeHourDto::getStartTime));
+        dto.setOfficeHours(ordered);
     }
 
     @AfterMapping

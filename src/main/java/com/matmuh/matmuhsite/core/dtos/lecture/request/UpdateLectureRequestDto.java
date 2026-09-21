@@ -9,6 +9,7 @@ import com.matmuh.matmuhsite.entities.LectureType;
 import com.matmuh.matmuhsite.entities.Semester;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -26,10 +27,15 @@ public class UpdateLectureRequestDto {
     @NullOrNotBlank(message = LectureMessages.LECTURE_NAME_NOT_BLANK_IF_PRESENT)
     private String name;
 
+    @Size(max = 255, message = LectureMessages.LECTURE_NAME_EN_TOO_LONG)
+    private String nameEn;
+
     @NullOrNotBlank(message = LectureMessages.LECTURE_CODE_NOT_BLANK_IF_PRESENT)
     private String code;
 
     private String about;
+
+    private String aboutEn;
 
     private String gradingPolicy;
 

@@ -22,6 +22,8 @@ public class ElectiveGroupOptionDto {
 
     private String name;
 
+    private String nameEn;
+
     private String slug;
 
     private String language;

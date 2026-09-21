@@ -14,6 +14,7 @@ import lombok.Setter;
 import tools.jackson.databind.JsonNode;
 
 import java.util.List;
+import java.util.Map;
 
 @Getter
 @Setter
@@ -43,8 +44,24 @@ public class SyncManifestRequestDto {
 
         private JsonNode defaultValue;
 
+        // Dil başına tohum: {"tr": ..., "en": ...}. Verilmeyen dil defaultValue'ya düşer.
+        // Tek defaultValue her dile aynı (Türkçe) metni yazıyordu ve /en Türkçe kalıyordu.
+        private Map<String, JsonNode> defaultValues;
+
         private Integer sortOrder;
 
         private JsonNode itemSchema;
+
+        public JsonNode defaultFor(String locale) {
+            if (locale != null && defaultValues != null && defaultValues.containsKey(locale)) {
+                return defaultValues.get(locale);
+            }
+            return defaultValue;
+        }
+
+        public boolean hasLocaleDefault(String locale) {
+            return locale != null && defaultValues != null && defaultValues.get(locale) != null
+                    && !defaultValues.get(locale).isNull();
+        }
     }
 }

@@ -56,6 +56,7 @@ public interface LectureDao extends JpaRepository<Lecture, UUID> {
               AND (:category IS NULL OR l.category = :category)
               AND (CAST(:search AS String) IS NULL
                    OR LOWER(l.name) LIKE LOWER(CONCAT('%', CAST(:search AS String), '%'))
+                   OR LOWER(l.nameEn) LIKE LOWER(CONCAT('%', CAST(:search AS String), '%'))
                    OR LOWER(l.code) LIKE LOWER(CONCAT('%', CAST(:search AS String), '%'))
                    OR LOWER(l.about) LIKE LOWER(CONCAT('%', CAST(:search AS String), '%')))
             """)

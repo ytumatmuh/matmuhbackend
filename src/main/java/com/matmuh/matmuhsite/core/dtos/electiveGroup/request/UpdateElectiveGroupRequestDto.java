@@ -5,6 +5,7 @@ import com.matmuh.matmuhsite.core.validation.NullOrNotBlank;
 import com.matmuh.matmuhsite.entities.DegreeLevel;
 import com.matmuh.matmuhsite.entities.Semester;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,6 +25,9 @@ public class UpdateElectiveGroupRequestDto {
 
     @NullOrNotBlank(message = ElectiveGroupMessages.NAME_NOT_BLANK_IF_PRESENT)
     private String name;
+
+    @Size(max = 255, message = ElectiveGroupMessages.NAME_EN_TOO_LONG)
+    private String nameEn;
 
     private String about;
 

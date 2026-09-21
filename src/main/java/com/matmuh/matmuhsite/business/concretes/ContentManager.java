@@ -196,7 +196,7 @@ public class ContentManager implements ContentService {
                     ? List.<SyncManifestRequestDto.ManifestBlockDto>of()
                     : manifest.getBlocks();
 
-            int created = 0, restored = 0, unchanged = 0;
+            int created = 0, restored = 0, unchanged = 0, reseeded = 0;
 
             int index = 0;
             for (var mb : manifestBlocks) {
@@ -218,7 +218,7 @@ public class ContentManager implements ContentService {
                                 .blockPath(blockPath)
                                 .locale(lane)
                                 .blockType(mb.getBlockType())
-                                .value(mb.getDefaultValue() == null ? objectMapper.nullNode() : mb.getDefaultValue())
+                                .value(seed(mb.defaultFor(lane)))
                                 .itemSchema(mb.getItemSchema())
                                 .sortOrder(sortOrder)
                                 .updatedBy(CmsMessages.SYNCED_BY_DEPLOY_PIPELINE)
@@ -246,6 +246,13 @@ public class ContentManager implements ContentService {
                         changed = true;
                     }
 
+                    if (mb.hasLocaleDefault(lane) && isUntouchedSeed(existing, mb)
+                            && !Objects.equals(existing.getValue(), mb.defaultFor(lane))) {
+                        existing.setValue(mb.defaultFor(lane));
+                        changed = true;
+                        reseeded++;
+                    }
+
                     if (changed) {
                         touch(existing, CmsMessages.SYNCED_BY_DEPLOY_PIPELINE);
                         toSave.add(existing);
@@ -255,7 +262,7 @@ public class ContentManager implements ContentService {
                 }
             }
 
-            results.add(new SyncResultDto.SyncSlugResultDto(manifestSlug, created, 0, unchanged, restored));
+            results.add(new SyncResultDto.SyncSlugResultDto(manifestSlug, created, 0, unchanged, restored, reseeded));
         }
 
         var deletedBySlug = new HashMap<String, Integer>();
@@ -347,6 +354,16 @@ public class ContentManager implements ContentService {
             }
         }
         return map;
+    }
+
+    private JsonNode seed(JsonNode value) {
+        return value == null ? objectMapper.nullNode() : value;
+    }
+
+    // Değer hâlâ dilsiz tohuma eşitse editör dokunmamıştır; yalnız o satır dile özgü
+    // tohumu alır. Düzenlenmiş bir satır sync ile asla ezilmez.
+    private boolean isUntouchedSeed(ContentBlock existing, SyncManifestRequestDto.ManifestBlockDto mb) {
+        return Objects.equals(existing.getValue(), seed(mb.getDefaultValue()));
     }
 
     private String key(String slug, String blockPath, String locale) {

@@ -25,6 +25,8 @@ public class ElectiveGroupDto {
 
     private String name;
 
+    private String nameEn;
+
     private String slug;
 
     private String about;

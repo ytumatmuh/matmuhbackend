@@ -22,6 +22,22 @@ class StaffMapperTest {
 
     private final StaffMapper mapper = Mappers.getMapper(StaffMapper.class);
 
+    // Veritabanı alfabetik verir (FRIDAY, MONDAY, WEDNESDAY); yanıt haftalık sırada olmalı.
+    @Test
+    void officeHoursComeOutMondayFirstThenByStart() {
+        var staff = new Staff();
+        staff.setOfficeHours(new ArrayList<>(List.of(
+                new OfficeHour(DayOfWeek.FRIDAY, LocalTime.of(9, 0), LocalTime.of(10, 0), null),
+                new OfficeHour(DayOfWeek.MONDAY, LocalTime.of(14, 0), LocalTime.of(15, 0), null),
+                new OfficeHour(DayOfWeek.MONDAY, LocalTime.of(10, 0), LocalTime.of(12, 0), null),
+                new OfficeHour(DayOfWeek.WEDNESDAY, LocalTime.of(13, 0), LocalTime.of(14, 30), null))));
+
+        var hours = mapper.toStaffDto(staff).getOfficeHours();
+
+        assertEquals(List.of("MONDAY 10:00", "MONDAY 14:00", "WEDNESDAY 13:00", "FRIDAY 09:00"),
+                hours.stream().map(h -> h.getDayOfWeek() + " " + h.getStartTime()).toList());
+    }
+
     @Test
     void createRequestRoundTripsOfficeHours() {
         var request = academicStaff("Ayşe", "Yılmaz");

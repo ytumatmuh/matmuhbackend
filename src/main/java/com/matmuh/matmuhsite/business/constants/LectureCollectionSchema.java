@@ -52,11 +52,15 @@ public final class LectureCollectionSchema {
 
     public static final CollectionSchema SCHEMA = new CollectionSchema(List.of(
             FieldDefinition.required("name", FieldType.SHORT_TEXT, "Ders adı"),
+            FieldDefinition.of("nameEn", FieldType.SHORT_TEXT, "Ders adı (İngilizce)")
+                    .withHelp("İngilizce sayfada görünen ad. Boş bırakılırsa Türkçe ad gösterilir."),
             FieldDefinition.required(FIELD_CODE, FieldType.SHORT_TEXT, "Ders kodu")
                     .asFilterable()
                     .withHelp("Sayfa adresi bu koddan üretilir. Filtre olarak kullanıldığında ad, kod ve içerikte arama yapar."),
             FieldDefinition.of("language", FieldType.SHORT_TEXT, "Dil"),
             FieldDefinition.of("about", FieldType.LONG_TEXT, "Ders içeriği"),
+            FieldDefinition.of("aboutEn", FieldType.LONG_TEXT, "Ders içeriği (İngilizce)")
+                    .withHelp("Boş bırakılırsa İngilizce sayfada Türkçe içerik gösterilir."),
             FieldDefinition.of("gradingPolicy", FieldType.LONG_TEXT, "Değerlendirme"),
             FieldDefinition.of("resources", FieldType.LONG_TEXT, "Kaynaklar"),
             FieldDefinition.of(FIELD_DEGREE_LEVELS, FieldType.STRING_ARRAY, "Öğrenim düzeyi")
