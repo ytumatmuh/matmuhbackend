@@ -35,7 +35,8 @@ public final class LectureCollectionSchema {
 
     private static final List<FieldDefinition> SYLLABUS_FIELDS = List.of(
             FieldDefinition.required("week", FieldType.NUMBER, "Hafta"),
-            FieldDefinition.required("topic", FieldType.SHORT_TEXT, "Konu")
+            FieldDefinition.required("topic", FieldType.SHORT_TEXT, "Konu"),
+            FieldDefinition.of("topicEn", FieldType.SHORT_TEXT, "Konu (İngilizce)")
     );
 
     private static final String[] DEGREE_LEVEL_OPTIONS =
@@ -62,7 +63,9 @@ public final class LectureCollectionSchema {
             FieldDefinition.of("aboutEn", FieldType.LONG_TEXT, "Ders içeriği (İngilizce)")
                     .withHelp("Boş bırakılırsa İngilizce sayfada Türkçe içerik gösterilir."),
             FieldDefinition.of("gradingPolicy", FieldType.LONG_TEXT, "Değerlendirme"),
+            FieldDefinition.of("gradingPolicyEn", FieldType.LONG_TEXT, "Değerlendirme (İngilizce)"),
             FieldDefinition.of("resources", FieldType.LONG_TEXT, "Kaynaklar"),
+            FieldDefinition.of("resourcesEn", FieldType.LONG_TEXT, "Kaynaklar (İngilizce)"),
             FieldDefinition.of(FIELD_DEGREE_LEVELS, FieldType.STRING_ARRAY, "Öğrenim düzeyi")
                     .withSource(ChoiceSource.ofValues(DEGREE_LEVEL_OPTIONS))
                     .asFilterable()

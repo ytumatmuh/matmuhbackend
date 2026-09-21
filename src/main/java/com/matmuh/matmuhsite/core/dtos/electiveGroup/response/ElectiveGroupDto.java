@@ -31,6 +31,8 @@ public class ElectiveGroupDto {
 
     private String about;
 
+    private String aboutEn;
+
     private Integer term;
 
     private Semester semester;

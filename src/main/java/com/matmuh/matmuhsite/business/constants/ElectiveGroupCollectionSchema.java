@@ -46,6 +46,7 @@ public final class ElectiveGroupCollectionSchema {
             FieldDefinition.of("nameEn", FieldType.SHORT_TEXT, "Slot adı (İngilizce)")
                     .withHelp("İngilizce müfredat sayfasında görünen ad, ör. Professional Elective 2. Boş bırakılırsa Türkçe ad gösterilir."),
             FieldDefinition.of("about", FieldType.LONG_TEXT, "Açıklama"),
+            FieldDefinition.of("aboutEn", FieldType.LONG_TEXT, "Açıklama (İngilizce)"),
             FieldDefinition.of(FIELD_TERM, FieldType.NUMBER, "Yarıyıl").asFilterable(),
             FieldDefinition.select(FIELD_SEMESTER, "Dönem", ChoiceSource.ofValues("FALL", "SPRING", "SUMMER"))
                     .asFilterable(),

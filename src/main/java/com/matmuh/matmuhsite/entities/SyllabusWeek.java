@@ -19,4 +19,7 @@ public class SyllabusWeek {
 
     @Column(name = "topic", nullable = false, length = 1000)
     private String topic;
+
+    @Column(name = "topic_en", length = 1000)
+    private String topicEn;
 }

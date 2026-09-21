@@ -31,6 +31,8 @@ public class UpdateElectiveGroupRequestDto {
 
     private String about;
 
+    private String aboutEn;
+
     @Min(value = 1, message = ElectiveGroupMessages.TERM_MIN)
     private Integer term;
 

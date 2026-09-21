@@ -39,7 +39,11 @@ public class UpdateLectureRequestDto {
 
     private String gradingPolicy;
 
+    private String gradingPolicyEn;
+
     private String resources;
+
+    private String resourcesEn;
 
     private String language;
 

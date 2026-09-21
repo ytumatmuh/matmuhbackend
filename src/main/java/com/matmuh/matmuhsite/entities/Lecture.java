@@ -56,8 +56,14 @@ public class Lecture extends BaseEntity{
     @Column(name = "grading_policy", columnDefinition = "TEXT")
     private String gradingPolicy;
 
+    @Column(name = "grading_policy_en", columnDefinition = "TEXT")
+    private String gradingPolicyEn;
+
     @Column(name = "resources", columnDefinition = "TEXT")
     private String resources;
+
+    @Column(name = "resources_en", columnDefinition = "TEXT")
+    private String resourcesEn;
 
     @Column(name = "term")
     private Integer term;

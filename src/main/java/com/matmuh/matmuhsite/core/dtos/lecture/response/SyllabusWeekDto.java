@@ -14,4 +14,6 @@ public class SyllabusWeekDto {
     private Integer week;
 
     private String topic;
+
+    private String topicEn;
 }
