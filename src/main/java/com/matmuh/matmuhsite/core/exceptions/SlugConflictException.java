@@ -4,6 +4,7 @@ public class SlugConflictException extends RuntimeException {
 
     public static final String REASON_TAKEN = "taken";
     public static final String REASON_ALIAS = "alias";
+    public static final String REASON_MOVED = "moved";
 
     private final String reason;
     private final String conflictingSlug;

@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -21,6 +23,12 @@ public class ProblemDetailsDto {
     private String reason;
     private Integer version;
     private String conflictingSlug;
+
+    // Yalnız blok bazlı 409'da dolar; SDK anahtarın yokluğunu "düz yazma yarışı" diye okur,
+    // o yüzden boş dizi değil null bırakılır.
+    private List<BlockConflictDto> conflicts;
+
+    public record BlockConflictDto(String path, int expected, int provided) {}
 
     public ProblemDetailsDto(String type, String title, int status, String detail, String instance) {
         this.type = type;

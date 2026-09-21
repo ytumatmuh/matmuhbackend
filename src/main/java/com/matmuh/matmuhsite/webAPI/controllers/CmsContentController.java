@@ -44,8 +44,9 @@ public class CmsContentController {
     }
 
     @Operation(summary = "Public içerik (clientKey yolu)",
-            description = "inscribed clientKey ile yapılandırıldığında anonim okumanın gittiği yol. Tek site olduğu için clientKey yok sayılır.")
-    @GetMapping("/public/{clientKey}/data")
+            description = "inscribed clientKey ile yapılandırıldığında anonim okumanın gittiği yol (SDK 4.4: .../content). "
+                    + "Tek site olduğu için clientKey yok sayılır.")
+    @GetMapping({"/public/{clientKey}/content", "/public/{clientKey}/data"})
     public ContentResponseDto getPublicData(@PathVariable String clientKey,
                                             @RequestParam String slug,
                                             @RequestParam(required = false) String locale,

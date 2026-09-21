@@ -17,8 +17,6 @@ import lombok.Setter;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SaveNewDraftRequestDto {
 
-    private String slug;
-
     @NotNull(message = CmsMessages.DATA_NOT_NULL)
     private JsonNode data;
 }

@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 import java.time.Instant;
 import java.util.*;
@@ -102,9 +103,11 @@ public class ContentManager implements ContentService {
                 .stream()
                 .collect(Collectors.toMap(ContentBlock::getBlockPath, Function.identity()));
 
-        int updated = 0;
+        record Pending(ContentBlock block, JsonNode value) {}
+
         int unchanged = 0;
-        var toSave = new ArrayList<ContentBlock>();
+        var pending = new ArrayList<Pending>();
+        var conflicts = new ArrayList<ConcurrencyConflictException.BlockConflict>();
 
         for (var update : request.getBlocks()) {
             var blockPath = SlugNormalizer.normalizeBlockPath(update.getBlockPath());
@@ -115,7 +118,9 @@ public class ContentManager implements ContentService {
             }
 
             if (update.getVersion() != null && update.getVersion() != block.getVersion()) {
-                throw new ConcurrencyConflictException(CmsMessages.VERSION_CONFLICT);
+                conflicts.add(new ConcurrencyConflictException.BlockConflict(
+                        blockPath, block.getVersion(), update.getVersion()));
+                continue;
             }
 
             if (Objects.equals(block.getValue(), update.getValue())) {
@@ -123,11 +128,22 @@ public class ContentManager implements ContentService {
                 continue;
             }
 
-            block.setValue(update.getValue());
-            touch(block, userId);
-            toSave.add(block);
-            updated++;
+            pending.add(new Pending(block, update.getValue()));
         }
+
+        // Tek 409 bütün bayat blokları sayar; SDK yalnız listelenen kartları çakışma
+        // durumuna alır, ilk uyuşmazlıkta kesmek kalanları gizlerdi.
+        if (!conflicts.isEmpty()) {
+            throw new ConcurrencyConflictException(CmsMessages.VERSION_CONFLICT, conflicts);
+        }
+
+        var toSave = new ArrayList<ContentBlock>();
+        for (var change : pending) {
+            change.block().setValue(change.value());
+            touch(change.block(), userId);
+            toSave.add(change.block());
+        }
+        int updated = toSave.size();
 
         contentBlockDao.saveAll(toSave);
         contentDraftDao.deleteOwn(normalizedSlug, userId, resolved);
@@ -142,8 +158,6 @@ public class ContentManager implements ContentService {
         var resolved = localeResolver.requireForWrite(locale);
         logger.info("Saving draft for slug: {} locale: {} user: {}", normalizedSlug, resolved, userId);
 
-        JsonNode payload = objectMapper.valueToTree(request.getBlocks());
-
         var draft = contentDraftDao.findOwn(normalizedSlug, userId, resolved)
                 .orElseGet(() -> ContentDraft.builder()
                         .slug(normalizedSlug)
@@ -151,8 +165,31 @@ public class ContentManager implements ContentService {
                         .locale(resolved)
                         .build());
 
-        draft.setPayload(payload);
+        draft.setPayload(mergeDraftPayload(draft.getPayload(), request.getBlocks()));
         contentDraftDao.save(draft);
+    }
+
+    // SDK autosave'i yalnız son kayıttan beri değişen blokları yollar; gövdeyi olduğu gibi
+    // yazmak daha önce taslağa girmiş diğer blokları sessizce düşürüyordu.
+    private JsonNode mergeDraftPayload(JsonNode existing, List<UpdatePageRequestDto.BlockUpdateDto> blocks) {
+        var merged = new LinkedHashMap<String, JsonNode>();
+        if (existing != null && existing.isArray()) {
+            for (JsonNode node : existing) {
+                var path = node.path("blockPath").asString(null);
+                if (path != null && !path.isBlank()) {
+                    merged.put(SlugNormalizer.normalizeBlockPath(path), node);
+                }
+            }
+        }
+        for (var block : blocks) {
+            var path = SlugNormalizer.normalizeBlockPath(block.getBlockPath());
+            ObjectNode node = objectMapper.valueToTree(block);
+            node.put("blockPath", path);
+            merged.put(path, node);
+        }
+        var payload = objectMapper.createArrayNode();
+        merged.values().forEach(payload::add);
+        return payload;
     }
 
     @Override

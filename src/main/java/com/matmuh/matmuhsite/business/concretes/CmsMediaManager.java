@@ -1,9 +1,8 @@
 package com.matmuh.matmuhsite.business.concretes;
 
 import com.matmuh.matmuhsite.business.abstracts.CmsMediaService;
-import com.matmuh.matmuhsite.business.constants.CmsMessages;
+import com.matmuh.matmuhsite.business.constants.FileMessages;
 import com.matmuh.matmuhsite.core.dtos.cms.response.UploadResponseDto;
-import com.matmuh.matmuhsite.core.exceptions.CmsValidationException;
 import com.matmuh.matmuhsite.core.helpers.StorageUrlResolver;
 import com.matmuh.matmuhsite.core.helpers.UploadValidator;
 import com.matmuh.matmuhsite.core.utilities.preview.DocumentPreviewService;
@@ -25,8 +24,6 @@ import java.io.UncheckedIOException;
 
 @Service
 public class CmsMediaManager implements CmsMediaService {
-
-    private static final long MAX_UPLOAD_BYTES = 50L * 1024 * 1024;
 
     private final Logger logger = LoggerFactory.getLogger(CmsMediaManager.class);
 
@@ -54,17 +51,8 @@ public class CmsMediaManager implements CmsMediaService {
     @Override
     @Transactional
     public UploadResponseDto upload(MultipartFile file, boolean publicAccess) {
-        if (file.isEmpty()) {
-            throw new CmsValidationException(CmsMessages.FILE_EMPTY);
-        }
-        if (file.getSize() > MAX_UPLOAD_BYTES) {
-            throw new CmsValidationException(CmsMessages.FILE_TOO_LARGE);
-        }
-
         var folderType = folderTypeFor(file, publicAccess);
-        if (!uploadValidator.isAllowed(file, folderType)) {
-            throw new CmsValidationException(CmsMessages.FILE_TYPE_NOT_SUPPORTED);
-        }
+        uploadValidator.validate(file, folderType, FileMessages.FILE_EMPTY_ERROR, FileMessages.FILE_SIZE_LIMIT);
 
         try {
             var bytes = file.getBytes();

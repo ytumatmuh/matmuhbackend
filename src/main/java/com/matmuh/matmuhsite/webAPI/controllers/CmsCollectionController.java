@@ -211,8 +211,11 @@ public class CmsCollectionController {
     @Operation(summary = "Yeni item draftı", description = "Henüz yaratılmamış item için draft (ADMIN).")
     @PostMapping("/{key}/drafts")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    // SDK çeviri yazarken translationGroup'u buraya da gönderir; slot grup saklamaz,
+    // grup yayınlarken POST'a gider. Bildirilmezse UnknownQueryParameterInterceptor reddeder.
     public void saveNewDraft(@PathVariable String key,
                              @RequestParam(required = false) String locale,
+                             @RequestParam(required = false) UUID translationGroup,
                              @RequestBody @Valid SaveNewDraftRequestDto request,
                              Authentication authentication) {
         collectionService.saveNewDraft(key, authentication.getName(), request, locale);
@@ -243,7 +246,7 @@ public class CmsCollectionController {
     private boolean isEditor(Authentication authentication) {
         return authentication != null && authentication.isAuthenticated()
                 && authentication.getAuthorities().stream()
-                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()) || "ROLE_EDITOR".equals(a.getAuthority()));
     }
 
     private String editorUserId(Authentication authentication) {

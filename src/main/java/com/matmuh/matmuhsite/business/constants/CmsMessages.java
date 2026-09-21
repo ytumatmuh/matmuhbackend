@@ -12,6 +12,7 @@ public class CmsMessages {
     public static final String COLLECTION_NOT_FOUND = "Collection not found: ";
     public static final String COLLECTION_ITEM_NOT_FOUND = "Collection item not found: ";
     public static final String VERSION_CONFLICT = "Version conflict: item was modified by someone else.";
+    public static final String VERSION_REQUIRED_FOR_EXISTING = "Version is required when writing to existing item: ";
     public static final String LOCALE_NOT_DECLARED = "Locale is not declared for this site: ";
     public static final String LOCALE_REQUIRED_FOR_WRITE = "Locale is required for writes here. Available: ";
     public static final String LOCALE_INVALID = "Invalid locale code: ";
@@ -25,12 +26,13 @@ public class CmsMessages {
     public static final String SLUG_RENAME_NOT_SUPPORTED = "Slug rename is not supported for this collection.";
     public static final String SLUG_TAKEN = "Slug is already taken: ";
     public static final String SLUG_HELD_BY_ALIAS = "Slug is held as an alias of another item: ";
+    public static final String SLUG_MOVED = "Slug is an old address; the item now lives at: ";
+    public static final String TRANSLATION_GROUP_NOT_FOUND = "Translation group has no item in this collection: ";
+    public static final String TRANSLATION_ALREADY_EXISTS = "The translation group already has an item in locale: ";
     public static final String ALIAS_NOT_FOUND = "Alias not found: ";
-    public static final String SLUG_REQUIRED_FOR_NEW_DRAFT = "Slug is required for a new item draft in this collection.";
-    public static final String SLUG_ALREADY_IN_USE = "Slug is already in use: ";
-    public static final String FILE_EMPTY = "Uploaded file is empty.";
-    public static final String FILE_TOO_LARGE = "Uploaded file exceeds the size limit.";
-    public static final String FILE_TYPE_NOT_SUPPORTED = "Uploaded file type is not accepted.";
+    public static final String PARAMETER_REQUIRED = "Missing required parameter: ";
+    public static final String PARAMETER_INVALID = "Invalid value for parameter: ";
+    public static final String FILE_PART_REQUIRED = "Multipart part 'file' is required.";
 
     public static final String SYNCED_BY_DEPLOY_PIPELINE = "deploy-pipeline";
 }
