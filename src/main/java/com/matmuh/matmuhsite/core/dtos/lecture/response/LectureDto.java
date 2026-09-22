@@ -1,5 +1,7 @@
 package com.matmuh.matmuhsite.core.dtos.lecture.response;
 
+import java.math.BigDecimal;
+
 import com.matmuh.matmuhsite.core.dtos.staff.response.StaffDto;
 import com.matmuh.matmuhsite.entities.DegreeLevel;
 import com.matmuh.matmuhsite.entities.InstructionLanguage;
@@ -73,7 +75,7 @@ public class LectureDto {
 
     private Integer localCredit;
 
-    private Integer ects;
+    private BigDecimal ects;
 
     private String bolognaLink;;
 

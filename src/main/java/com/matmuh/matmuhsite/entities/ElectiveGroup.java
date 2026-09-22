@@ -1,5 +1,7 @@
 package com.matmuh.matmuhsite.entities;
 
+import java.math.BigDecimal;
+
 import jakarta.persistence.*;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.SQLDelete;
@@ -69,8 +71,8 @@ public class ElectiveGroup extends BaseEntity {
     @Column(name = "local_credit")
     private Integer localCredit;
 
-    @Column(name = "ects")
-    private Integer ects;
+    @Column(name = "ects", precision = 4, scale = 1)
+    private BigDecimal ects;
 
     @Column(name = "selection_count", nullable = false)
     @Builder.Default

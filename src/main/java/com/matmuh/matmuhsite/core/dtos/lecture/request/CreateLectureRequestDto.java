@@ -1,5 +1,7 @@
 package com.matmuh.matmuhsite.core.dtos.lecture.request;
 
+import java.math.BigDecimal;
+
 import com.matmuh.matmuhsite.business.constants.LectureMessages;
 import com.matmuh.matmuhsite.core.validation.NullOrNotBlank;
 import com.matmuh.matmuhsite.core.dtos.lecture.response.SyllabusWeekDto;
@@ -84,7 +86,7 @@ public class CreateLectureRequestDto {
 
     private Integer localCredit;
 
-    private Integer ects;
+    private BigDecimal ects;
 
     private String bolognaLink;
 

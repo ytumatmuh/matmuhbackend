@@ -1,5 +1,7 @@
 package com.matmuh.matmuhsite.entities;
 
+import java.math.BigDecimal;
+
 import jakarta.persistence.*;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.SQLDelete;
@@ -123,8 +125,8 @@ public class Lecture extends BaseEntity{
     @Column(name = "local_credit")
     private int localCredit;
 
-    @Column(name = "ects")
-    private int ects;
+    @Column(name = "ects", precision = 4, scale = 1)
+    private BigDecimal ects;
 
     @Column(name = "bologna_link")
     private String bolognaLink;

@@ -1,5 +1,7 @@
 package com.matmuh.matmuhsite.core.dtos.electiveGroup.response;
 
+import java.math.BigDecimal;
+
 import com.matmuh.matmuhsite.entities.DegreeLevel;
 import com.matmuh.matmuhsite.entities.Semester;
 import lombok.AllArgsConstructor;
@@ -43,7 +45,7 @@ public class ElectiveGroupDto {
 
     private Integer localCredit;
 
-    private Integer ects;
+    private BigDecimal ects;
 
     private Integer selectionCount;
 

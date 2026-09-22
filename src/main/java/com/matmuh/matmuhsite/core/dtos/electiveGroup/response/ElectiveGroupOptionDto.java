@@ -1,5 +1,7 @@
 package com.matmuh.matmuhsite.core.dtos.electiveGroup.response;
 
+import java.math.BigDecimal;
+
 import com.matmuh.matmuhsite.entities.DegreeLevel;
 import com.matmuh.matmuhsite.entities.InstructionLanguage;
 import lombok.AllArgsConstructor;
@@ -33,7 +35,7 @@ public class ElectiveGroupOptionDto {
 
     private Integer localCredit;
 
-    private Integer ects;
+    private BigDecimal ects;
 
     private Set<DegreeLevel> degreeLevels = new LinkedHashSet<>();
 }

@@ -1,5 +1,7 @@
 package com.matmuh.matmuhsite.core.dtos.electiveGroup.request;
 
+import java.math.BigDecimal;
+
 import com.matmuh.matmuhsite.business.constants.ElectiveGroupMessages;
 import com.matmuh.matmuhsite.core.validation.NullOrNotBlank;
 import com.matmuh.matmuhsite.entities.DegreeLevel;
@@ -47,7 +49,7 @@ public class UpdateElectiveGroupRequestDto {
     private Integer localCredit;
 
     @Min(value = 0, message = ElectiveGroupMessages.ECTS_MIN)
-    private Integer ects;
+    private BigDecimal ects;
 
     @Min(value = 1, message = ElectiveGroupMessages.SELECTION_COUNT_MIN)
     private Integer selectionCount;
