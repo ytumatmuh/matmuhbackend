@@ -117,4 +117,22 @@ class CollectionSchemaValidatorTest {
         assertTrue(errors.contains("Field 'attachments[0].file' is required."), errors.toString());
         assertTrue(errors.contains("Unknown field 'attachments[0].url'."), errors.toString());
     }
+
+    // Bologna haftalık konuları 300-500 karakterlik cümleler; SHORT_TEXT 255'te kesiyordu ve
+    // bot 299 dersin yarısını yazamıyordu (Egehan, 22 Eylül).
+    @Test
+    void longTextFieldsAreNotCappedAt255() {
+        var schema = CollectionSchema.of(
+                FieldDefinition.of("syllabus", FieldType.OBJECT_ARRAY, "Haftalık program")
+                        .withItemFields(List.of(
+                                FieldDefinition.required("week", FieldType.NUMBER, "Hafta"),
+                                FieldDefinition.required("topic", FieldType.LONG_TEXT, "Konu"))));
+        var topic = "Konu ".repeat(120).trim();
+
+        var cleaned = CollectionSchemaValidator.validateAndStrip(schema, json("""
+                {"syllabus": [{"week": 1, "topic": "%s"}]}
+                """.formatted(topic)));
+
+        assertEquals(topic, cleaned.get("syllabus").get(0).get("topic").asText());
+    }
 }

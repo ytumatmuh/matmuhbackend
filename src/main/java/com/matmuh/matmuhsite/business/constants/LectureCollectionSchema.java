@@ -37,8 +37,8 @@ public final class LectureCollectionSchema {
 
     private static final List<FieldDefinition> SYLLABUS_FIELDS = List.of(
             FieldDefinition.required("week", FieldType.NUMBER, "Hafta"),
-            FieldDefinition.required("topic", FieldType.SHORT_TEXT, "Konu"),
-            FieldDefinition.of("topicEn", FieldType.SHORT_TEXT, "Konu (İngilizce)")
+            FieldDefinition.required("topic", FieldType.LONG_TEXT, "Konu"),
+            FieldDefinition.of("topicEn", FieldType.LONG_TEXT, "Konu (İngilizce)")
     );
 
     private static final String[] DEGREE_LEVEL_OPTIONS =

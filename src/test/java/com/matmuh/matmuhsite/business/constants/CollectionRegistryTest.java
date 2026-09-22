@@ -37,7 +37,8 @@ class CollectionRegistryTest {
         assertFalse(lectureFields.get("nameEn").required());
         var syllabusRow = lectureFields.get("syllabus").itemFields().stream()
                 .collect(java.util.stream.Collectors.toMap(FieldDefinition::name, f -> f));
-        assertEquals(FieldType.SHORT_TEXT, syllabusRow.get("topicEn").type());
+        assertEquals(FieldType.LONG_TEXT, syllabusRow.get("topicEn").type());
+        assertEquals(FieldType.LONG_TEXT, syllabusRow.get("topic").type());
         assertFalse(syllabusRow.get("topicEn").required());
 
         var groupFields = registry.resolve(ElectiveGroupCollectionSchema.KEY).schema().fields().stream()

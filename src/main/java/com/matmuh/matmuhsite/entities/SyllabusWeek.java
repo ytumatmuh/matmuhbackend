@@ -17,9 +17,9 @@ public class SyllabusWeek {
     @Column(name = "week", nullable = false)
     private Integer week;
 
-    @Column(name = "topic", nullable = false, length = 1000)
+    @Column(name = "topic", nullable = false, columnDefinition = "TEXT")
     private String topic;
 
-    @Column(name = "topic_en", length = 1000)
+    @Column(name = "topic_en", columnDefinition = "TEXT")
     private String topicEn;
 }
