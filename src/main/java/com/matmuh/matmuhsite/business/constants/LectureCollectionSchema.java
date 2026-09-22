@@ -4,6 +4,7 @@ import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionSchema;
 import com.matmuh.matmuhsite.core.dtos.cms.response.ChoiceSource;
 import com.matmuh.matmuhsite.core.dtos.cms.response.FieldDefinition;
 import com.matmuh.matmuhsite.entities.DegreeLevel;
+import com.matmuh.matmuhsite.entities.InstructionLanguage;
 import com.matmuh.matmuhsite.entities.LectureCategory;
 import com.matmuh.matmuhsite.entities.LectureType;
 import com.matmuh.matmuhsite.entities.cms.FieldType;
@@ -24,6 +25,7 @@ public final class LectureCollectionSchema {
     public static final String FIELD_SEMESTER = "semester";
     public static final String FIELD_CODE = "code";
     public static final String FIELD_DEGREE_LEVELS = "degreeLevels";
+    public static final String FIELD_LANGUAGES = "languages";
     public static final String FIELD_TYPE = "type";
     public static final String FIELD_CATEGORY = "category";
 
@@ -42,6 +44,9 @@ public final class LectureCollectionSchema {
     private static final String[] DEGREE_LEVEL_OPTIONS =
             Arrays.stream(DegreeLevel.values()).map(Enum::name).toArray(String[]::new);
 
+    private static final String[] LANGUAGE_OPTIONS =
+            Arrays.stream(InstructionLanguage.values()).map(Enum::name).toArray(String[]::new);
+
     private static final List<FieldDefinition> STAFF_FIELDS = List.of(
             FieldDefinition.of("firstName", FieldType.SHORT_TEXT, "Ad"),
             FieldDefinition.of("lastName", FieldType.SHORT_TEXT, "Soyad"),
@@ -58,7 +63,10 @@ public final class LectureCollectionSchema {
             FieldDefinition.required(FIELD_CODE, FieldType.SHORT_TEXT, "Ders kodu")
                     .asFilterable()
                     .withHelp("Sayfa adresi bu koddan üretilir. Filtre olarak kullanıldığında ad, kod ve içerikte arama yapar."),
-            FieldDefinition.of("language", FieldType.SHORT_TEXT, "Dil"),
+            FieldDefinition.of(FIELD_LANGUAGES, FieldType.STRING_ARRAY, "Eğitim dili")
+                    .withSource(ChoiceSource.ofValues(LANGUAGE_OPTIONS))
+                    .asFilterable()
+                    .withHelp("Dersin verildiği diller; iki dilde veriliyorsa ikisini de seçin."),
             FieldDefinition.of("about", FieldType.LONG_TEXT, "Ders içeriği"),
             FieldDefinition.of("aboutEn", FieldType.LONG_TEXT, "Ders içeriği (İngilizce)")
                     .withHelp("Boş bırakılırsa İngilizce sayfada Türkçe içerik gösterilir."),

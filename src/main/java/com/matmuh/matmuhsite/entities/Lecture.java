@@ -34,9 +34,6 @@ public class Lecture extends BaseEntity{
     @Column(name = "name_en")
     private String nameEn;
 
-    @Column(name = "language")
-    private String language;
-
     @Column(name = "code")
     private String code;
 
@@ -75,6 +72,16 @@ public class Lecture extends BaseEntity{
     @BatchSize(size = 50)
     @Builder.Default
     private Set<DegreeLevel> degreeLevels = new LinkedHashSet<>();
+
+    // Ders düzeyinde küme: iki dilde verilen dersler var. Dönem kaydının dili (LectureOffering.language)
+    // ayrı bir kavram, o grubun o dönem hangi dilde açıldığını söyler.
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "lecture_languages", joinColumns = @JoinColumn(name = "lecture_id"))
+    @Column(name = "language", nullable = false)
+    @Enumerated(EnumType.STRING)
+    @BatchSize(size = 50)
+    @Builder.Default
+    private Set<InstructionLanguage> languages = new LinkedHashSet<>();
 
     @Enumerated(EnumType.STRING)
     @Column(name = "semester")

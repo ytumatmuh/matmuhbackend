@@ -4,6 +4,7 @@ import com.matmuh.matmuhsite.business.constants.LectureMessages;
 import com.matmuh.matmuhsite.core.validation.NullOrNotBlank;
 import com.matmuh.matmuhsite.core.dtos.lecture.response.SyllabusWeekDto;
 import com.matmuh.matmuhsite.entities.DegreeLevel;
+import com.matmuh.matmuhsite.entities.InstructionLanguage;
 import com.matmuh.matmuhsite.entities.LectureCategory;
 import com.matmuh.matmuhsite.entities.LectureType;
 import com.matmuh.matmuhsite.entities.Semester;
@@ -48,7 +49,7 @@ public class CreateLectureRequestDto {
 
     private String resourcesEn;
 
-    private String language;
+    private Set<InstructionLanguage> languages;
 
     private Integer term;
 

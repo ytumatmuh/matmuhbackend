@@ -30,6 +30,8 @@ public class CmsMessages {
     public static final String TRANSLATION_GROUP_NOT_FOUND = "Translation group has no item in this collection: ";
     public static final String TRANSLATION_ALREADY_EXISTS = "The translation group already has an item in locale: ";
     public static final String ALIAS_NOT_FOUND = "Alias not found: ";
+    public static final String COLLECTION_NOT_PURGEABLE = "Collection is provider-backed and has no archive to purge: ";
+    public static final String PURGE_REQUIRES_ARCHIVED = "Only archived items can be purged; archive it first: ";
     public static final String PARAMETER_REQUIRED = "Missing required parameter: ";
     public static final String PARAMETER_INVALID = "Invalid value for parameter: ";
     public static final String FILE_PART_REQUIRED = "Multipart part 'file' is required.";

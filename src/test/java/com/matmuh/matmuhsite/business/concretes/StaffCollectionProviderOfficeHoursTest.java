@@ -101,7 +101,7 @@ class StaffCollectionProviderOfficeHoursTest {
         staff.setSlug("yilmaz");
         staff.setGroups(Set.of(StaffGroup.ACADEMIC));
         staff.setOfficeHours(new ArrayList<>(List.of(
-                new OfficeHour(DayOfWeek.MONDAY, LocalTime.of(10, 0), LocalTime.of(12, 0), "Ofis D-105"))));
+                new OfficeHour(DayOfWeek.MONDAY, LocalTime.of(10, 0), LocalTime.of(12, 0), "Ofis D-105", null))));
         when(staffDao.findBySlug("yilmaz")).thenReturn(Optional.of(staff));
 
         var item = provider.getBySlug("yilmaz", null);

@@ -3,6 +3,7 @@ package com.matmuh.matmuhsite.business.concretes;
 import com.matmuh.matmuhsite.business.abstracts.CalendarService;
 import com.matmuh.matmuhsite.business.constants.EnrollmentMessages;
 import com.matmuh.matmuhsite.core.dtos.calendar.response.CalendarOccurrenceDto;
+import com.matmuh.matmuhsite.core.dtos.calendar.response.WeeklyScheduleDto;
 import com.matmuh.matmuhsite.core.dtos.calendar.response.WeeklySlotDto;
 import com.matmuh.matmuhsite.core.exceptions.ResourceNotFoundException;
 import com.matmuh.matmuhsite.entities.Semester;
@@ -123,13 +124,15 @@ public class CalendarManager implements CalendarService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<WeeklySlotDto> getWeeklySchedule(String academicYear, Semester semester, Integer term, UUID staffId) {
+    public WeeklyScheduleDto getWeeklySchedule(String academicYear, Semester semester, Integer term, UUID staffId) {
         var resolved = resolveTerm(academicYear, semester);
 
         logger.debug("Retrieving weekly schedule for {} {} term={} staffId={}",
                 resolved.getAcademicYear(), resolved.getSemester(), term, staffId);
 
-        return scheduleSlotDao.findByTerm(resolved.getAcademicYear(), resolved.getSemester()).stream()
+        var termRef = new WeeklyScheduleDto.TermRef(resolved.getAcademicYear(), resolved.getSemester(),
+                resolved.getStartDate(), resolved.getEndDate());
+        var slots = scheduleSlotDao.findByTerm(resolved.getAcademicYear(), resolved.getSemester()).stream()
                 .filter(slot -> term == null || term.equals(slot.getLectureOffering().getLecture().getTerm()))
                 .filter(slot -> staffId == null || matchesStaff(slot, staffId))
                 .sorted(Comparator.comparing(ScheduleSlot::getDayOfWeek)
@@ -138,6 +141,7 @@ public class CalendarManager implements CalendarService {
                                 Comparator.nullsLast(String::compareToIgnoreCase)))
                 .map(this::toWeeklySlot)
                 .toList();
+        return new WeeklyScheduleDto(termRef, slots);
     }
 
 

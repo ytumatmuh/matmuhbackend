@@ -47,6 +47,10 @@ public interface LectureNoteDao extends JpaRepository<LectureNote, UUID> {
     @Query("UPDATE LectureNote n SET n.viewCount = n.viewCount + 1 WHERE n.id = :id")
     void incrementViewCount(@Param("id") UUID id);
 
+    @Modifying
+    @Query("UPDATE LectureNote n SET n.lectureOffering = null WHERE n.lectureOffering.id IN :offeringIds")
+    int detachFromOfferings(@Param("offeringIds") Collection<UUID> offeringIds);
+
     @Query("""
             SELECT n.lecture.id, COUNT(n)
             FROM LectureNote n

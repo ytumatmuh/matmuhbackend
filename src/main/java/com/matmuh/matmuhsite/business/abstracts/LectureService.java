@@ -3,6 +3,7 @@ package com.matmuh.matmuhsite.business.abstracts;
 import com.matmuh.matmuhsite.core.dtos.common.PageDto;
 import com.matmuh.matmuhsite.core.dtos.lecture.request.CreateLectureRequestDto;
 import com.matmuh.matmuhsite.entities.DegreeLevel;
+import com.matmuh.matmuhsite.entities.InstructionLanguage;
 import com.matmuh.matmuhsite.entities.LectureCategory;
 import com.matmuh.matmuhsite.entities.LectureType;
 import com.matmuh.matmuhsite.entities.Semester;
@@ -42,7 +43,8 @@ public interface LectureService {
     void applyBadgeCounts(List<LectureDto> lectures);
 
     PageDto<LectureDto> getLectures(Integer term, Semester semester, DegreeLevel degreeLevel,
-                                    LectureType type, LectureCategory category, String search, Pageable pageable);
+                                    LectureType type, LectureCategory category,
+                                    Collection<InstructionLanguage> languages, String search, Pageable pageable);
 
     LectureStatisticsDto getLectureStatistics(UUID lectureId);
 

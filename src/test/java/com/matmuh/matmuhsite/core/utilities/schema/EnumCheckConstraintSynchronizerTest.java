@@ -49,6 +49,7 @@ class EnumCheckConstraintSynchronizerTest {
                 column("grade_results", "evaluation_method", EvaluationMethod.class),
                 column("grade_results", "exam_period", ExamPeriod.class),
                 column("lecture_degree_levels", "degree_level", DegreeLevel.class),
+                column("lecture_languages", "language", InstructionLanguage.class),
                 column("lecture_notes", "review_status", NoteReviewStatus.class),
                 column("lecture_notes", "type", NoteType.class),
                 column("lecture_offering_exam_weights", "exam_type", ExamType.class),

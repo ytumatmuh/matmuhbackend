@@ -97,10 +97,13 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/cms/sync").hasRole("SCHEMA_SYNC")
                         .requestMatchers(HttpMethod.PUT, "/api/cms/content", "/api/cms/draft").hasAnyRole("ADMIN", "EDITOR")
                         .requestMatchers(HttpMethod.DELETE, "/api/cms/draft").hasAnyRole("ADMIN", "EDITOR")
-                        .requestMatchers(HttpMethod.POST, "/api/cms/media").hasAnyRole("ADMIN", "EDITOR")
-                        .requestMatchers(HttpMethod.POST, "/api/cms/collections/**").hasAnyRole("ADMIN", "EDITOR")
-                        .requestMatchers(HttpMethod.PUT, "/api/cms/collections/**").hasAnyRole("ADMIN", "EDITOR")
-                        .requestMatchers(HttpMethod.DELETE, "/api/cms/collections/**").hasAnyRole("ADMIN", "EDITOR")
+                        // CONTENT_WRITE: Egehan'ın botu için makine anahtarı — koleksiyon yazma, medya,
+                        // toplu açılış aktarımı ve dört sağlayıcı koleksiyonun REST silmesi. Katalog
+                        // POST/PATCH REST'te ADMIN kaldı; bot yazmaları CMS API'sinden yapar.
+                        .requestMatchers(HttpMethod.POST, "/api/cms/media").hasAnyRole("ADMIN", "EDITOR", "CONTENT_WRITE")
+                        .requestMatchers(HttpMethod.POST, "/api/cms/collections/**").hasAnyRole("ADMIN", "EDITOR", "CONTENT_WRITE")
+                        .requestMatchers(HttpMethod.PUT, "/api/cms/collections/**").hasAnyRole("ADMIN", "EDITOR", "CONTENT_WRITE")
+                        .requestMatchers(HttpMethod.DELETE, "/api/cms/collections/**").hasAnyRole("ADMIN", "EDITOR", "CONTENT_WRITE")
 
                         .requestMatchers(HttpMethod.POST, "/api/lectures/{id}/notes").hasAnyRole("ADMIN", "USER")
                         .requestMatchers(HttpMethod.POST, "/api/lectures/{id}/offerings").hasAnyRole("ADMIN", "EDITOR")
@@ -110,14 +113,14 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET,  "/api/lectures/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/lectures/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/api/lectures/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/lectures/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/lectures/**").hasAnyRole("ADMIN", "CONTENT_WRITE")
 
                         .requestMatchers(HttpMethod.GET,    "/api/search").permitAll()
 
                         .requestMatchers(HttpMethod.GET,    "/api/elective-groups/**").permitAll()
                         .requestMatchers(HttpMethod.POST,   "/api/elective-groups/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PATCH,  "/api/elective-groups/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/elective-groups/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/elective-groups/**").hasAnyRole("ADMIN", "CONTENT_WRITE")
 
                         .requestMatchers(HttpMethod.GET, "/api/lecture-notes/me").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/lecture-notes/{id}").authenticated()
@@ -125,10 +128,11 @@ public class SecurityConfig {
                         .requestMatchers("/api/lecture-notes/**").hasRole("ADMIN")
 
                         .requestMatchers(HttpMethod.GET, "/api/lecture-offerings/**").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/lecture-offerings/import").hasAnyRole("ADMIN", "EDITOR", "CONTENT_WRITE")
                         .requestMatchers(HttpMethod.POST, "/api/lecture-offerings/**").hasAnyRole("ADMIN", "EDITOR")
                         .requestMatchers(HttpMethod.PUT, "/api/lecture-offerings/**").hasAnyRole("ADMIN", "EDITOR")
                         .requestMatchers(HttpMethod.PATCH, "/api/lecture-offerings/**").hasAnyRole("ADMIN", "EDITOR")
-                        .requestMatchers(HttpMethod.DELETE, "/api/lecture-offerings/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/lecture-offerings/**").hasAnyRole("ADMIN", "CONTENT_WRITE")
 
                         .requestMatchers(HttpMethod.GET, "/api/academic-years").permitAll()
 
@@ -140,7 +144,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET,  "/api/staff/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/staff").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/api/staff/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/staff/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/staff/**").hasAnyRole("ADMIN", "CONTENT_WRITE")
 
                         .anyRequest().authenticated()
                 )

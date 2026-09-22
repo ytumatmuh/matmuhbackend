@@ -14,6 +14,7 @@ import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionItemDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionListDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionLookupDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.MyCollectionDto;
+import com.matmuh.matmuhsite.core.dtos.cms.response.PurgeResultDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionSchema;
 import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionSchemaResponseDto;
 import com.matmuh.matmuhsite.core.exceptions.PermissionDeniedException;
@@ -197,6 +198,26 @@ public class CmsCollectionController {
         return collectionService.restore(key, slug, authentication.getName());
     }
 
+    @Operation(summary = "Arşivli item'ı kalıcı sil",
+            description = "Yalnız arşivdeki item'ı slug alias'ları ve taslaklarıyla birlikte kalıcı siler; slug yeniden "
+                    + "kullanıma açılır. Arşivde olmayan item 409, olmayan item 404, eski adres (alias) 409 reason=moved, "
+                    + "sağlayıcı tabanlı koleksiyon 400 döner. Sorgu parametresi almaz.")
+    @DeleteMapping("/{key}/{slug}/purge")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void purge(@PathVariable String key,
+                      @PathVariable String slug,
+                      Authentication authentication) {
+        collectionService.purge(key, slug, authentication.getName());
+    }
+
+    @Operation(summary = "Arşivi boşalt",
+            description = "Koleksiyonun arşivindeki bütün item'ları alias ve taslaklarıyla kalıcı siler ve "
+                    + "{purged: N} döner. Canlı item'lara dokunmaz; sağlayıcı tabanlı koleksiyon 400 döner. Sorgu parametresi almaz.")
+    @DeleteMapping("/{key}/purge")
+    public PurgeResultDto purgeArchived(@PathVariable String key, Authentication authentication) {
+        return collectionService.purgeArchived(key, authentication.getName());
+    }
+
     @Operation(summary = "Item draftını sil",
             description = "Item draftını siler. Idempotent: draft yoksa da 204 döner.")
     @DeleteMapping("/{key}/{slug}/draft")
@@ -246,7 +267,8 @@ public class CmsCollectionController {
     private boolean isEditor(Authentication authentication) {
         return authentication != null && authentication.isAuthenticated()
                 && authentication.getAuthorities().stream()
-                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()) || "ROLE_EDITOR".equals(a.getAuthority()));
+                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()) || "ROLE_EDITOR".equals(a.getAuthority())
+                        || "ROLE_CONTENT_WRITE".equals(a.getAuthority()));
     }
 
     private String editorUserId(Authentication authentication) {

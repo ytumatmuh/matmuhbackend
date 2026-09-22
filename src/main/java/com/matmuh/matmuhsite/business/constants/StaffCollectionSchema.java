@@ -39,7 +39,8 @@ public final class StaffCollectionSchema {
             FieldDefinition.required("endTime", FieldType.SHORT_TEXT, "Bitiş Saati")
                     .withHelp("HH:mm biçiminde, ör. 12:00."),
             FieldDefinition.of("description", FieldType.SHORT_TEXT, "Açıklama")
-                    .withHelp("Opsiyonel not, ör. Ofis D-105 veya randevulu.")
+                    .withHelp("Opsiyonel not, ör. Ofis D-105 veya randevulu."),
+            FieldDefinition.of("descriptionEn", FieldType.SHORT_TEXT, "Açıklama (İngilizce)")
     );
 
     public static final CollectionSchema SCHEMA = new CollectionSchema(List.of(
@@ -56,6 +57,8 @@ public final class StaffCollectionSchema {
                     .withHelp("Bir personel birden fazla kategoride yer alabilir; bölüm başkanı hem Yönetim hem Akademik Kadro altında listelenir."),
             FieldDefinition.of("role", FieldType.SHORT_TEXT, "Görev / Rol")
                     .withHelp("Yönetim kartlarında adın altında görünür, ör. Bölüm Başkanı."),
+            FieldDefinition.of("roleEn", FieldType.SHORT_TEXT, "Görev / Rol (İngilizce)")
+                    .withHelp("İngilizce sayfada adın altında görünür, ör. Head of Department. Boşsa Türkçesi gösterilir."),
             FieldDefinition.of("academicTitle", FieldType.SHORT_TEXT, "Akademik Ünvan").asFilterable(),
             FieldDefinition.of(FIELD_EMAIL, FieldType.SHORT_TEXT, "E-posta").asFilterable(),
             FieldDefinition.of("phone", FieldType.SHORT_TEXT, "Telefon"),

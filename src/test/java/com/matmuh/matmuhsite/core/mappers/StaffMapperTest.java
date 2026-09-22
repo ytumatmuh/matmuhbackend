@@ -27,10 +27,10 @@ class StaffMapperTest {
     void officeHoursComeOutMondayFirstThenByStart() {
         var staff = new Staff();
         staff.setOfficeHours(new ArrayList<>(List.of(
-                new OfficeHour(DayOfWeek.FRIDAY, LocalTime.of(9, 0), LocalTime.of(10, 0), null),
-                new OfficeHour(DayOfWeek.MONDAY, LocalTime.of(14, 0), LocalTime.of(15, 0), null),
-                new OfficeHour(DayOfWeek.MONDAY, LocalTime.of(10, 0), LocalTime.of(12, 0), null),
-                new OfficeHour(DayOfWeek.WEDNESDAY, LocalTime.of(13, 0), LocalTime.of(14, 30), null))));
+                new OfficeHour(DayOfWeek.FRIDAY, LocalTime.of(9, 0), LocalTime.of(10, 0), null, null),
+                new OfficeHour(DayOfWeek.MONDAY, LocalTime.of(14, 0), LocalTime.of(15, 0), null, null),
+                new OfficeHour(DayOfWeek.MONDAY, LocalTime.of(10, 0), LocalTime.of(12, 0), null, null),
+                new OfficeHour(DayOfWeek.WEDNESDAY, LocalTime.of(13, 0), LocalTime.of(14, 30), null, null))));
 
         var hours = mapper.toStaffDto(staff).getOfficeHours();
 
@@ -57,7 +57,7 @@ class StaffMapperTest {
     void updateReplacesOfficeHoursWhenProvided() {
         var staff = new Staff();
         staff.setOfficeHours(new ArrayList<>(List.of(
-                new OfficeHour(DayOfWeek.TUESDAY, LocalTime.of(9, 0), LocalTime.of(10, 0), "eski"))));
+                new OfficeHour(DayOfWeek.TUESDAY, LocalTime.of(9, 0), LocalTime.of(10, 0), "eski", null))));
 
         var update = new UpdateStaffRequestDto();
         update.setOfficeHours(List.of(hour(DayOfWeek.WEDNESDAY, "14:00", "16:00", "yeni")));
@@ -72,7 +72,7 @@ class StaffMapperTest {
     void updateLeavesOfficeHoursWhenOmitted() {
         var staff = new Staff();
         staff.setOfficeHours(new ArrayList<>(List.of(
-                new OfficeHour(DayOfWeek.FRIDAY, LocalTime.of(11, 0), LocalTime.of(12, 0), "korunur"))));
+                new OfficeHour(DayOfWeek.FRIDAY, LocalTime.of(11, 0), LocalTime.of(12, 0), "korunur", null))));
 
         mapper.updateStaffFromDto(new UpdateStaffRequestDto(), staff);
 
@@ -84,7 +84,7 @@ class StaffMapperTest {
     void updateClearsOfficeHoursWhenEmptyListIsSent() {
         var staff = new Staff();
         staff.setOfficeHours(new ArrayList<>(List.of(
-                new OfficeHour(DayOfWeek.MONDAY, LocalTime.of(10, 0), LocalTime.of(12, 0), null))));
+                new OfficeHour(DayOfWeek.MONDAY, LocalTime.of(10, 0), LocalTime.of(12, 0), null, null))));
 
         var update = new UpdateStaffRequestDto();
         update.setOfficeHours(List.of());

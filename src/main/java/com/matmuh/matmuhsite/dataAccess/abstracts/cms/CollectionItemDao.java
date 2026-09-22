@@ -16,6 +16,8 @@ public interface CollectionItemDao extends JpaRepository<CollectionItem, UUID>, 
 
     boolean existsByCollectionKeyAndSlug(String collectionKey, String slug);
 
+    List<CollectionItem> findByCollectionKeyAndArchivedTrue(String collectionKey);
+
     List<CollectionItem> findByCollectionKeyAndTranslationGroupId(String collectionKey, UUID translationGroupId);
 
     List<CollectionItem> findByCollectionKeyAndTranslationGroupIdIn(String collectionKey, Collection<UUID> translationGroupIds);

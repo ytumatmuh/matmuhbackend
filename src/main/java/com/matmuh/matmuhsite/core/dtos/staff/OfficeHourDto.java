@@ -34,6 +34,9 @@ public class OfficeHourDto {
     @Size(max = 255, message = StaffMessages.OFFICE_HOUR_DESCRIPTION_TOO_LONG)
     private String description;
 
+    @Size(max = 255, message = StaffMessages.OFFICE_HOUR_DESCRIPTION_TOO_LONG)
+    private String descriptionEn;
+
     @JsonIgnore
     @AssertTrue(message = StaffMessages.OFFICE_HOUR_TIME_INVALID)
     public boolean isTimeRangeOrdered() {

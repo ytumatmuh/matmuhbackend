@@ -26,7 +26,7 @@ class StaffCollectionSchemaOfficeHoursTest {
         assertFalse(officeHours.required());
 
         var itemNames = officeHours.itemFields().stream().map(FieldDefinition::name).toList();
-        assertEquals(List.of("dayOfWeek", "startTime", "endTime", "description"), itemNames);
+        assertEquals(List.of("dayOfWeek", "startTime", "endTime", "description", "descriptionEn"), itemNames);
 
         var day = officeHours.itemFields().get(0);
         assertEquals(FieldType.SELECT, day.type());

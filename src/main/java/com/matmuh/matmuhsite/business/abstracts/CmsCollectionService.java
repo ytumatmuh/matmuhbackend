@@ -10,6 +10,7 @@ import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionItemDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionListDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionLookupDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.MyCollectionDto;
+import com.matmuh.matmuhsite.core.dtos.cms.response.PurgeResultDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionSchema;
 import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionSchemaResponseDto;
 
@@ -43,6 +44,10 @@ public interface CmsCollectionService {
     ArchiveResultDto archive(String collectionKey, String slug, Integer version, String updatedBy);
 
     CollectionItemDto restore(String collectionKey, String slug, String updatedBy);
+
+    void purge(String collectionKey, String slug, String purgedBy);
+
+    PurgeResultDto purgeArchived(String collectionKey, String purgedBy);
 
     void deleteItemDraft(String collectionKey, String slug, String userId, String locale);
 

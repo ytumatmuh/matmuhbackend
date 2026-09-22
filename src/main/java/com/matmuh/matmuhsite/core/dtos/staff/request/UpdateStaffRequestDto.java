@@ -36,6 +36,9 @@ public class UpdateStaffRequestDto {
     @Size(max = 100, message = StaffMessages.ROLE_TOO_LONG)
     private String role;
 
+    @Size(max = 100, message = StaffMessages.ROLE_TOO_LONG)
+    private String roleEn;
+
     @Email(message = StaffMessages.EMAIL_INVALID)
     private String email;
 

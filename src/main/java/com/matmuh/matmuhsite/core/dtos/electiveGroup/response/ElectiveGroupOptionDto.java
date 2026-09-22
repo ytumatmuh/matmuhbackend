@@ -1,6 +1,7 @@
 package com.matmuh.matmuhsite.core.dtos.electiveGroup.response;
 
 import com.matmuh.matmuhsite.entities.DegreeLevel;
+import com.matmuh.matmuhsite.entities.InstructionLanguage;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -26,7 +27,7 @@ public class ElectiveGroupOptionDto {
 
     private String slug;
 
-    private String language;
+    private Set<InstructionLanguage> languages = new LinkedHashSet<>();
 
     private Integer weeklyHours;
 

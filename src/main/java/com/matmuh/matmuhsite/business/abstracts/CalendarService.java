@@ -1,7 +1,7 @@
 package com.matmuh.matmuhsite.business.abstracts;
 
 import com.matmuh.matmuhsite.core.dtos.calendar.response.CalendarOccurrenceDto;
-import com.matmuh.matmuhsite.core.dtos.calendar.response.WeeklySlotDto;
+import com.matmuh.matmuhsite.core.dtos.calendar.response.WeeklyScheduleDto;
 import com.matmuh.matmuhsite.entities.Semester;
 
 import java.time.LocalDate;
@@ -14,5 +14,5 @@ public interface CalendarService {
 
     List<CalendarOccurrenceDto> getMyCalendar(UUID userId, LocalDate from, LocalDate to);
 
-    List<WeeklySlotDto> getWeeklySchedule(String academicYear, Semester semester, Integer term, UUID staffId);
+    WeeklyScheduleDto getWeeklySchedule(String academicYear, Semester semester, Integer term, UUID staffId);
 }

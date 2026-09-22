@@ -21,6 +21,7 @@ import com.matmuh.matmuhsite.core.dtos.cms.response.ArchiveResultDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionItemDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionListDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.MyCollectionDto;
+import com.matmuh.matmuhsite.core.dtos.cms.response.PurgeResultDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.TranslationRefDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.VirtualItemDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionSchema;
@@ -228,6 +229,50 @@ public class CmsCollectionManager implements CmsCollectionService {
         }
 
         return editable(item);
+    }
+
+    @Override
+    @Transactional
+    public void purge(String collectionKey, String slug, String purgedBy) {
+        var key = requirePurgeable(collectionKey);
+        var normalizedSlug = SlugNormalizer.normalizeBlockPath(slug);
+        var item = requireWritable(key, normalizedSlug);
+
+        if (!item.isArchived()) {
+            throw new ConcurrencyConflictException(CmsMessages.PURGE_REQUIRES_ARCHIVED + key + "/" + normalizedSlug);
+        }
+
+        purgeItem(item);
+        logger.info("Purged archived collection item {}/{} by {}", key, normalizedSlug, purgedBy);
+    }
+
+    @Override
+    @Transactional
+    public PurgeResultDto purgeArchived(String collectionKey, String purgedBy) {
+        var key = requirePurgeable(collectionKey);
+
+        var archived = collectionItemDao.findByCollectionKeyAndArchivedTrue(key);
+        archived.forEach(this::purgeItem);
+
+        logger.info("Purged {} archived item(s) of collection {} by {}", archived.size(), key, purgedBy);
+        return new PurgeResultDto(archived.size());
+    }
+
+    private String requirePurgeable(String collectionKey) {
+        var key = registry.resolve(collectionKey).key();
+        if (providers.containsKey(key)) {
+            throw new CmsValidationException(CmsMessages.COLLECTION_NOT_PURGEABLE + key);
+        }
+        return key;
+    }
+
+    // Soft-delete kuralının bilinçli istisnası: arşiv çöp kutusudur, yalnız zaten arşivlenmiş
+    // satır açık istekle kalıcı silinir. Alias ve taslaklar da gider ki slug gerçekten boşalsın
+    // ve aynı başlıkla yeniden oluşturulan kayıt "-2" eki almasın.
+    private void purgeItem(CollectionItem item) {
+        slugAliasDao.deleteByCollectionKeyAndItemId(item.getCollectionKey(), item.getId());
+        collectionDraftDao.deleteAll(collectionDraftDao.findByCollectionKeyAndSlug(item.getCollectionKey(), item.getSlug()));
+        collectionItemDao.delete(item);
     }
 
 

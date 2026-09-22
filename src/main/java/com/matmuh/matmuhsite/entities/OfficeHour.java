@@ -31,4 +31,7 @@ public class OfficeHour {
 
     @Column(name = "description", length = 255)
     private String description;
+
+    @Column(name = "description_en", length = 255)
+    private String descriptionEn;
 }

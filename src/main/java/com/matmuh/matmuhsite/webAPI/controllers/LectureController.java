@@ -32,6 +32,7 @@ import com.matmuh.matmuhsite.business.abstracts.ElectiveGroupService;
 import com.matmuh.matmuhsite.business.constants.ElectiveGroupMessages;
 import com.matmuh.matmuhsite.core.dtos.electiveGroup.response.ElectiveGroupDto;
 import com.matmuh.matmuhsite.entities.DegreeLevel;
+import com.matmuh.matmuhsite.entities.InstructionLanguage;
 import com.matmuh.matmuhsite.entities.LectureCategory;
 import com.matmuh.matmuhsite.entities.LectureType;
 import com.matmuh.matmuhsite.entities.NoteType;
@@ -69,7 +70,7 @@ public class LectureController {
     }
 
     @Operation(summary = "Dersleri listele",
-            description = "Sayfalı liste. Filtreler: term, semester, degreeLevel, search (ad, kod, açıklama). degreeLevel tek değer alır ve dersin düzeylerinden biri eşleşiyorsa döner; ortak lisansüstü dersleri hem MASTERS hem DOCTORATE filtresinde listelenir. Sayfalama: page, size, sort (örn. code,asc). Sıralanabilir alanlar: code, name, term, semester, ects, createdAt.")
+            description = "Sayfalı liste. Filtreler: term, semester, degreeLevel, type, category, language, search (ad, kod, açıklama). degreeLevel tek değer alır ve dersin düzeylerinden biri eşleşiyorsa döner; ortak lisansüstü dersleri hem MASTERS hem DOCTORATE filtresinde listelenir. language çoklu değer alır (language=ENGLISH,TURKISH) ve dersin dillerinden biri eşleşiyorsa döner. Sayfalama: page, size, sort (örn. code,asc). Sıralanabilir alanlar: code, name, term, semester, ects, createdAt.")
     @GetMapping
     public ResponseEntity<DataResult<PageDto<LectureDto>>> getLectures(
             @RequestParam(required = false) Integer term,
@@ -77,9 +78,10 @@ public class LectureController {
             @RequestParam(required = false) DegreeLevel degreeLevel,
             @RequestParam(required = false) LectureType type,
             @RequestParam(required = false) LectureCategory category,
+            @RequestParam(required = false) List<InstructionLanguage> language,
             @RequestParam(required = false) String search,
             @ParameterObject @PageableDefault(size = 20, sort = "code", direction = Sort.Direction.ASC) Pageable pageable) {
-        var lectures = lectureService.getLectures(term, semester, degreeLevel, type, category, search, PageableSanitizer.sanitize(pageable, SORTABLE, "code"));
+        var lectures = lectureService.getLectures(term, semester, degreeLevel, type, category, language, search, PageableSanitizer.sanitize(pageable, SORTABLE, "code"));
         return ResponseEntity.ok(new SuccessDataResult<>(lectures, messageResolver.resolve(LectureNoteMessages.LECTURES_FETCH_SUCCESS), HttpStatus.OK));
     }
 

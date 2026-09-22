@@ -3,6 +3,7 @@ package com.matmuh.matmuhsite.dataAccess.abstracts;
 import com.matmuh.matmuhsite.entities.CalendarEvent;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -34,4 +35,8 @@ public interface CalendarEventDao extends JpaRepository<CalendarEvent, UUID> {
     List<CalendarEvent> findInRangeForOfferings(@Param("from") LocalDateTime from,
                                                 @Param("to") LocalDateTime to,
                                                 @Param("offeringIds") Collection<UUID> offeringIds);
+
+    @Modifying
+    @Query("DELETE FROM CalendarEvent e WHERE e.lectureOffering.id IN :offeringIds")
+    int deleteByLectureOfferingIdIn(@Param("offeringIds") Collection<UUID> offeringIds);
 }

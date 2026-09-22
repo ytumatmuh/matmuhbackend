@@ -12,6 +12,7 @@ import com.matmuh.matmuhsite.core.dtos.lectureOfferings.request.UpdateLectureOff
 import com.matmuh.matmuhsite.core.dtos.lectureOfferings.response.LectureOfferingDto;
 import com.matmuh.matmuhsite.core.exceptions.BusinessRuleException;
 import com.matmuh.matmuhsite.core.exceptions.ResourceNotFoundException;
+import com.matmuh.matmuhsite.core.helpers.OfferingDependents;
 import com.matmuh.matmuhsite.core.mappers.LectureOfferingMapper;
 import com.matmuh.matmuhsite.dataAccess.abstracts.LectureOfferingDao;
 import com.matmuh.matmuhsite.entities.ExamPeriod;
@@ -43,12 +44,15 @@ public class LectureOfferingManager implements LectureOfferingService {
     private final LectureService lectureService;
     private final StaffService staffService;
     private final LectureOfferingMapper lectureOfferingMapper;
+    private final OfferingDependents offeringDependents;
 
-    public LectureOfferingManager(LectureOfferingDao lectureOfferingDao, LectureService lectureService, StaffService staffService, LectureOfferingMapper lectureOfferingMapper) {
+    public LectureOfferingManager(LectureOfferingDao lectureOfferingDao, LectureService lectureService, StaffService staffService,
+                                  LectureOfferingMapper lectureOfferingMapper, OfferingDependents offeringDependents) {
         this.lectureOfferingDao = lectureOfferingDao;
         this.lectureService = lectureService;
         this.staffService = staffService;
         this.lectureOfferingMapper = lectureOfferingMapper;
+        this.offeringDependents = offeringDependents;
     }
 
     @Override
@@ -117,7 +121,10 @@ public class LectureOfferingManager implements LectureOfferingService {
     @Transactional
     public void deleteOffering(UUID offeringId) {
         logger.info("Deleting lecture offering: {}", offeringId);
-        lectureOfferingDao.delete(findOffering(offeringId));
+
+        var offering = findOffering(offeringId);
+        offeringDependents.detach(List.of(offering.getId()));
+        lectureOfferingDao.delete(offering);
     }
 
     @Override

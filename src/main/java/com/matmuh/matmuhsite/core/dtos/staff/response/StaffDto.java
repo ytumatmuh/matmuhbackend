@@ -46,6 +46,8 @@ public class StaffDto {
 
     private String role;
 
+    private String roleEn;
+
     @Builder.Default
     private Set<StaffGroup> groups = new LinkedHashSet<>();
 

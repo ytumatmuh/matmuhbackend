@@ -12,6 +12,7 @@ import com.matmuh.matmuhsite.core.dtos.lecture.response.LectureDto;
 import com.matmuh.matmuhsite.core.dtos.lectureNote.request.LectureNoteCreateRequestDto;
 import com.matmuh.matmuhsite.core.dtos.lectureNote.response.LectureNoteDto;
 import com.matmuh.matmuhsite.core.exceptions.ResourceAlreadyExistsException;
+import com.matmuh.matmuhsite.core.helpers.OfferingDependents;
 import com.matmuh.matmuhsite.core.helpers.UniqueSlugResolver;
 import com.matmuh.matmuhsite.core.exceptions.ResourceNotFoundException;
 import com.matmuh.matmuhsite.core.mappers.LectureMapper;
@@ -21,9 +22,11 @@ import com.matmuh.matmuhsite.dataAccess.abstracts.LectureNoteDao;
 import com.matmuh.matmuhsite.dataAccess.abstracts.LectureOfferingDao;
 import com.matmuh.matmuhsite.dataAccess.abstracts.ElectiveGroupDao;
 import com.matmuh.matmuhsite.entities.DegreeLevel;
+import com.matmuh.matmuhsite.entities.InstructionLanguage;
 import com.matmuh.matmuhsite.entities.LectureCategory;
 import com.matmuh.matmuhsite.entities.LectureType;
 import com.matmuh.matmuhsite.entities.Lecture;
+import com.matmuh.matmuhsite.entities.LectureOffering;
 import com.matmuh.matmuhsite.entities.NoteType;
 import com.matmuh.matmuhsite.entities.SyllabusWeek;
 import com.matmuh.matmuhsite.core.dtos.lecture.response.LectureStatisticsDto;
@@ -59,11 +62,13 @@ public class LectureManager implements LectureService {
     private final LectureNoteDao lectureNoteDao;
     private final LectureOfferingDao lectureOfferingDao;
     private final ElectiveGroupDao electiveGroupDao;
+    private final OfferingDependents offeringDependents;
 
 
     public LectureManager(LectureDao lectureDao, LectureMapper lectureMapper, LectureNoteService lectureNoteService,
                           LectureNoteMapper lectureNoteMapper, LectureNoteDao lectureNoteDao,
-                          LectureOfferingDao lectureOfferingDao, ElectiveGroupDao electiveGroupDao) {
+                          LectureOfferingDao lectureOfferingDao, ElectiveGroupDao electiveGroupDao,
+                          OfferingDependents offeringDependents) {
         this.lectureDao = lectureDao;
         this.lectureMapper = lectureMapper;
         this.lectureNoteService = lectureNoteService;
@@ -71,6 +76,7 @@ public class LectureManager implements LectureService {
         this.lectureNoteDao = lectureNoteDao;
         this.lectureOfferingDao = lectureOfferingDao;
         this.electiveGroupDao = electiveGroupDao;
+        this.offeringDependents = offeringDependents;
     }
 
 
@@ -238,6 +244,9 @@ public class LectureManager implements LectureService {
             return new ResourceNotFoundException(LectureMessages.LECTURE_NOT_FOUND);
         });
 
+        // Açılışlar JPA cascade ile soft-delete olur; saat, kayıt ve sınav tarihleri ise
+        // açılış silme yolundaki kuralla (OfferingDependents) düşer, yoksa sahipsiz kalırlar.
+        offeringDependents.detach(lecture.getOfferings().stream().map(LectureOffering::getId).toList());
         lectureDao.delete(lecture);
         logger.info("Lecture soft deleted with ID: {}", lectureId);
     }
@@ -245,10 +254,11 @@ public class LectureManager implements LectureService {
     @Override
     @Transactional(readOnly = true)
     public PageDto<LectureDto> getLectures(Integer term, Semester semester, DegreeLevel degreeLevel,
-                                          LectureType type, LectureCategory category, String search, Pageable pageable) {
-        logger.debug("Retrieving lectures term={} semester={} degreeLevel={} search={} page={}", term, semester, degreeLevel, search, pageable.getPageNumber());
+                                          LectureType type, LectureCategory category,
+                                          Collection<InstructionLanguage> languages, String search, Pageable pageable) {
+        logger.debug("Retrieving lectures term={} semester={} degreeLevel={} languages={} search={} page={}", term, semester, degreeLevel, languages, search, pageable.getPageNumber());
 
-        var page = lectureDao.search(term, semester, degreeLevel, type, category,
+        var page = lectureDao.search(term, semester, degreeLevel, type, category, languages,
                 search == null || search.isBlank() ? null : search.trim(), pageable);
 
         logger.info("Retrieved {} lectures", page.getTotalElements());

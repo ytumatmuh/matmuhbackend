@@ -77,7 +77,7 @@ class StaffManagerOfficeHoursTest {
         staff.setFirstName("Ayşe");
         staff.setLastName("Yılmaz");
         staff.setOfficeHours(new ArrayList<>(List.of(
-                new OfficeHour(DayOfWeek.MONDAY, LocalTime.of(10, 0), LocalTime.of(12, 0), "Ofis D-105"))));
+                new OfficeHour(DayOfWeek.MONDAY, LocalTime.of(10, 0), LocalTime.of(12, 0), "Ofis D-105", null))));
         when(staffDao.findById(id)).thenReturn(Optional.of(staff));
 
         var dto = staffManager.getStaffById(id);
@@ -95,7 +95,7 @@ class StaffManagerOfficeHoursTest {
         staff.setFirstName("Ayşe");
         staff.setLastName("Yılmaz");
         staff.setOfficeHours(new ArrayList<>(List.of(
-                new OfficeHour(DayOfWeek.TUESDAY, LocalTime.of(9, 0), LocalTime.of(10, 0), "eski"))));
+                new OfficeHour(DayOfWeek.TUESDAY, LocalTime.of(9, 0), LocalTime.of(10, 0), "eski", null))));
         when(staffDao.findById(id)).thenReturn(Optional.of(staff));
 
         var update = new UpdateStaffRequestDto();

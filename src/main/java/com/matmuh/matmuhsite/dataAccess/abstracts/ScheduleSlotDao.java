@@ -4,6 +4,7 @@ import com.matmuh.matmuhsite.entities.ScheduleSlot;
 import com.matmuh.matmuhsite.entities.Semester;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -52,4 +53,8 @@ public interface ScheduleSlotDao extends JpaRepository<ScheduleSlot, UUID> {
                                        @Param("startTime") LocalTime startTime,
                                        @Param("endTime") LocalTime endTime,
                                        @Param("excludedId") UUID excludedId);
+
+    @Modifying
+    @Query("DELETE FROM ScheduleSlot s WHERE s.lectureOffering.id IN :offeringIds")
+    int deleteByLectureOfferingIdIn(@Param("offeringIds") Collection<UUID> offeringIds);
 }

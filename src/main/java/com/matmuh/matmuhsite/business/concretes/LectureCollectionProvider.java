@@ -18,6 +18,7 @@ import com.matmuh.matmuhsite.core.mappers.LectureMapper;
 import com.matmuh.matmuhsite.dataAccess.abstracts.LectureDao;
 import com.matmuh.matmuhsite.entities.Lecture;
 import com.matmuh.matmuhsite.entities.DegreeLevel;
+import com.matmuh.matmuhsite.entities.InstructionLanguage;
 import com.matmuh.matmuhsite.entities.LectureCategory;
 import com.matmuh.matmuhsite.entities.LectureType;
 import com.matmuh.matmuhsite.entities.Semester;
@@ -27,8 +28,11 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.EnumSet;
 import java.util.List;
 
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.node.ObjectNode;
 import java.util.Locale;
@@ -65,6 +69,7 @@ public class LectureCollectionProvider implements CmsCollectionProvider {
                         LectureMessages.LECTURE_TYPE_INVALID),
                 filterEnum(filters, LectureCollectionSchema.FIELD_CATEGORY, LectureCategory.class,
                         LectureMessages.LECTURE_CATEGORY_INVALID),
+                filterLanguages(filters),
                 filterCode(filters),
                 OffsetPageable.of(offset, limit, DEFAULT_SORT));
 
@@ -199,6 +204,30 @@ public class LectureCollectionProvider implements CmsCollectionProvider {
         } catch (IllegalArgumentException e) {
             throw new CmsValidationException(invalidMessage);
         }
+    }
+
+    // "Herhangi biri" süzgeci: ?languages=ENGLISH,TURKISH tek dizi öğesi olarak gelir, virgülden ayrılır.
+    private Collection<InstructionLanguage> filterLanguages(ObjectNode filters) {
+        var node = filters == null ? null : filters.get(LectureCollectionSchema.FIELD_LANGUAGES);
+        if (node == null || node.isNull()) {
+            return null;
+        }
+
+        var languages = EnumSet.noneOf(InstructionLanguage.class);
+        Iterable<JsonNode> elements = node.isArray() ? node : List.of(node);
+        for (var element : elements) {
+            for (var text : element.asString().split(",")) {
+                if (text.isBlank()) {
+                    continue;
+                }
+                try {
+                    languages.add(InstructionLanguage.valueOf(text.trim().toUpperCase(Locale.ROOT)));
+                } catch (IllegalArgumentException e) {
+                    throw new CmsValidationException(LectureMessages.LANGUAGE_INVALID);
+                }
+            }
+        }
+        return languages.isEmpty() ? null : languages;
     }
 
     private DegreeLevel filterDegreeLevel(ObjectNode filters) {

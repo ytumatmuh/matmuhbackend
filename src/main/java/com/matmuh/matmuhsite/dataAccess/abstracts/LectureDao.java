@@ -1,6 +1,7 @@
 package com.matmuh.matmuhsite.dataAccess.abstracts;
 
 import com.matmuh.matmuhsite.entities.DegreeLevel;
+import com.matmuh.matmuhsite.entities.InstructionLanguage;
 import com.matmuh.matmuhsite.entities.Lecture;
 import com.matmuh.matmuhsite.entities.LectureCategory;
 import com.matmuh.matmuhsite.entities.LectureType;
@@ -13,6 +14,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
+import java.util.EnumSet;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -54,17 +57,33 @@ public interface LectureDao extends JpaRepository<Lecture, UUID> {
               AND (:degreeLevel IS NULL OR :degreeLevel MEMBER OF l.degreeLevels)
               AND (:type IS NULL OR l.type = :type)
               AND (:category IS NULL OR l.category = :category)
+              AND (:filterByLanguage = false OR EXISTS (
+                       SELECT taught.id FROM Lecture taught JOIN taught.languages lang
+                       WHERE taught.id = l.id AND lang IN :languages))
               AND (CAST(:search AS String) IS NULL
                    OR LOWER(l.name) LIKE LOWER(CONCAT('%', CAST(:search AS String), '%'))
                    OR LOWER(l.nameEn) LIKE LOWER(CONCAT('%', CAST(:search AS String), '%'))
                    OR LOWER(l.code) LIKE LOWER(CONCAT('%', CAST(:search AS String), '%'))
                    OR LOWER(l.about) LIKE LOWER(CONCAT('%', CAST(:search AS String), '%')))
             """)
-    Page<Lecture> search(@Param("term") Integer term,
-                         @Param("semester") Semester semester,
-                         @Param("degreeLevel") DegreeLevel degreeLevel,
-                         @Param("type") LectureType type,
-                         @Param("category") LectureCategory category,
-                         @Param("search") String search,
-                         Pageable pageable);
+    Page<Lecture> searchMatching(@Param("term") Integer term,
+                                 @Param("semester") Semester semester,
+                                 @Param("degreeLevel") DegreeLevel degreeLevel,
+                                 @Param("type") LectureType type,
+                                 @Param("category") LectureCategory category,
+                                 @Param("filterByLanguage") boolean filterByLanguage,
+                                 @Param("languages") Collection<InstructionLanguage> languages,
+                                 @Param("search") String search,
+                                 Pageable pageable);
+
+    // Dil süzgeci "verilenlerden herhangi biri"; hiç verilmezse dili boş dersler de düşmesin diye
+    // bayrakla kapatılır, IN listesi hiçbir zaman boş bağlanmaz.
+    default Page<Lecture> search(Integer term, Semester semester, DegreeLevel degreeLevel, LectureType type,
+                                 LectureCategory category, Collection<InstructionLanguage> languages,
+                                 String search, Pageable pageable) {
+        var filterByLanguage = languages != null && !languages.isEmpty();
+        return searchMatching(term, semester, degreeLevel, type, category, filterByLanguage,
+                filterByLanguage ? EnumSet.copyOf(languages) : EnumSet.allOf(InstructionLanguage.class),
+                search, pageable);
+    }
 }

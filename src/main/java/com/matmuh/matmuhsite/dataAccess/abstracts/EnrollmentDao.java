@@ -3,10 +3,12 @@ package com.matmuh.matmuhsite.dataAccess.abstracts;
 import com.matmuh.matmuhsite.entities.Enrollment;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -27,4 +29,8 @@ public interface EnrollmentDao extends JpaRepository<Enrollment, UUID> {
             """)
     boolean existsByUserIdAndLectureOfferingId(@Param("userId") UUID userId,
                                                @Param("lectureOfferingId") UUID lectureOfferingId);
+
+    @Modifying
+    @Query("DELETE FROM Enrollment e WHERE e.lectureOffering.id IN :offeringIds")
+    int deleteByLectureOfferingIdIn(@Param("offeringIds") Collection<UUID> offeringIds);
 }

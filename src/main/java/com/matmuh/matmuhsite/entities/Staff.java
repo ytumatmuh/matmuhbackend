@@ -48,6 +48,9 @@ public class Staff extends BaseEntity{
     @Column(name = "role")
     private String role;
 
+    @Column(name = "role_en")
+    private String roleEn;
+
     @Column(name = "phone")
     private String phone;
 

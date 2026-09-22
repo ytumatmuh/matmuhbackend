@@ -1,5 +1,6 @@
 package com.matmuh.matmuhsite.business.constants;
 
+import com.matmuh.matmuhsite.core.dtos.cms.response.ChoiceSource;
 import com.matmuh.matmuhsite.core.dtos.cms.response.FieldDefinition;
 import com.matmuh.matmuhsite.entities.cms.FieldType;
 import org.junit.jupiter.api.Test;
@@ -43,6 +44,23 @@ class CollectionRegistryTest {
         assertEquals(FieldType.SHORT_TEXT, groupFields.get("nameEn").type());
         assertEquals(FieldType.LONG_TEXT, groupFields.get("aboutEn").type());
         assertFalse(groupFields.get("nameEn").required());
+    }
+
+    // Eğitim dili ders düzeyinde çoklu: editör iki dilde verilen derste ikisini de işaretler,
+    // liste ?languages=ENGLISH ile süzülür. Dönem kaydının tek değerli dili ayrı bir alan.
+    @Test
+    void lectureLanguagesAreAConstrainedFilterableList() {
+        var languages = registry.resolve(LectureCollectionSchema.KEY).schema().fields().stream()
+                .filter(f -> f.name().equals("languages"))
+                .findFirst().orElseThrow();
+
+        assertEquals(FieldType.STRING_ARRAY, languages.type());
+        assertTrue(languages.filterable());
+        assertFalse(languages.required());
+        assertEquals(ChoiceSource.STATIC, languages.source().kind());
+        assertEquals(List.of("TURKISH", "ENGLISH"), languages.source().values());
+        assertTrue(registry.resolve(LectureCollectionSchema.KEY).schema().fields().stream()
+                .noneMatch(f -> f.name().equals("language")));
     }
 
     @Test

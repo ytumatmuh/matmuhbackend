@@ -10,7 +10,7 @@ import com.matmuh.matmuhsite.core.helpers.MessageResolver;
 import com.matmuh.matmuhsite.core.utilities.results.DataResult;
 import com.matmuh.matmuhsite.core.utilities.results.SuccessDataResult;
 import org.springframework.format.annotation.DateTimeFormat;
-import com.matmuh.matmuhsite.core.dtos.calendar.response.WeeklySlotDto;
+import com.matmuh.matmuhsite.core.dtos.calendar.response.WeeklyScheduleDto;
 import com.matmuh.matmuhsite.entities.Semester;
 import com.matmuh.matmuhsite.core.validation.AcademicYear;
 import org.springframework.http.HttpStatus;
@@ -53,18 +53,18 @@ public class CalendarController {
 
     @Operation(summary = "Haftalık ders programı",
             description = "Tarihe açılmamış haftalık ders saatleri: gün, başlangıç/bitiş saati, derslik, ders, grup ve hoca. "
-                    + "/egitim/ders-programi gibi gün-saat ızgarası çizen sayfalar için. Güne ve saate göre sıralı döner. "
+                    + "/egitim/ders-programi gibi gün-saat ızgarası çizen sayfalar için. Yanıt {term:{academicYear, semester, startDate, endDate}, slots:[...]}; slotlar güne ve saate göre sıralı. "
                     + "academicYear ve semester boş bırakılırsa bugünü kapsayan dönem kullanılır; term ile tek bir yarıyıla, "
                     + "staffId ile tek bir hocanın programına daraltılır.")
     @GetMapping("/weekly")
-    public ResponseEntity<DataResult<List<WeeklySlotDto>>> getWeeklySchedule(
+    public ResponseEntity<DataResult<WeeklyScheduleDto>> getWeeklySchedule(
             @RequestParam(required = false) @AcademicYear String academicYear,
             @RequestParam(required = false) Semester semester,
             @RequestParam(required = false) Integer term,
             @RequestParam(required = false) UUID staffId) {
 
-        var slots = calendarService.getWeeklySchedule(academicYear, semester, term, staffId);
-        return ResponseEntity.ok(new SuccessDataResult<>(slots,
+        var schedule = calendarService.getWeeklySchedule(academicYear, semester, term, staffId);
+        return ResponseEntity.ok(new SuccessDataResult<>(schedule,
                 messageResolver.resolve(EnrollmentMessages.LISTED), HttpStatus.OK));
     }
 
