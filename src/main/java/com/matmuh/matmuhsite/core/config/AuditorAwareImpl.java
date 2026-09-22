@@ -29,8 +29,19 @@ public class AuditorAwareImpl implements AuditorAware<User> {
 
             return Optional.of(authenticatedUser);
         }catch (Exception e){
-            logger.info("No authenticated user found, using system user for createdBy or updatedBy. Exception: {}", e.getMessage());
+            logger.debug("No authenticated user found, using system user for createdBy or updatedBy. Exception: {}", e.getMessage());
+            return systemUser();
+        }
+    }
+
+    // Denetim alanı bir isteği düşürmemeli: sistem kullanıcısı yoksa alan boş kalır,
+    // kolon zaten nullable. (Prod'da satır hiç yoktu ve yazmalar 404 dönüyordu.)
+    private Optional<User> systemUser() {
+        try {
             return Optional.of(securityService.getSystemUser());
+        } catch (Exception e) {
+            logger.warn("System user is missing; createdBy/updatedBy left empty: {}", e.getMessage());
+            return Optional.empty();
         }
     }
 
