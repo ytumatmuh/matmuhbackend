@@ -180,8 +180,10 @@ public class CmsCollectionController {
     }
 
     @Operation(summary = "Item arşivle",
-            description = "Item'ı arşivler; kalıcı silme yok, slug rezerve kalır. "
-                    + "Sürüm tüketilmez: aynı numara arşivler, geri yükler ve sonrasında yayınlar.")
+            description = "jsonb koleksiyonda item'ı arşivler; kalıcı silme yok, slug rezerve kalır. "
+                    + "Sürüm tüketilmez: aynı numara arşivler, geri yükler ve sonrasında yayınlar. "
+                    + "Sağlayıcı tabanlı koleksiyonda satır kendi tablosunda silinir; geri yükleme yoktur. "
+                    + "Sürüm her iki durumda da zorunlu.")
     @DeleteMapping("/{key}/{slug}")
     public ArchiveResultDto archive(@PathVariable String key,
                                     @PathVariable String slug,

@@ -91,6 +91,18 @@ public class ElectiveGroupCollectionProvider implements CmsCollectionProvider {
     }
 
     @Override
+    @Transactional
+    public void delete(String slug, Integer version) {
+        var group = requireBySlug(slug);
+
+        if (version != null && version != group.getVersion()) {
+            throw new ConcurrencyConflictException(CmsMessages.VERSION_CONFLICT);
+        }
+
+        electiveGroupService.deleteElectiveGroup(group.getId());
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public boolean existsBySlug(String slug) {
         return electiveGroupDao.existsBySlug(slug);

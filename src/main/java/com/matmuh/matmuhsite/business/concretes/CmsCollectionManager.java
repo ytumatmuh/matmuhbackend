@@ -191,6 +191,11 @@ public class CmsCollectionManager implements CmsCollectionService {
     @Override
     @Transactional
     public ArchiveResultDto archive(String collectionKey, String slug, Integer version, String updatedBy) {
+        var provider = providers.get(registry.resolve(collectionKey).key());
+        if (provider != null) {
+            return deleteThroughProvider(provider, slug, version, updatedBy);
+        }
+
         var item = requireOwnItem(collectionKey, slug);
 
         logger.info("Archiving collection item {}/{} by {}", item.getCollectionKey(), item.getSlug(), updatedBy);
@@ -212,6 +217,24 @@ public class CmsCollectionManager implements CmsCollectionService {
         // Sürüm bilerek artmıyor: içerik değişmedi. Aynı numara arşivliyor, geri yüklüyor
         // ve sonrasında yayınlamaya da yetiyor.
         return new ArchiveResultDto(item.getCollectionKey(), item.getSlug(), item.getVersion());
+    }
+
+    // Sağlayıcılı koleksiyonun arşivi yok, kendi tablosu var: SDK her koleksiyonda sil düğmesi
+    // çizdiği için aynı uç burada satırı gerçekten siler. Sürüm jsonb'deki kuralla aynı sebeple
+    // zorunlu — sürümsüz DELETE başkasının okuduğundan başka bir kaydı düşürebilir.
+    private ArchiveResultDto deleteThroughProvider(CmsCollectionProvider provider, String slug,
+                                                   Integer version, String deletedBy) {
+        var key = provider.collectionKey();
+        var normalizedSlug = SlugNormalizer.normalizeBlockPath(slug);
+
+        if (version == null) {
+            throw new CmsValidationException(CmsMessages.VERSION_REQUIRED_FOR_EXISTING + key + "/" + normalizedSlug);
+        }
+
+        logger.info("Deleting provider-backed collection item {}/{} by {}", key, normalizedSlug, deletedBy);
+        provider.delete(normalizedSlug, version);
+
+        return new ArchiveResultDto(key, normalizedSlug, version);
     }
 
     @Override
@@ -295,8 +318,9 @@ public class CmsCollectionManager implements CmsCollectionService {
         return requireWritable(key, normalizedSlug);
     }
 
-    // Sağlayıcılı koleksiyonun kendi tablosu var, arşivi yok; hata nereye gidileceğini söylesin
-    // ki çağıran (bot ya da panel) 400'ü okuyup doğru uca gidebilsin.
+    // Silme sağlayıcıya iner ama geri yükleme inemez: satır kendi tablosunda soft-delete
+    // edilmiştir, CMS arşivinde listelenmez. Hata nereye gidileceğini söylesin ki çağıran
+    // (bot ya da panel) 400'ü okuyup doğru uca gidebilsin.
     private String notArchivable(CollectionRegistry.CollectionDefinition def) {
         var message = CmsMessages.COLLECTION_NOT_ARCHIVABLE + def.key();
         return def.restDeletePath() == null ? message : message + CmsMessages.USE_REST_DELETE + def.restDeletePath();

@@ -140,6 +140,14 @@ public class LectureOfferingCollectionProvider implements CmsCollectionProvider 
         return toItem(refreshed);
     }
 
+    // LectureOffering'de @Version yok, upsert de gelen sürümü yok sayar; silme aynı kuralı izler.
+    // Ders saati, kayıt ve sınav tarihi temizliği servisteki OfferingDependents yolundan gelir.
+    @Override
+    @Transactional
+    public void delete(String slug, Integer version) {
+        lectureOfferingService.deleteOffering(requireBySlug(slug).getId());
+    }
+
     @Override
     @Transactional(readOnly = true)
     public boolean existsBySlug(String slug) {

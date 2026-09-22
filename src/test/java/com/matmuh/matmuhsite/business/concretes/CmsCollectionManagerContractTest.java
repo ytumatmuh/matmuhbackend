@@ -1,5 +1,7 @@
 package com.matmuh.matmuhsite.business.concretes;
 
+import com.matmuh.matmuhsite.business.abstracts.CmsCollectionProvider;
+import com.matmuh.matmuhsite.business.constants.AcademicTermCollectionSchema;
 import com.matmuh.matmuhsite.business.constants.CollectionRegistry;
 import com.matmuh.matmuhsite.business.constants.NewsCollectionSchema;
 import com.matmuh.matmuhsite.core.dtos.cms.request.RenameSlugRequestDto;
@@ -42,6 +44,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -50,12 +53,15 @@ import static org.mockito.Mockito.when;
 class CmsCollectionManagerContractTest {
 
     private static final String KEY = NewsCollectionSchema.KEY;
+    private static final String PROVIDER_KEY = AcademicTermCollectionSchema.KEY;
+    private static final String TERM_SLUG = "2026-2027-fall";
     private static final String USER = "editor-1";
     private static final JsonMapper JSON = JsonMapper.builder().build();
 
     private CollectionItemDao itemDao;
     private CollectionDraftDao draftDao;
     private CollectionSlugAliasDao aliasDao;
+    private CmsCollectionProvider termProvider;
     private CmsCollectionManager manager;
 
     @BeforeEach
@@ -71,8 +77,47 @@ class CmsCollectionManagerContractTest {
         var enricher = mock(FilePreviewEnricher.class);
         when(enricher.enrich(any(), any())).thenAnswer(invocation -> invocation.getArgument(1));
 
+        termProvider = mock(CmsCollectionProvider.class);
+        when(termProvider.collectionKey()).thenReturn(PROVIDER_KEY);
+
         manager = new CmsCollectionManager(itemDao, draftDao, aliasDao, new CollectionRegistry(),
-                new CmsLocaleResolver(localeDao), enricher, List.of());
+                new CmsLocaleResolver(localeDao), enricher, List.of(termProvider));
+    }
+
+    // SDK sil düğmesini her koleksiyonda çiziyor (affordance koleksiyon tipine bakmıyor);
+    // sağlayıcılı koleksiyonda aynı uç satırı kendi tablosunda siler ve yanıt şekli değişmez.
+    @Test
+    void providerBackedArchiveDeletesThroughTheProvider() {
+        var result = manager.archive(PROVIDER_KEY, TERM_SLUG, 3, USER);
+
+        verify(termProvider).delete(TERM_SLUG, 3);
+        assertEquals(PROVIDER_KEY, result.collectionKey());
+        assertEquals(TERM_SLUG, result.slug());
+        assertEquals(3, result.version());
+    }
+
+    // Sürümsüz DELETE jsonb'de olduğu gibi burada da 400: çağıranın okuduğundan başka bir
+    // kaydı düşürebilir. Gerçek karşılaştırmayı sürümü olan sağlayıcılar kendi yapar.
+    @Test
+    void providerBackedArchiveWithoutVersionIsRefused() {
+        var error = assertThrows(CmsValidationException.class,
+                () -> manager.archive(PROVIDER_KEY, TERM_SLUG, null, USER));
+
+        assertTrue(error.getMessage().contains("Version is required"));
+        verify(termProvider, never()).delete(any(), any());
+    }
+
+    // Silme sağlayıcıya iniyor ama geri yükleme ve purge inemez: satır kendi tablosunda
+    // soft-delete edilir, CMS arşivinde listelenmez. Hata nereye gidileceğini söyler.
+    @Test
+    void providerBackedRestoreAndPurgeStayRefused() {
+        var restore = assertThrows(CmsValidationException.class, () -> manager.restore(PROVIDER_KEY, TERM_SLUG, USER));
+        assertTrue(restore.getMessage().contains("DELETE /api/calendar-admin/terms/{id}"));
+
+        assertThrows(CmsValidationException.class, () -> manager.purge(PROVIDER_KEY, TERM_SLUG, USER));
+        assertThrows(CmsValidationException.class, () -> manager.purgeArchived(PROVIDER_KEY, USER));
+
+        verify(termProvider, never()).delete(any(), any());
     }
 
     // Bekleyen taslak editörün slotudur, listenin penceresi değil: offset, sıralama ve

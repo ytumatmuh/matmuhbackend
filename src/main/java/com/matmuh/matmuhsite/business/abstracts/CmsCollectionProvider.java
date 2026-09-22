@@ -16,5 +16,7 @@ public interface CmsCollectionProvider {
 
     CollectionItemDto upsert(String slug, ObjectNode data, Integer version, String locale);
 
+    void delete(String slug, Integer version);
+
     boolean existsBySlug(String slug);
 }

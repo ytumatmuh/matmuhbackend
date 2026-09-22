@@ -82,6 +82,14 @@ public class AcademicTermCollectionProvider implements CmsCollectionProvider {
         return toItem(calendarAdminService.saveTerm(request(data)));
     }
 
+    // AcademicTerm'de @Version yok, upsert de gelen sürümü yok sayar; silme yeni bir kural
+    // icat etmiyor. Sürümün boş olamayacağını yöneticide tutuyoruz (SDK her zaman yolluyor).
+    @Override
+    @Transactional
+    public void delete(String slug, Integer version) {
+        calendarAdminService.deleteTerm(requireBySlug(slug).getId());
+    }
+
     @Override
     @Transactional(readOnly = true)
     public boolean existsBySlug(String slug) {

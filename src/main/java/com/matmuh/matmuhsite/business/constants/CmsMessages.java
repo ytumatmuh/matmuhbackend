@@ -16,7 +16,7 @@ public class CmsMessages {
     public static final String LOCALE_NOT_DECLARED = "Locale is not declared for this site: ";
     public static final String LOCALE_REQUIRED_FOR_WRITE = "Locale is required for writes here. Available: ";
     public static final String LOCALE_INVALID = "Invalid locale code: ";
-    public static final String COLLECTION_NOT_ARCHIVABLE = "Collection is provider-backed and cannot be archived: ";
+    public static final String COLLECTION_NOT_ARCHIVABLE = "Collection is provider-backed: a deleted row is soft-deleted in its own table and cannot be listed back from the CMS archive: ";
     public static final String USE_REST_DELETE = " Delete it over REST instead: ";
     public static final String AUTO_GENERATED_USE_POST = "This collection uses auto-generated slugs; use POST to create items.";
     public static final String USER_DEFINED_USE_PUT = "This collection uses user-defined slugs; use PUT to create items.";

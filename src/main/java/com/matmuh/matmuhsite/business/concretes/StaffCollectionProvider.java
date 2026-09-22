@@ -114,6 +114,18 @@ public class StaffCollectionProvider implements CmsCollectionProvider {
     }
 
     @Override
+    @Transactional
+    public void delete(String slug, Integer version) {
+        var staff = requireBySlug(slug);
+
+        if (version != null && version != staff.getVersion()) {
+            throw new ConcurrencyConflictException(CmsMessages.VERSION_CONFLICT);
+        }
+
+        staffService.deleteStaff(staff.getId());
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public boolean existsBySlug(String slug) {
         return staffDao.existsBySlug(slug);

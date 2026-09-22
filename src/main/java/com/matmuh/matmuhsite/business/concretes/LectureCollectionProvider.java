@@ -114,6 +114,18 @@ public class LectureCollectionProvider implements CmsCollectionProvider {
     }
 
     @Override
+    @Transactional
+    public void delete(String slug, Integer version) {
+        var lecture = requireBySlug(slug);
+
+        if (version != null && version != lecture.getVersion()) {
+            throw new ConcurrencyConflictException(CmsMessages.VERSION_CONFLICT);
+        }
+
+        lectureService.deleteLecture(lecture.getId());
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public boolean existsBySlug(String slug) {
         return lectureDao.existsBySlug(slug);
