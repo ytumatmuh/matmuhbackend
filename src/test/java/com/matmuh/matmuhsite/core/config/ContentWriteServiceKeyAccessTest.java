@@ -70,7 +70,8 @@ class ContentWriteServiceKeyAccessTest {
                 delete("/api/lectures/" + UUID.randomUUID()),
                 delete("/api/staff/" + UUID.randomUUID()),
                 delete("/api/elective-groups/" + UUID.randomUUID()),
-                delete("/api/lecture-offerings/" + UUID.randomUUID())}) {
+                delete("/api/lecture-offerings/" + UUID.randomUUID()),
+                delete("/api/calendar-admin/terms/" + UUID.randomUUID())}) {
             var status = statusOf(request);
             assertNotEquals(401, status, request.toString());
             assertNotEquals(403, status, request.toString());

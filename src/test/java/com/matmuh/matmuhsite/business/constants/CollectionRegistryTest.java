@@ -9,6 +9,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CollectionRegistryTest {
@@ -75,5 +76,21 @@ class CollectionRegistryTest {
             assertEquals(FieldType.FILE, file.type());
             assertTrue(file.required());
         }
+    }
+
+    // Sağlayıcılı koleksiyon CMS'ten silinemez; 400 nereye gidileceğini söylemeli (Egehan
+    // academic-terms'i CMS'ten silmeye çalışıp boş bir 400 aldı, 22 Eylül).
+    @Test
+    void providerCollectionsNameTheirRestDeleteEndpoint() {
+        for (var def : registry.all()) {
+            var jsonbBacked = List.of(AnnouncementCollectionSchema.KEY, NewsCollectionSchema.KEY).contains(def.key());
+            if (jsonbBacked) {
+                assertNull(def.restDeletePath(), def.key());
+            } else {
+                assertTrue(def.restDeletePath() != null && def.restDeletePath().startsWith("DELETE /api/"), def.key());
+            }
+        }
+        assertEquals("DELETE /api/calendar-admin/terms/{id}",
+                registry.resolve(AcademicTermCollectionSchema.KEY).restDeletePath());
     }
 }

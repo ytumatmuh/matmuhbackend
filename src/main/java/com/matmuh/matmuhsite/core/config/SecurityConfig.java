@@ -79,7 +79,7 @@ public class SecurityConfig {
 
                         .requestMatchers("/api/service-keys/**").hasRole("ADMIN")
 
-                        .requestMatchers("/api/calendar-admin/**").hasAnyRole("ADMIN", "EDITOR")
+                        .requestMatchers("/api/calendar-admin/**").hasAnyRole("ADMIN", "EDITOR", "CONTENT_WRITE")
 
 
                         .requestMatchers(HttpMethod.GET, "/api/calendar/me").authenticated()

@@ -259,11 +259,12 @@ public class CmsCollectionManager implements CmsCollectionService {
     }
 
     private String requirePurgeable(String collectionKey) {
-        var key = registry.resolve(collectionKey).key();
-        if (providers.containsKey(key)) {
-            throw new CmsValidationException(CmsMessages.COLLECTION_NOT_PURGEABLE + key);
+        var def = registry.resolve(collectionKey);
+        if (providers.containsKey(def.key())) {
+            throw new CmsValidationException(CmsMessages.COLLECTION_NOT_PURGEABLE + def.key()
+                    + (def.restDeletePath() == null ? "" : CmsMessages.USE_REST_DELETE + def.restDeletePath()));
         }
-        return key;
+        return def.key();
     }
 
     // Soft-delete kuralının bilinçli istisnası: arşiv çöp kutusudur, yalnız zaten arşivlenmiş
@@ -288,10 +289,17 @@ public class CmsCollectionManager implements CmsCollectionService {
         var normalizedSlug = SlugNormalizer.normalizeBlockPath(slug);
 
         if (providers.containsKey(key)) {
-            throw new CmsValidationException(CmsMessages.COLLECTION_NOT_ARCHIVABLE + key);
+            throw new CmsValidationException(notArchivable(def));
         }
 
         return requireWritable(key, normalizedSlug);
+    }
+
+    // Sağlayıcılı koleksiyonun kendi tablosu var, arşivi yok; hata nereye gidileceğini söylesin
+    // ki çağıran (bot ya da panel) 400'ü okuyup doğru uca gidebilsin.
+    private String notArchivable(CollectionRegistry.CollectionDefinition def) {
+        var message = CmsMessages.COLLECTION_NOT_ARCHIVABLE + def.key();
+        return def.restDeletePath() == null ? message : message + CmsMessages.USE_REST_DELETE + def.restDeletePath();
     }
 
     private CollectionItem requireWritable(String collectionKey, String slug) {

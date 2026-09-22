@@ -22,7 +22,8 @@ public class CollectionRegistry {
             boolean localized,
             boolean slugEditable,
             String displayName,
-            String displayField
+            String displayField,
+            String restDeletePath
     ) {}
 
     private static final List<CollectionDefinition> DEFINITIONS = List.of(
@@ -35,7 +36,8 @@ public class CollectionRegistry {
                     false,
                     false,
                     LectureCollectionSchema.DISPLAY_NAME,
-                    LectureCollectionSchema.DISPLAY_FIELD),
+                    LectureCollectionSchema.DISPLAY_FIELD,
+                    "DELETE /api/lectures/{id}"),
             new CollectionDefinition(
                     StaffCollectionSchema.KEY,
                     StaffCollectionSchema.SCHEMA,
@@ -45,7 +47,8 @@ public class CollectionRegistry {
                     false,
                     false,
                     StaffCollectionSchema.DISPLAY_NAME,
-                    StaffCollectionSchema.DISPLAY_FIELD
+                    StaffCollectionSchema.DISPLAY_FIELD,
+                    "DELETE /api/staff/{id}"
             ),
             new CollectionDefinition(
                     ElectiveGroupCollectionSchema.KEY,
@@ -56,7 +59,8 @@ public class CollectionRegistry {
                     false,
                     false,
                     ElectiveGroupCollectionSchema.DISPLAY_NAME,
-                    ElectiveGroupCollectionSchema.DISPLAY_FIELD),
+                    ElectiveGroupCollectionSchema.DISPLAY_FIELD,
+                    "DELETE /api/elective-groups/{id}"),
             new CollectionDefinition(
                     LectureOfferingCollectionSchema.KEY,
                     LectureOfferingCollectionSchema.SCHEMA,
@@ -66,7 +70,8 @@ public class CollectionRegistry {
                     false,
                     false,
                     LectureOfferingCollectionSchema.DISPLAY_NAME,
-                    LectureOfferingCollectionSchema.DISPLAY_FIELD),
+                    LectureOfferingCollectionSchema.DISPLAY_FIELD,
+                    "DELETE /api/lecture-offerings/{id}"),
             new CollectionDefinition(
                     AcademicTermCollectionSchema.KEY,
                     AcademicTermCollectionSchema.SCHEMA,
@@ -76,7 +81,8 @@ public class CollectionRegistry {
                     false,
                     false,
                     AcademicTermCollectionSchema.DISPLAY_NAME,
-                    AcademicTermCollectionSchema.DISPLAY_FIELD),
+                    AcademicTermCollectionSchema.DISPLAY_FIELD,
+                    "DELETE /api/calendar-admin/terms/{id}"),
             new CollectionDefinition(
                     AnnouncementCollectionSchema.KEY,
                     AnnouncementCollectionSchema.SCHEMA,
@@ -86,7 +92,8 @@ public class CollectionRegistry {
                     true,
                     true,
                     AnnouncementCollectionSchema.DISPLAY_NAME,
-                    AnnouncementCollectionSchema.DISPLAY_FIELD),
+                    AnnouncementCollectionSchema.DISPLAY_FIELD,
+                    null),
             new CollectionDefinition(
                     NewsCollectionSchema.KEY,
                     NewsCollectionSchema.SCHEMA,
@@ -96,7 +103,8 @@ public class CollectionRegistry {
                     true,
                     true,
                     NewsCollectionSchema.DISPLAY_NAME,
-                    NewsCollectionSchema.DISPLAY_FIELD)
+                    NewsCollectionSchema.DISPLAY_FIELD,
+                    null)
     );
 
     private final Map<String, CollectionDefinition> byKey =
