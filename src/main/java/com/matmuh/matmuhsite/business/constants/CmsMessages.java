@@ -12,6 +12,7 @@ public class CmsMessages {
     public static final String COLLECTION_NOT_FOUND = "Collection not found: ";
     public static final String COLLECTION_ITEM_NOT_FOUND = "Collection item not found: ";
     public static final String VERSION_CONFLICT = "Version conflict: item was modified by someone else.";
+    public static final String RESEED_CONFLICT = "A block was published while sync was reseeding it; nothing was applied, re-run the sync: ";
     public static final String VERSION_REQUIRED_FOR_EXISTING = "Version is required when writing to existing item: ";
     public static final String LOCALE_NOT_DECLARED = "Locale is not declared for this site: ";
     public static final String LOCALE_REQUIRED_FOR_WRITE = "Locale is required for writes here. Available: ";

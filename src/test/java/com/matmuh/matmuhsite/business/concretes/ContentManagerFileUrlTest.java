@@ -72,7 +72,7 @@ class ContentManagerFileUrlTest {
                         new SyncManifestRequestDto.ManifestBlockDto("hero.doc", BlockType.FILE, SAFE,
                                 Map.of("en", SCRIPT), 0, null),
                         new SyncManifestRequestDto.ManifestBlockDto("hero.cv", BlockType.FILE, SCRIPT,
-                                null, 1, null)))), List.of("tr", "en")));
+                                null, 1, null)))), List.of("tr", "en"), false));
 
         assertEquals(List.of(
                 "Block '/home/hero.doc': 'defaultValues.en.url' " + FileUrlRule.EXPECTATION + ".",

@@ -18,6 +18,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -36,6 +37,7 @@ class ContentManagerSyncLocaleDefaultsTest {
     @BeforeEach
     void setUp() {
         when(localeResolver.replaceDeclared(any())).thenReturn(List.of("tr", "en"));
+        when(blockDao.reseed(any(), anyInt(), any(), any())).thenReturn(1);
         manager = new ContentManager(blockDao, mock(ContentDraftDao.class), MAPPER, localeResolver);
     }
 
@@ -72,7 +74,7 @@ class ContentManagerSyncLocaleDefaultsTest {
 
         var result = manager.sync(List.of(manifest(
                 block("hero.title", TR, Map.of("tr", TR, "en", EN)),
-                block("hero.note", TR, null))), List.of("tr", "en"));
+                block("hero.note", TR, null))), List.of("tr", "en"), false);
 
         var rows = saved();
         assertEquals(EN, valueOf(rows, "hero.title", "en"));
@@ -92,7 +94,7 @@ class ContentManagerSyncLocaleDefaultsTest {
 
         var result = manager.sync(List.of(manifest(
                 block("hero.title", TR, Map.of("en", EN)),
-                block("hero.note", TR, Map.of("en", EN)))), List.of("tr", "en"));
+                block("hero.note", TR, Map.of("en", EN)))), List.of("tr", "en"), false);
 
         var rows = saved();
         assertEquals(EN, valueOf(rows, "hero.title", "en"));
@@ -108,7 +110,7 @@ class ContentManagerSyncLocaleDefaultsTest {
                 existing("hero.title", "en", EN)));
 
         var result = manager.sync(List.of(manifest(
-                block("hero.title", TR, Map.of("tr", TR, "en", EN)))), List.of("tr", "en"));
+                block("hero.title", TR, Map.of("tr", TR, "en", EN)))), List.of("tr", "en"), false);
 
         assertEquals(0, result.getResults().get(0).getReseeded());
         assertEquals(2, result.getResults().get(0).getUnchanged());

@@ -124,11 +124,16 @@ public class CmsContentController {
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(summary = "Manifest sync", description = "cms-sync CLI manifestini reconcile eder (ADMIN).")
+    @Operation(summary = "Manifest sync",
+            description = "cms-sync CLI manifestini reconcile eder. Sync hiçbir bloğun version'ını değiştirmez. "
+                    + "reseed=true, hâlâ ilk sürümünde olan ve o dilde kimsenin taslağında bulunmayan satırları güncel "
+                    + "tohuma (defaultValues[dil] ya da defaultValue) yeniden yazar; araya giren bir publish 409 döndürür "
+                    + "ve sync'ten hiçbir şey uygulanmaz.")
     @PostMapping("/sync")
     public SyncResultDto sync(@RequestBody List<@Valid SyncManifestRequestDto> manifests,
-                              @RequestParam(required = false) List<String> locales) {
-        return contentService.sync(manifests, locales);
+                              @RequestParam(required = false) List<String> locales,
+                              @RequestParam(required = false, defaultValue = "false") boolean reseed) {
+        return contentService.sync(manifests, locales, reseed);
     }
 
     @Operation(summary = "Medya yükle", description = "CMS görseli veya belge eki yükler. Görseller images/ (CDN) altına gider. Belgeler publicAccess=true ise "

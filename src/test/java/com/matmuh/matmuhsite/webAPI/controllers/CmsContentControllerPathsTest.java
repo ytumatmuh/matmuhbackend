@@ -68,7 +68,7 @@ class CmsContentControllerPathsTest {
     // transport.syncManifests `?locales=tr,en` diye tek parametrede virgülle gönderir.
     @Test
     void commaSeparatedLocalesReachTheServiceAsAList() throws Exception {
-        when(contentService.sync(List.of(), List.of("tr", "en")))
+        when(contentService.sync(List.of(), List.of("tr", "en"), false))
                 .thenReturn(new SyncResultDto(List.of(), List.of()));
 
         mvc.perform(post("/api/cms/sync").param("locales", "tr,en")
@@ -77,6 +77,20 @@ class CmsContentControllerPathsTest {
                 .andExpect(jsonPath("$.results").isArray())
                 .andExpect(jsonPath("$.prunedSlugs").isArray());
 
-        verify(contentService).sync(List.of(), List.of("tr", "en"));
+        verify(contentService).sync(List.of(), List.of("tr", "en"), false);
+    }
+
+    // `cms-sync --reseed` bayrağı `?reseed=true` olarak gelir; yanıtta her slug reseeded taşır.
+    @Test
+    void reseedFlagReachesTheService() throws Exception {
+        when(contentService.sync(List.of(), null, true)).thenReturn(new SyncResultDto(
+                List.of(new SyncResultDto.SyncSlugResultDto("/home", 0, 0, 1, 0, 2)), List.of()));
+
+        mvc.perform(post("/api/cms/sync").param("reseed", "true")
+                        .contentType(MediaType.APPLICATION_JSON).content("[]"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.results[0].reseeded").value(2));
+
+        verify(contentService).sync(List.of(), null, true);
     }
 }

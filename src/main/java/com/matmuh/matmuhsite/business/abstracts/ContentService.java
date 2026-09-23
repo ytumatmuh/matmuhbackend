@@ -25,5 +25,5 @@ public interface ContentService {
 
     void deleteDraft(String userId, String slug, String locale);
 
-    SyncResultDto sync(List<SyncManifestRequestDto> manifests, List<String> locales);
+    SyncResultDto sync(List<SyncManifestRequestDto> manifests, List<String> locales, boolean reseed);
 }

@@ -270,11 +270,11 @@ public class ContentManager implements ContentService {
 
     @Override
     @Transactional
-    public SyncResultDto sync(List<SyncManifestRequestDto> manifests, List<String> locales) {
+    public SyncResultDto sync(List<SyncManifestRequestDto> manifests, List<String> locales, boolean reseed) {
         rejectUnsafeFileSeeds(manifests);
 
         var declared = localeResolver.replaceDeclared(locales);
-        logger.info("Sync started with {} manifest(s), locales={}", manifests.size(), declared);
+        logger.info("Sync started with {} manifest(s), locales={}, reseed={}", manifests.size(), declared, reseed);
 
 
         var lanes = declared.isEmpty() ? Collections.<String>singletonList(null) : declared;
@@ -286,6 +286,10 @@ public class ContentManager implements ContentService {
                 .collect(Collectors.toMap(
                         b -> key(b.getSlug(), b.getBlockPath(), b.getLocale()),
                         Function.identity()));
+
+        // Aşağıdaki döngü satırları değiştirmeden önce çalışmalı: sürüm şartlı UPDATE'ten önceki
+        // otomatik flush eski değerli bir satırı yazıp araya giren publish'i ezmesin.
+        var reseededIds = reseedUntouched(manifests, lanes, blocksByKey, reseed);
 
         var seenKeys = new HashSet<String>();
         var manifestSlugs = new HashSet<String>();
@@ -350,9 +354,7 @@ public class ContentManager implements ContentService {
                         changed = true;
                     }
 
-                    if (mb.hasLocaleDefault(lane) && isUntouchedSeed(existing, mb)
-                            && !Objects.equals(existing.getValue(), mb.defaultFor(lane))) {
-                        existing.setValue(mb.defaultFor(lane));
+                    if (reseededIds.contains(existing.getId())) {
                         changed = true;
                         reseeded++;
                     }
@@ -436,6 +438,54 @@ public class ContentManager implements ContentService {
                 .map(seed -> "defaultValues." + seed.getKey())
                 .findFirst()
                 .orElse(null);
+    }
+
+    // İki kural bir satırı tohumuna geri yazar. Her sync'te: dile özgü tohum sonradan eklendiyse
+    // hâlâ dilsiz tohumu taşıyan satır onu alır. ?reseed=true ile ayrıca: kimsenin yayınlamadığı
+    // (sürüm 1) ve o dilde kimsenin taslağında olmayan her satır. Sürüm korunur ki sonraki bir
+    // reseed onu yine bulabilsin.
+    private Set<UUID> reseedUntouched(List<SyncManifestRequestDto> manifests, List<String> lanes,
+                                      Map<String, ContentBlock> blocksByKey, boolean reseed) {
+        var drafted = reseed ? draftedKeys() : Set.<String>of();
+        var reseeded = new HashSet<UUID>();
+
+        for (var manifest : manifests) {
+            if (manifest.getBlocks() == null) continue;
+            var slug = SlugNormalizer.normalizeSlug(manifest.getSlug());
+
+            for (var mb : manifest.getBlocks()) {
+                var blockPath = SlugNormalizer.normalizeBlockPath(mb.getBlockPath());
+
+                for (var lane : lanes) {
+                    var k = key(slug, blockPath, lane);
+                    var block = blocksByKey.get(k);
+                    var target = seed(mb.defaultFor(lane));
+                    if (block == null || Objects.equals(block.getValue(), target)) continue;
+
+                    var adoptsLocaleSeed = mb.hasLocaleDefault(lane) && isUntouchedSeed(block, mb);
+                    var neverPublished = reseed && block.getVersion() == 1 && !drafted.contains(k);
+                    if (!adoptsLocaleSeed && !neverPublished) continue;
+
+                    if (contentBlockDao.reseed(block.getId(), block.getVersion(), target,
+                            CmsMessages.SYNCED_BY_DEPLOY_PIPELINE) == 0) {
+                        throw new ConcurrencyConflictException(CmsMessages.RESEED_CONFLICT + slug + "/" + blockPath);
+                    }
+                    block.setValue(target);
+                    reseeded.add(block.getId());
+                }
+            }
+        }
+        return reseeded;
+    }
+
+    private Set<String> draftedKeys() {
+        var keys = new HashSet<String>();
+        for (var draft : contentDraftDao.findAll()) {
+            for (var blockPath : parseDraftPayload(draft.getPayload()).keySet()) {
+                keys.add(key(draft.getSlug(), blockPath, draft.getLocale()));
+            }
+        }
+        return keys;
     }
 
     private void adoptLegacyRows(List<ContentBlock> blocks, List<String> declared) {

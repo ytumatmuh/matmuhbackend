@@ -69,7 +69,7 @@ class ContentManagerSyncVersionTest {
 
         manager.sync(List.of(new SyncManifestRequestDto("home", List.of(
                 block("hero.title", BlockType.LONG_TEXT, 2),
-                block("hero.body", BlockType.SHORT_TEXT, 0)))), null);
+                block("hero.body", BlockType.SHORT_TEXT, 0)))), null, false);
 
         var rows = saved();
         assertEquals(3, find(rows, "hero.title").getVersion());
