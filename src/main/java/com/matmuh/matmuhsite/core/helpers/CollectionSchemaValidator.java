@@ -96,7 +96,11 @@ public final class CollectionSchemaValidator {
             }
 
             if (field.type() == FieldType.FILE) {
-                result.set(field.name(), validateObject(FILE_FIELDS, value, isDraft, errors, fieldPath));
+                var file = validateObject(FILE_FIELDS, value, isDraft, errors, fieldPath);
+                if (!FileUrlRule.accepts(file)) {
+                    errors.add("Field '" + fieldPath + "." + FILE_URL + "' " + FileUrlRule.EXPECTATION + ".");
+                }
+                result.set(field.name(), file);
                 continue;
             }
 

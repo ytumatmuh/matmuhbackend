@@ -135,4 +135,28 @@ class CollectionSchemaValidatorTest {
 
         assertEquals(topic, cleaned.get("syllabus").get(0).get("topic").asText());
     }
+
+    // Site url'i doğrudan bir bağlantıya basar; javascript: ya da data: okuyucunun tarayıcısında çalışırdı.
+    @Test
+    void rejectsScriptAddressesInFileUrls() {
+        var errors = errorsOf(WITH_ATTACHMENTS, """
+                {"attachments": [
+                    {"file": {"url": "javascript:alert(1)", "name": "x"}},
+                    {"file": {"url": "DATA:text/html,x", "name": "y"}}
+                ]}
+                """);
+        assertEquals(List.of(
+                "Field 'attachments[0].file.url' " + FileUrlRule.EXPECTATION + ".",
+                "Field 'attachments[1].file.url' " + FileUrlRule.EXPECTATION + "."), errors);
+    }
+
+    @Test
+    void acceptsEmptyHttpAndRootRelativeFileUrls() {
+        for (var url : List.of("", "/api/uploads/public/a.pdf", "http://x/a.pdf", "HTTPS://x/a.pdf")) {
+            var cleaned = CollectionSchemaValidator.validateAndStrip(WITH_FILE, json("""
+                    {"brochure": {"url": "%s", "name": "a.pdf"}}
+                    """.formatted(url)));
+            assertEquals(url, cleaned.get("brochure").get("url").asText());
+        }
+    }
 }

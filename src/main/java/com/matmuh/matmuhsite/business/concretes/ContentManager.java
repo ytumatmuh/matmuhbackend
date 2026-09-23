@@ -8,11 +8,14 @@ import com.matmuh.matmuhsite.core.dtos.cms.response.BlockDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.ContentResponseDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.SyncResultDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.UpdatePageResponseDto;
+import com.matmuh.matmuhsite.core.exceptions.CmsValidationException;
 import com.matmuh.matmuhsite.core.exceptions.ConcurrencyConflictException;
 import com.matmuh.matmuhsite.core.helpers.CmsLocaleResolver;
+import com.matmuh.matmuhsite.core.helpers.FileUrlRule;
 import com.matmuh.matmuhsite.core.helpers.SlugNormalizer;
 import com.matmuh.matmuhsite.dataAccess.abstracts.cms.ContentBlockDao;
 import com.matmuh.matmuhsite.dataAccess.abstracts.cms.ContentDraftDao;
+import com.matmuh.matmuhsite.entities.cms.BlockType;
 import com.matmuh.matmuhsite.entities.cms.ContentBlock;
 import com.matmuh.matmuhsite.entities.cms.ContentDraft;
 import org.slf4j.Logger;
@@ -108,6 +111,7 @@ public class ContentManager implements ContentService {
         int unchanged = 0;
         var pending = new ArrayList<Pending>();
         var conflicts = new ArrayList<ConcurrencyConflictException.BlockConflict>();
+        var invalid = new ArrayList<String>();
 
         for (var update : request.getBlocks()) {
             var blockPath = SlugNormalizer.normalizeBlockPath(update.getBlockPath());
@@ -128,7 +132,16 @@ public class ContentManager implements ContentService {
                 continue;
             }
 
+            if (block.getBlockType() == BlockType.FILE && !FileUrlRule.accepts(update.getValue())) {
+                invalid.add("Block '" + blockPath + "': 'url' " + FileUrlRule.EXPECTATION + ".");
+                continue;
+            }
+
             pending.add(new Pending(block, update.getValue()));
+        }
+
+        if (!invalid.isEmpty()) {
+            throw new CmsValidationException(invalid);
         }
 
         // Tek 409 bütün bayat blokları sayar; SDK yalnız listelenen kartları çakışma
@@ -206,6 +219,8 @@ public class ContentManager implements ContentService {
     @Override
     @Transactional
     public SyncResultDto sync(List<SyncManifestRequestDto> manifests, List<String> locales) {
+        rejectUnsafeFileSeeds(manifests);
+
         var declared = localeResolver.replaceDeclared(locales);
         logger.info("Sync started with {} manifest(s), locales={}", manifests.size(), declared);
 
@@ -338,6 +353,38 @@ public class ContentManager implements ContentService {
         return new SyncResultDto(results, new ArrayList<>(prunedSlugs));
     }
 
+
+    private void rejectUnsafeFileSeeds(List<SyncManifestRequestDto> manifests) {
+        var errors = new ArrayList<String>();
+        for (var manifest : manifests) {
+            if (manifest.getBlocks() == null) continue;
+            for (var mb : manifest.getBlocks()) {
+                if (mb.getBlockType() != BlockType.FILE) continue;
+                var unsafeSeed = findUnsafeFileSeed(mb);
+                if (unsafeSeed != null) {
+                    errors.add("Block '" + manifest.getSlug() + "/" + mb.getBlockPath() + "': '" + unsafeSeed + ".url' "
+                            + FileUrlRule.EXPECTATION + ".");
+                }
+            }
+        }
+        if (!errors.isEmpty()) {
+            throw new CmsValidationException(errors);
+        }
+    }
+
+    private String findUnsafeFileSeed(SyncManifestRequestDto.ManifestBlockDto mb) {
+        if (!FileUrlRule.accepts(mb.getDefaultValue())) {
+            return "defaultValue";
+        }
+        if (mb.getDefaultValues() == null) {
+            return null;
+        }
+        return mb.getDefaultValues().entrySet().stream()
+                .filter(seed -> !FileUrlRule.accepts(seed.getValue()))
+                .map(seed -> "defaultValues." + seed.getKey())
+                .findFirst()
+                .orElse(null);
+    }
 
     private void adoptLegacyRows(List<ContentBlock> blocks, List<String> declared) {
         if (declared.isEmpty()) {
