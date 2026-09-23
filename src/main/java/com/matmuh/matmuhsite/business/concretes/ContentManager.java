@@ -290,8 +290,10 @@ public class ContentManager implements ContentService {
                         reseeded++;
                     }
 
+                    // Sürüme dokunulmuyor: onu yalnız publish ilerletir. Aksi halde sayfası açık
+                    // editörün bir sonraki publish'i, deploy yüzünden 409 alırdı.
                     if (changed) {
-                        touch(existing, CmsMessages.SYNCED_BY_DEPLOY_PIPELINE);
+                        existing.setUpdatedBy(CmsMessages.SYNCED_BY_DEPLOY_PIPELINE);
                         toSave.add(existing);
                     } else {
                         unchanged++;
@@ -311,7 +313,7 @@ public class ContentManager implements ContentService {
 
             block.setArchived(true);
             block.setArchivedAt(Instant.now());
-            touch(block, CmsMessages.SYNCED_BY_DEPLOY_PIPELINE);
+            block.setUpdatedBy(CmsMessages.SYNCED_BY_DEPLOY_PIPELINE);
             toSave.add(block);
 
             deletedBySlug.merge(block.getSlug(), 1, Integer::sum);
