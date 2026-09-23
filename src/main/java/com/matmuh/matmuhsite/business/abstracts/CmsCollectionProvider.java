@@ -19,4 +19,6 @@ public interface CmsCollectionProvider {
     void delete(String slug, Integer version);
 
     boolean existsBySlug(String slug);
+
+    long count();
 }

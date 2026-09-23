@@ -132,6 +132,12 @@ public class StaffCollectionProvider implements CmsCollectionProvider {
 
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public long count() {
+        return staffDao.count();
+    }
+
     private <T> T convert(ObjectNode data, Class<T> type) {
         try {
             return objectMapper.treeToValue(data, type);

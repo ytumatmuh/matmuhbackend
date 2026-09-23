@@ -17,6 +17,9 @@ public class MyCollectionDto {
     private String collectionKey;
     private CollectionSchema schema;
     private boolean canCreate;
+
+    // Listelemenin göstereceği canlı kayıt sayısı: arşiv hariç, dilli koleksiyonda varsayılan dil.
+    private long itemCount;
     private SlugSource slugSource;
 
     private List<String> locales;

@@ -154,6 +154,12 @@ public class LectureOfferingCollectionProvider implements CmsCollectionProvider 
         return findBySlug(slug).isPresent();
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public long count() {
+        return lectureOfferingDao.count();
+    }
+
 
     private void syncSlots(LectureOffering offering, ObjectNode data) {
         var node = data.get(LectureOfferingCollectionSchema.FIELD_SCHEDULE_SLOTS);

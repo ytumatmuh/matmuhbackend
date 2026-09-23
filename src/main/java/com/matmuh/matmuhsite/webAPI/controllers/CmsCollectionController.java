@@ -47,7 +47,9 @@ public class CmsCollectionController {
         this.collectionService = collectionService;
     }
 
-    @Operation(summary = "Editör collectionları", description = "Editörün yaratabildiği collection tanımlarını döner (ADMIN).")
+    @Operation(summary = "Editör collectionları",
+            description = "Editörün yaratabildiği collection tanımlarını döner. itemCount listelemenin göstereceği canlı kayıt "
+                    + "sayısıdır: arşiv hariç, dilli koleksiyonda varsayılan dil (ADMIN).")
     @GetMapping("/me")
     public List<MyCollectionDto> getMyCollections() {
         return collectionService.getMyCollections();

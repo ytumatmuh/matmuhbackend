@@ -108,6 +108,12 @@ public class ElectiveGroupCollectionProvider implements CmsCollectionProvider {
         return electiveGroupDao.existsBySlug(slug);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public long count() {
+        return electiveGroupDao.count();
+    }
+
     private ElectiveGroup requireBySlug(String slug) {
         return electiveGroupDao.findBySlug(slug)
                 .orElseThrow(() -> new ResourceNotFoundException(

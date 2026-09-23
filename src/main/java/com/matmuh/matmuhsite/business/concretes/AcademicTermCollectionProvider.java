@@ -96,6 +96,12 @@ public class AcademicTermCollectionProvider implements CmsCollectionProvider {
         return findBySlug(slug).isPresent();
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public long count() {
+        return academicTermDao.count();
+    }
+
     private AcademicTerm requireBySlug(String slug) {
         return findBySlug(slug).orElseThrow(() -> new ResourceNotFoundException(
                 CmsMessages.COLLECTION_ITEM_NOT_FOUND + AcademicTermCollectionSchema.KEY + "/" + slug));

@@ -131,6 +131,12 @@ public class LectureCollectionProvider implements CmsCollectionProvider {
         return lectureDao.existsBySlug(slug);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public long count() {
+        return lectureDao.count();
+    }
+
     private Lecture requireBySlug(String slug) {
         return lectureDao.findBySlug(slug)
                 .orElseThrow(() -> new ResourceNotFoundException(

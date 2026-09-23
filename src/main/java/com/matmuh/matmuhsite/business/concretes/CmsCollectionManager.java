@@ -47,6 +47,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionLookupDto;
 import java.util.Locale;
 import java.util.List;
@@ -122,11 +123,41 @@ public class CmsCollectionManager implements CmsCollectionService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<MyCollectionDto> getMyCollections() {
+        var counts = countListedItems();
         return registry.all().stream()
-                .map(def -> new MyCollectionDto(def.key(), def.schema(), true, def.slugSource(),
-                        localesOf(def), def.slugEditable(), def.displayName(), def.displayField()))
+                .map(def -> new MyCollectionDto(def.key(), def.schema(), true, counts.getOrDefault(def.key(), 0L),
+                        def.slugSource(), localesOf(def), def.slugEditable(), def.displayName(), def.displayField()))
                 .collect(Collectors.toList());
+    }
+
+    // Listelemenin göstereceğini sayar: arşiv hariç, dilli koleksiyonda yalnız varsayılan dil.
+    private Map<String, Long> countListedItems() {
+        var counts = new HashMap<String, Long>();
+        var localizedByKey = new HashMap<String, Boolean>();
+
+        for (var def : registry.all()) {
+            var provider = providers.get(def.key());
+            if (provider != null) {
+                counts.put(def.key(), provider.count());
+            } else {
+                localizedByKey.put(def.key(), def.localized());
+            }
+        }
+
+        if (localizedByKey.isEmpty()) {
+            return counts;
+        }
+
+        var listedLocale = localeResolver.resolveForRead(null);
+        for (var row : collectionItemDao.countLiveByCollection(localizedByKey.keySet())) {
+            var localized = localizedByKey.getOrDefault(row.getCollectionKey(), false);
+            if (!localized || listedLocale == null || listedLocale.equals(row.getLocale())) {
+                counts.merge(row.getCollectionKey(), row.getCount(), Long::sum);
+            }
+        }
+        return counts;
     }
 
     @Override
