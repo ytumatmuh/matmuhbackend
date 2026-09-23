@@ -89,8 +89,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/cms/data").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/cms/collections/me").hasAnyRole("ADMIN", "EDITOR")
                         .requestMatchers(HttpMethod.GET, "/api/cms/collections/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/cms/content",
-                                "/api/cms/public/*/content", "/api/cms/public/*/data").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/cms/content", "/api/cms/content/all",
+                                "/api/cms/public/*/content", "/api/cms/public/*/content/all",
+                                "/api/cms/public/*/data").permitAll()
                         // Sync'i insan token'ı çalıştıramaz: yetenek yalnız servis anahtarlarında var.
                         // Bir geliştiricinin lokalinden bayat manifest'le prod'u uzlaştırması
                         // bu yüzden yapısal olarak kapalı.

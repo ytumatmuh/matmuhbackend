@@ -2,6 +2,7 @@ package com.matmuh.matmuhsite.webAPI.controllers;
 
 import com.matmuh.matmuhsite.business.abstracts.CmsMediaService;
 import com.matmuh.matmuhsite.business.abstracts.ContentService;
+import com.matmuh.matmuhsite.core.dtos.cms.response.ContentBundleDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.ContentResponseDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.SyncResultDto;
 import org.junit.jupiter.api.Test;
@@ -44,6 +45,24 @@ class CmsContentControllerPathsTest {
                     .andExpect(jsonPath("$.blocks").isArray());
         }
         verify(contentService, times(2)).getPublishedBySlug("/about", null);
+    }
+
+    // SDK 5.0 sunucu tarafında siteyi sayfa sayfa değil bu tek çağrıyla okur; yoksa render durur.
+    @Test
+    void wholeSiteReadServesPublishedBundleOnBothPaths() throws Exception {
+        when(contentService.getAllPublished("en")).thenReturn(new ContentBundleDto("en",
+                List.of(new ContentBundleDto.ContentPageDto("/__global", List.of())),
+                List.of(new ContentBundleDto.ContentPageDto("/about", List.of()))));
+
+        for (var path : new String[]{"/api/cms/content/all", "/api/cms/public/site/content/all"}) {
+            mvc.perform(get(path).param("locale", "en"))
+                    .andExpect(status().isOk())
+                    .andExpect(header().string("Cache-Control", "public, max-age=60, stale-while-revalidate=300"))
+                    .andExpect(jsonPath("$.locale").value("en"))
+                    .andExpect(jsonPath("$.global[0].slug").value("/__global"))
+                    .andExpect(jsonPath("$.pages[0].slug").value("/about"));
+        }
+        verify(contentService, times(2)).getAllPublished("en");
     }
 
     // transport.syncManifests `?locales=tr,en` diye tek parametrede virgülle gönderir.

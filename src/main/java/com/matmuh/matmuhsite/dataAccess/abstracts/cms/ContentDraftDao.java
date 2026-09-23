@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -23,6 +24,13 @@ public interface ContentDraftDao extends JpaRepository<ContentDraft, UUID> {
     Optional<ContentDraft> findOwn(@Param("slug") String slug,
                                    @Param("userId") String userId,
                                    @Param("locale") String locale);
+
+    @Query("""
+            SELECT d FROM ContentDraft d
+            WHERE d.userId = :userId
+              AND ((:locale IS NULL AND d.locale IS NULL) OR d.locale = :locale)
+            """)
+    List<ContentDraft> findAllOwn(@Param("userId") String userId, @Param("locale") String locale);
 
     @Modifying
     @Query("""

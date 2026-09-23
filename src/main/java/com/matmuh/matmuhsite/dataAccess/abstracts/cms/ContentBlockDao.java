@@ -24,6 +24,14 @@ public interface ContentBlockDao extends JpaRepository<ContentBlock, UUID> {
 
     @Query("""
             SELECT b FROM ContentBlock b
+            WHERE b.archived = false
+              AND ((:locale IS NULL AND b.locale IS NULL) OR b.locale = :locale)
+            ORDER BY b.slug ASC, b.sortOrder ASC
+            """)
+    List<ContentBlock> findPublishedByLocale(@Param("locale") String locale);
+
+    @Query("""
+            SELECT b FROM ContentBlock b
             WHERE b.slug = :slug
               AND b.blockPath IN :blockPaths
               AND ((:locale IS NULL AND b.locale IS NULL) OR b.locale = :locale)

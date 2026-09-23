@@ -2,6 +2,7 @@ package com.matmuh.matmuhsite.business.abstracts;
 
 import com.matmuh.matmuhsite.core.dtos.cms.request.SyncManifestRequestDto;
 import com.matmuh.matmuhsite.core.dtos.cms.request.UpdatePageRequestDto;
+import com.matmuh.matmuhsite.core.dtos.cms.response.ContentBundleDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.ContentResponseDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.SyncResultDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.UpdatePageResponseDto;
@@ -13,6 +14,10 @@ public interface ContentService {
     ContentResponseDto getPublishedBySlug(String slug, String locale);
 
     ContentResponseDto getBySlugForEditor(String userId, String slug, String locale);
+
+    ContentBundleDto getAllPublished(String locale);
+
+    ContentBundleDto getAllForEditor(String userId, String locale);
 
     UpdatePageResponseDto updatePage(String userId, UpdatePageRequestDto request, String locale);
 

@@ -7,6 +7,7 @@ import com.matmuh.matmuhsite.business.abstracts.ContentService;
 import com.matmuh.matmuhsite.core.helpers.CmsCacheHeaders;
 import com.matmuh.matmuhsite.core.dtos.cms.request.SyncManifestRequestDto;
 import com.matmuh.matmuhsite.core.dtos.cms.request.UpdatePageRequestDto;
+import com.matmuh.matmuhsite.core.dtos.cms.response.ContentBundleDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.ContentResponseDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.SyncResultDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.UpdatePageResponseDto;
@@ -68,6 +69,32 @@ public class CmsContentController {
         }
         CmsCacheHeaders.anonymous(response);
         return contentService.getPublishedBySlug(slug, locale);
+    }
+
+    @Operation(summary = "Tüm site içeriği",
+            description = "İstenen dildeki bütün sayfaları tek çağrıda { locale, global, pages } olarak döner (SDK 5.0 sunucu okuması). "
+                    + "Son segmenti __ ile başlayan slug'lar (__global gibi) rota değil paylaşılan içeriktir ve global altında gelir. "
+                    + "pages sitenin rotaları değil, canlı bloğu olan slug'lardır. draftValue yalnız editöre döner.")
+    @GetMapping("/content/all")
+    public ContentBundleDto getAllContent(@RequestParam(required = false) String locale,
+                                          Authentication authentication,
+                                          HttpServletResponse response) {
+        if (isEditor(authentication)) {
+            CmsCacheHeaders.editor(response);
+            return contentService.getAllForEditor(authentication.getName(), locale);
+        }
+        CmsCacheHeaders.anonymous(response);
+        return contentService.getAllPublished(locale);
+    }
+
+    @Operation(summary = "Tüm site içeriği (clientKey yolu)",
+            description = "GET /content/all'un anonim hali. Tek site olduğu için clientKey yok sayılır.")
+    @GetMapping("/public/{clientKey}/content/all")
+    public ContentBundleDto getPublicAllContent(@PathVariable String clientKey,
+                                                @RequestParam(required = false) String locale,
+                                                HttpServletResponse response) {
+        CmsCacheHeaders.anonymous(response);
+        return contentService.getAllPublished(locale);
     }
 
     @Operation(summary = "Publish", description = "Blok değerlerini yayınlar, draft silinir; version uyuşmazsa 409 (ADMIN).")

@@ -5,6 +5,7 @@ import com.matmuh.matmuhsite.business.constants.CmsMessages;
 import com.matmuh.matmuhsite.core.dtos.cms.request.SyncManifestRequestDto;
 import com.matmuh.matmuhsite.core.dtos.cms.request.UpdatePageRequestDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.BlockDto;
+import com.matmuh.matmuhsite.core.dtos.cms.response.ContentBundleDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.ContentResponseDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.SyncResultDto;
 import com.matmuh.matmuhsite.core.dtos.cms.response.UpdatePageResponseDto;
@@ -33,6 +34,9 @@ import java.util.stream.Collectors;
 
 @Service
 public class ContentManager implements ContentService {
+
+    // Son segmenti bununla başlayan slug bir rota değil, her sayfanın paylaştığı içerik (__global gibi).
+    private static final String GLOBAL_SLUG_PREFIX = "__";
 
     private final Logger logger = LoggerFactory.getLogger(ContentManager.class);
 
@@ -76,16 +80,64 @@ public class ContentManager implements ContentService {
 
         contentDraftDao.findOwn(normalizedSlug, userId, resolved).ifPresent(draft -> {
             var draftValues = parseDraftPayload(draft.getPayload());
-            for (BlockDto dto : blockDtos) {
-                var draftValue = draftValues.get(dto.getBlockPath());
-                if (draftValue != null && !draftValue.equals(dto.getValue())) {
-                    dto.setDraftValue(draftValue);
-                }
-            }
+            applyDraft(blockDtos, draftValues);
             logger.debug("Resolved draft with {} block(s) for slug: {}", draftValues.size(), normalizedSlug);
         });
 
         return new ContentResponseDto(normalizedSlug, resolved, blockDtos);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ContentBundleDto getAllPublished(String locale) {
+        var resolved = localeResolver.resolveForRead(locale);
+        logger.debug("Fetching published content bundle for locale: {}", resolved);
+
+        return toBundle(resolved, contentBlockDao.findPublishedByLocale(resolved), Map.of());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ContentBundleDto getAllForEditor(String userId, String locale) {
+        var resolved = localeResolver.resolveForRead(locale);
+        logger.debug("Fetching editor content bundle for locale: {} user: {}", resolved, userId);
+
+        var draftsBySlug = contentDraftDao.findAllOwn(userId, resolved).stream()
+                .collect(Collectors.toMap(ContentDraft::getSlug, draft -> parseDraftPayload(draft.getPayload())));
+
+        return toBundle(resolved, contentBlockDao.findPublishedByLocale(resolved), draftsBySlug);
+    }
+
+    // `pages` sitenin rotaları değil, canlı bloğu olan slug'lar: blokları arşivlenmiş bir sayfa
+    // hiç görünmez. Paylaşılan bloklar bu yüzden sayfalara katılmıyor, ayrı `global` altında dönüyor.
+    private ContentBundleDto toBundle(String locale, List<ContentBlock> blocks,
+                                      Map<String, Map<String, JsonNode>> draftsBySlug) {
+        var blocksBySlug = blocks.stream()
+                .collect(Collectors.groupingBy(ContentBlock::getSlug, LinkedHashMap::new, Collectors.toList()));
+
+        var global = new ArrayList<ContentBundleDto.ContentPageDto>();
+        var pages = new ArrayList<ContentBundleDto.ContentPageDto>();
+
+        blocksBySlug.forEach((slug, pageBlocks) -> {
+            var blockDtos = toBlockDtos(pageBlocks);
+            applyDraft(blockDtos, draftsBySlug.getOrDefault(slug, Map.of()));
+            (isGlobalSlug(slug) ? global : pages).add(new ContentBundleDto.ContentPageDto(slug, blockDtos));
+        });
+
+        return new ContentBundleDto(locale, global, pages);
+    }
+
+    private boolean isGlobalSlug(String slug) {
+        return slug.substring(slug.lastIndexOf('/') + 1).startsWith(GLOBAL_SLUG_PREFIX);
+    }
+
+    private void applyDraft(List<BlockDto> blockDtos, Map<String, JsonNode> draftValues) {
+        for (BlockDto dto : blockDtos) {
+            var draftValue = draftValues.get(dto.getBlockPath());
+            if (draftValue != null && !draftValue.equals(dto.getValue())) {
+                dto.setDraftValue(draftValue);
+            }
+        }
     }
 
 
