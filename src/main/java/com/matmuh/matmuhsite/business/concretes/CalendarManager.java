@@ -21,9 +21,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -156,10 +159,28 @@ public class CalendarManager implements CalendarService {
                     .orElseThrow(() -> new ResourceNotFoundException(EnrollmentMessages.TERM_NOT_FOUND));
         }
 
-        var today = LocalDate.now();
-        return academicTermDao.findByStartDateLessThanEqualAndEndDateGreaterThanEqual(today, today).stream()
-                .findFirst()
+        return nearestTerm(academicTermDao.findAll(), LocalDate.now())
                 .orElseThrow(() -> new ResourceNotFoundException(EnrollmentMessages.TERM_NOT_FOUND));
+    }
+
+    // Dönem dışındaysak (yaz tatili, dönem başlamadan önceki günler) en yakın dönem seçilir;
+    // yoksa ders programı dönem başlayana kadar boş kalıyordu (Egehan, 23 Eylül). Eşitlikte
+    // yaklaşan dönem kazanır: tatilde bakılan program gelecek dönemin programıdır.
+    static Optional<AcademicTerm> nearestTerm(Collection<AcademicTerm> terms, LocalDate today) {
+        return terms.stream().min(Comparator
+                .comparingLong((AcademicTerm term) -> daysOutside(term, today))
+                .thenComparing(term -> !term.getStartDate().isAfter(today))
+                .thenComparing(AcademicTerm::getStartDate, Comparator.reverseOrder()));
+    }
+
+    private static long daysOutside(AcademicTerm term, LocalDate today) {
+        if (today.isBefore(term.getStartDate())) {
+            return ChronoUnit.DAYS.between(today, term.getStartDate());
+        }
+        if (today.isAfter(term.getEndDate())) {
+            return ChronoUnit.DAYS.between(term.getEndDate(), today);
+        }
+        return 0;
     }
 
     private WeeklySlotDto toWeeklySlot(ScheduleSlot slot) {
