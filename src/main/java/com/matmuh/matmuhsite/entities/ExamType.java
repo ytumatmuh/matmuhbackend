@@ -8,6 +8,8 @@ public enum ExamType {
     FINAL,
     RESIT,
     QUIZ,
+    QUIZ_2,
     ASSIGNMENT,
+    ASSIGNMENT_2,
     PROJECT
 }
