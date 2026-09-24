@@ -10,6 +10,7 @@ import com.matmuh.matmuhsite.core.dtos.search.response.SearchGroupDto;
 import com.matmuh.matmuhsite.core.dtos.search.response.SearchHitDto;
 import com.matmuh.matmuhsite.core.dtos.search.response.SearchResultDto;
 import com.matmuh.matmuhsite.core.helpers.CmsLocaleResolver;
+import com.matmuh.matmuhsite.core.helpers.CollectionSortParser.CollectionSort;
 import com.matmuh.matmuhsite.core.helpers.MessageResolver;
 import com.matmuh.matmuhsite.core.helpers.OffsetPageable;
 import com.matmuh.matmuhsite.dataAccess.abstracts.ElectiveGroupDao;
@@ -38,6 +39,10 @@ public class SearchManager implements SearchService {
     private static final Sort LECTURE_SORT = Sort.by(Sort.Direction.ASC, "code");
     private static final Sort STAFF_SORT = Sort.by(Sort.Direction.ASC, "lastName");
     private static final Sort GROUP_SORT = Sort.by(Sort.Direction.ASC, "code");
+    private static final List<CollectionSort> NEWEST_FIRST = List.of(
+            new CollectionSort(null, "publishedAt", true),
+            new CollectionSort("created_at", null, true));
+    private static final String ENGLISH = "en";
 
     private final LectureDao lectureDao;
     private final ElectiveGroupDao electiveGroupDao;
@@ -76,16 +81,17 @@ public class SearchManager implements SearchService {
 
         var wanted = types == null || types.isEmpty() ? Set.of(SearchResultType.values()) : types;
         var resolvedLocale = localeResolver.resolveForRead(locale);
+        var english = ENGLISH.equals(CmsLocaleResolver.normalize(locale));
         var groups = new ArrayList<SearchGroupDto>();
 
         if (wanted.contains(SearchResultType.LECTURE)) {
-            groups.add(lectureGroup(normalized, limit));
+            groups.add(lectureGroup(normalized, english, limit));
         }
         if (wanted.contains(SearchResultType.ELECTIVE_GROUP)) {
-            groups.add(electiveGroupGroup(normalized, limit));
+            groups.add(electiveGroupGroup(normalized, english, limit));
         }
         if (wanted.contains(SearchResultType.STAFF)) {
-            groups.add(staffGroup(normalized, limit));
+            groups.add(staffGroup(normalized, english, limit));
         }
         if (wanted.contains(SearchResultType.ANNOUNCEMENT)) {
             groups.add(collectionGroup(SearchResultType.ANNOUNCEMENT, AnnouncementCollectionSchema.KEY,
@@ -103,24 +109,24 @@ public class SearchManager implements SearchService {
         return result;
     }
 
-    private SearchGroupDto lectureGroup(String query, int limit) {
+    private SearchGroupDto lectureGroup(String query, boolean english, int limit) {
         var page = lectureDao.search(null, null, null, null, null, null, query, OffsetPageable.of(0, limit, LECTURE_SORT));
 
-        var items = page.getContent().stream().map(this::toHit).toList();
+        var items = page.getContent().stream().map(lecture -> toHit(lecture, english)).toList();
         return group(SearchResultType.LECTURE, SearchMessages.GROUP_LECTURES, page.getTotalElements(), items);
     }
 
-    private SearchGroupDto electiveGroupGroup(String query, int limit) {
+    private SearchGroupDto electiveGroupGroup(String query, boolean english, int limit) {
         var page = electiveGroupDao.search(null, null, null, query, OffsetPageable.of(0, limit, GROUP_SORT));
 
-        var items = page.getContent().stream().map(this::toHit).toList();
+        var items = page.getContent().stream().map(group -> toHit(group, english)).toList();
         return group(SearchResultType.ELECTIVE_GROUP, SearchMessages.GROUP_ELECTIVE_GROUPS, page.getTotalElements(), items);
     }
 
-    private SearchGroupDto staffGroup(String query, int limit) {
+    private SearchGroupDto staffGroup(String query, boolean english, int limit) {
         var page = staffDao.search(query, null, null, OffsetPageable.of(0, limit, STAFF_SORT));
 
-        var items = page.getContent().stream().map(this::toHit).toList();
+        var items = page.getContent().stream().map(staff -> toHit(staff, english)).toList();
         return group(SearchResultType.STAFF, SearchMessages.GROUP_STAFF, page.getTotalElements(), items);
     }
 
@@ -132,7 +138,7 @@ public class SearchManager implements SearchService {
                 .toList();
 
         var total = collectionItemDao.countByFilter(key, null, false, locale, searchFields, query);
-        var items = collectionItemDao.searchByFilter(key, null, null, false, locale, searchFields, query, 0, limit)
+        var items = collectionItemDao.searchByFilter(key, null, NEWEST_FIRST, false, locale, searchFields, query, 0, limit)
                 .stream()
                 .map(item -> toHit(type, item))
                 .toList();
@@ -140,20 +146,20 @@ public class SearchManager implements SearchService {
         return group(type, labelKey, total, items);
     }
 
-    private SearchHitDto toHit(Lecture lecture) {
+    private SearchHitDto toHit(Lecture lecture, boolean english) {
         return new SearchHitDto(SearchResultType.LECTURE, lecture.getId().toString(), lecture.getSlug(),
-                lecture.getName(), lecture.getCode());
+                inLanguage(english, lecture.getName(), lecture.getNameEn()), lecture.getCode());
     }
 
-    private SearchHitDto toHit(ElectiveGroup group) {
+    private SearchHitDto toHit(ElectiveGroup group, boolean english) {
         return new SearchHitDto(SearchResultType.ELECTIVE_GROUP, group.getId().toString(), group.getSlug(),
-                group.getName(), group.getCode());
+                inLanguage(english, group.getName(), group.getNameEn()), group.getCode());
     }
 
-    private SearchHitDto toHit(Staff staff) {
+    private SearchHitDto toHit(Staff staff, boolean english) {
         var name = join(staff.getFirstName(), staff.getLastName());
         var subtitle = staff.getAcademicTitle() == null || staff.getAcademicTitle().isBlank()
-                ? staff.getRole()
+                ? inLanguage(english, staff.getRole(), staff.getRoleEn())
                 : staff.getAcademicTitle();
         return new SearchHitDto(SearchResultType.STAFF, staff.getId().toString(), staff.getSlug(), name, subtitle);
     }
@@ -173,6 +179,10 @@ public class SearchManager implements SearchService {
         }
         var node = data.get(field);
         return node == null || node.isNull() ? null : node.asString();
+    }
+
+    private String inLanguage(boolean english, String turkish, String inEnglish) {
+        return english && inEnglish != null && !inEnglish.isBlank() ? inEnglish : turkish;
     }
 
     private String join(String first, String last) {
