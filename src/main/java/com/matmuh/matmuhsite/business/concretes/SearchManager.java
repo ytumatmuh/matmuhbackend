@@ -110,14 +110,14 @@ public class SearchManager implements SearchService {
     }
 
     private SearchGroupDto lectureGroup(String query, boolean english, int limit) {
-        var page = lectureDao.search(null, null, null, null, null, null, query, OffsetPageable.of(0, limit, LECTURE_SORT));
+        var page = lectureDao.search(null, null, null, null, null, null, null, query, OffsetPageable.of(0, limit, LECTURE_SORT));
 
         var items = page.getContent().stream().map(lecture -> toHit(lecture, english)).toList();
         return group(SearchResultType.LECTURE, SearchMessages.GROUP_LECTURES, page.getTotalElements(), items);
     }
 
     private SearchGroupDto electiveGroupGroup(String query, boolean english, int limit) {
-        var page = electiveGroupDao.search(null, null, null, query, OffsetPageable.of(0, limit, GROUP_SORT));
+        var page = electiveGroupDao.search(null, null, null, null, query, OffsetPageable.of(0, limit, GROUP_SORT));
 
         var items = page.getContent().stream().map(group -> toHit(group, english)).toList();
         return group(SearchResultType.ELECTIVE_GROUP, SearchMessages.GROUP_ELECTIVE_GROUPS, page.getTotalElements(), items);

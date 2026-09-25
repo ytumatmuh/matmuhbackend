@@ -1,5 +1,6 @@
 package com.matmuh.matmuhsite.business.concretes;
 
+import com.matmuh.matmuhsite.entities.Program;
 import com.matmuh.matmuhsite.business.abstracts.LectureNoteService;
 import com.matmuh.matmuhsite.business.abstracts.LectureOfferingService;
 import com.matmuh.matmuhsite.business.abstracts.LectureService;
@@ -131,6 +132,9 @@ public class LectureManager implements LectureService {
         if (lecture.getDegreeLevels() == null || lecture.getDegreeLevels().isEmpty()) {
             lecture.setDegreeLevels(new LinkedHashSet<>(DegreeLevel.fromCode(createLectureRequestDto.getCode())));
         }
+        if (lecture.getPrograms() == null || lecture.getPrograms().isEmpty()) {
+            lecture.setPrograms(Program.fromDegreeLevels(lecture.getDegreeLevels()));
+        }
         lecture.setSlug(UniqueSlugResolver.resolve(
                 createLectureRequestDto.getSlug(),
                 createLectureRequestDto.getCode(),
@@ -253,12 +257,12 @@ public class LectureManager implements LectureService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageDto<LectureDto> getLectures(Integer term, Semester semester, DegreeLevel degreeLevel,
+    public PageDto<LectureDto> getLectures(Integer term, Semester semester, DegreeLevel degreeLevel, Program program,
                                           LectureType type, LectureCategory category,
                                           Collection<InstructionLanguage> languages, String search, Pageable pageable) {
         logger.debug("Retrieving lectures term={} semester={} degreeLevel={} languages={} search={} page={}", term, semester, degreeLevel, languages, search, pageable.getPageNumber());
 
-        var page = lectureDao.search(term, semester, degreeLevel, type, category, languages,
+        var page = lectureDao.search(term, semester, degreeLevel, program, type, category, languages,
                 search == null || search.isBlank() ? null : search.trim(), pageable);
 
         logger.info("Retrieved {} lectures", page.getTotalElements());

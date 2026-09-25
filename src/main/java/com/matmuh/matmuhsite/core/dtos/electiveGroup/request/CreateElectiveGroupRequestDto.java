@@ -1,5 +1,6 @@
 package com.matmuh.matmuhsite.core.dtos.electiveGroup.request;
 
+import com.matmuh.matmuhsite.entities.Program;
 import java.math.BigDecimal;
 
 import com.matmuh.matmuhsite.business.constants.ElectiveGroupMessages;
@@ -46,6 +47,8 @@ public class CreateElectiveGroupRequestDto {
     private Semester semester;
 
     private Set<DegreeLevel> degreeLevels;
+
+    private Set<Program> programs;
 
     @Min(value = 0, message = ElectiveGroupMessages.HOURS_MIN)
     private Integer weeklyHours;

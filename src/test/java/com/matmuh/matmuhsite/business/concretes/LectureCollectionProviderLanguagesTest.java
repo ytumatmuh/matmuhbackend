@@ -54,7 +54,7 @@ class LectureCollectionProviderLanguagesTest {
                 Mappers.getMapper(LectureMapper.class),
                 MAPPER,
                 Validation.buildDefaultValidatorFactory().getValidator());
-        when(lectureDao.search(any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(Page.empty());
+        when(lectureDao.search(any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(Page.empty());
     }
 
     @Test
@@ -146,7 +146,7 @@ class LectureCollectionProviderLanguagesTest {
     @SuppressWarnings("unchecked")
     private Collection<InstructionLanguage> searchedLanguages() {
         var captor = ArgumentCaptor.forClass(Collection.class);
-        verify(lectureDao).search(any(), any(), any(), any(), any(), captor.capture(), any(), any());
+        verify(lectureDao).search(any(), any(), any(), any(), any(), any(), captor.capture(), any(), any());
         return captor.getValue();
     }
 

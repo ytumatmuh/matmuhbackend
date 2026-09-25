@@ -1,5 +1,6 @@
 package com.matmuh.matmuhsite.core.utilities.schema;
 
+import com.matmuh.matmuhsite.entities.Program;
 import com.matmuh.matmuhsite.core.utilities.schema.EnumCheckConstraintSynchronizer.EnumColumn;
 import com.matmuh.matmuhsite.entities.AuthProvider;
 import com.matmuh.matmuhsite.entities.CalendarEventType;
@@ -44,6 +45,7 @@ class EnumCheckConstraintSynchronizerTest {
                 column("calendar_events", "type", CalendarEventType.class),
                 column("content_blocks", "block_type", BlockType.class),
                 column("elective_group_degree_levels", "degree_level", DegreeLevel.class),
+                column("elective_group_programs", "program", Program.class),
                 column("elective_groups", "semester", Semester.class),
                 column("exam_statistics", "exam_type", ExamType.class),
                 column("grade_results", "evaluation_method", EvaluationMethod.class),
@@ -55,6 +57,7 @@ class EnumCheckConstraintSynchronizerTest {
                 column("lecture_offering_exam_weights", "exam_type", ExamType.class),
                 column("lecture_offerings", "language", InstructionLanguage.class),
                 column("lecture_offerings", "semester", Semester.class),
+                column("lecture_programs", "program", Program.class),
                 column("lectures", "category", LectureCategory.class),
                 column("lectures", "semester", Semester.class),
                 column("lectures", "type", LectureType.class),

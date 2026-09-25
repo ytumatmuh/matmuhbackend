@@ -257,7 +257,7 @@ class LectureOfferingDeleteCascadeTest {
     }
 
     private List<UUID> weeklySlotIds() {
-        return calendarService.getWeeklySchedule(YEAR, Semester.FALL, null, null).slots().stream()
+        return calendarService.getWeeklySchedule(YEAR, Semester.FALL, null, null, null).slots().stream()
                 .map(WeeklySlotDto::id)
                 .toList();
     }

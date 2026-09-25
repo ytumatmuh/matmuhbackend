@@ -1,5 +1,6 @@
 package com.matmuh.matmuhsite.dataAccess.abstracts;
 
+import com.matmuh.matmuhsite.entities.Program;
 import com.matmuh.matmuhsite.entities.DegreeLevel;
 import com.matmuh.matmuhsite.entities.InstructionLanguage;
 import com.matmuh.matmuhsite.entities.Lecture;
@@ -55,6 +56,7 @@ public interface LectureDao extends JpaRepository<Lecture, UUID> {
             WHERE (:term IS NULL OR l.term = :term)
               AND (:semester IS NULL OR l.semester = :semester)
               AND (:degreeLevel IS NULL OR :degreeLevel MEMBER OF l.degreeLevels)
+              AND (:program IS NULL OR :program MEMBER OF l.programs)
               AND (:type IS NULL OR l.type = :type)
               AND (:category IS NULL OR l.category = :category)
               AND (:filterByLanguage = false OR EXISTS (
@@ -69,6 +71,7 @@ public interface LectureDao extends JpaRepository<Lecture, UUID> {
     Page<Lecture> searchMatching(@Param("term") Integer term,
                                  @Param("semester") Semester semester,
                                  @Param("degreeLevel") DegreeLevel degreeLevel,
+                                 @Param("program") Program program,
                                  @Param("type") LectureType type,
                                  @Param("category") LectureCategory category,
                                  @Param("filterByLanguage") boolean filterByLanguage,
@@ -78,11 +81,11 @@ public interface LectureDao extends JpaRepository<Lecture, UUID> {
 
     // Dil süzgeci "verilenlerden herhangi biri"; hiç verilmezse dili boş dersler de düşmesin diye
     // bayrakla kapatılır, IN listesi hiçbir zaman boş bağlanmaz.
-    default Page<Lecture> search(Integer term, Semester semester, DegreeLevel degreeLevel, LectureType type,
+    default Page<Lecture> search(Integer term, Semester semester, DegreeLevel degreeLevel, Program program, LectureType type,
                                  LectureCategory category, Collection<InstructionLanguage> languages,
                                  String search, Pageable pageable) {
         var filterByLanguage = languages != null && !languages.isEmpty();
-        return searchMatching(term, semester, degreeLevel, type, category, filterByLanguage,
+        return searchMatching(term, semester, degreeLevel, program, type, category, filterByLanguage,
                 filterByLanguage ? EnumSet.copyOf(languages) : EnumSet.allOf(InstructionLanguage.class),
                 search, pageable);
     }

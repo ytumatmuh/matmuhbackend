@@ -27,4 +27,6 @@ public class ElectiveGroupMessages {
     public static final String OPTION_ADDED_SUCCESSFULLY = "elective.group.option.added";
     public static final String OPTION_REMOVED_SUCCESSFULLY = "elective.group.option.removed";
     public static final String DEGREE_LEVEL_INVALID = "elective.group.degree.level.invalid";
+    public static final String PROGRAM_INVALID = "elective.group.program.invalid";
+    public static final String CODE_AMBIGUOUS = "elective.group.code.ambiguous";
 }

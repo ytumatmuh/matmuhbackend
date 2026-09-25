@@ -48,6 +48,7 @@ class CmsProviderUpsertByServiceKeyTest {
     void cleanUp() {
         SecurityContextHolder.clearContext();
         jdbc.update("DELETE FROM lecture_degree_levels WHERE lecture_id IN (SELECT id FROM lectures WHERE code = ?)", CODE);
+        jdbc.update("DELETE FROM lecture_programs WHERE lecture_id IN (SELECT id FROM lectures WHERE code = ?)", CODE);
         jdbc.update("DELETE FROM lecture_languages WHERE lecture_id IN (SELECT id FROM lectures WHERE code = ?)", CODE);
         jdbc.update("DELETE FROM lecture_syllabus WHERE lecture_id IN (SELECT id FROM lectures WHERE code = ?)", CODE);
         jdbc.update("DELETE FROM lectures WHERE code = ?", CODE);
