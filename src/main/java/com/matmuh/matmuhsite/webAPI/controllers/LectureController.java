@@ -1,6 +1,5 @@
 package com.matmuh.matmuhsite.webAPI.controllers;
 
-import com.matmuh.matmuhsite.entities.Program;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import com.matmuh.matmuhsite.business.abstracts.LectureOfferingService;
@@ -71,19 +70,18 @@ public class LectureController {
     }
 
     @Operation(summary = "Dersleri listele",
-            description = "Sayfalı liste. Filtreler: term, semester, degreeLevel, program, type, category, language, search (ad, kod, açıklama). degreeLevel tek değer alır ve dersin düzeylerinden biri eşleşiyorsa döner; ortak lisansüstü dersleri hem MASTERS hem DOCTORATE filtresinde listelenir. program da tek değer alır (UNDERGRADUATE, MASTERS_THESIS, MASTERS_NON_THESIS, DOCTORATE) ve dersin programlarından biri eşleşiyorsa döner. language çoklu değer alır (language=ENGLISH,TURKISH) ve dersin dillerinden biri eşleşiyorsa döner. Sayfalama: page, size, sort (örn. code,asc). Sıralanabilir alanlar: code, name, term, semester, ects, createdAt.")
+            description = "Sayfalı liste. Filtreler: term, semester, degreeLevel, type, category, language, search (ad, kod, açıklama). degreeLevel tek değer alır ve dersin düzeylerinden biri eşleşiyorsa döner; ortak lisansüstü dersleri hem MASTERS hem DOCTORATE filtresinde listelenir. language çoklu değer alır (language=ENGLISH,TURKISH) ve dersin dillerinden biri eşleşiyorsa döner. Sayfalama: page, size, sort (örn. code,asc). Sıralanabilir alanlar: code, name, term, semester, ects, createdAt.")
     @GetMapping
     public ResponseEntity<DataResult<PageDto<LectureDto>>> getLectures(
             @RequestParam(required = false) Integer term,
             @RequestParam(required = false) Semester semester,
             @RequestParam(required = false) DegreeLevel degreeLevel,
-            @RequestParam(required = false) Program program,
             @RequestParam(required = false) LectureType type,
             @RequestParam(required = false) LectureCategory category,
             @RequestParam(required = false) List<InstructionLanguage> language,
             @RequestParam(required = false) String search,
             @ParameterObject @PageableDefault(size = 20, sort = "code", direction = Sort.Direction.ASC) Pageable pageable) {
-        var lectures = lectureService.getLectures(term, semester, degreeLevel, program, type, category, language, search, PageableSanitizer.sanitize(pageable, SORTABLE, "code"));
+        var lectures = lectureService.getLectures(term, semester, degreeLevel, type, category, language, search, PageableSanitizer.sanitize(pageable, SORTABLE, "code"));
         return ResponseEntity.ok(new SuccessDataResult<>(lectures, messageResolver.resolve(LectureNoteMessages.LECTURES_FETCH_SUCCESS), HttpStatus.OK));
     }
 

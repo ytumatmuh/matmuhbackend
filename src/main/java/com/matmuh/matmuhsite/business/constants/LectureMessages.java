@@ -6,7 +6,6 @@ public class LectureMessages {
     public static final String WEIGHT_MIN = "{lecture.weight.min}";
     public static final String WEIGHT_MAX = "{lecture.weight.max}";
     public static final String DEGREE_LEVEL_INVALID = "lecture.degree.level.invalid";
-    public static final String PROGRAM_INVALID = "lecture.program.invalid";
     public static final String LANGUAGE_INVALID = "lecture.language.invalid";
     public static final String LECTURE_CODE_EXISTS = "lecture.code.exists";
     public static final String LECTURE_NOT_FOUND = "lecture.not.found";

@@ -1,7 +1,5 @@
 package com.matmuh.matmuhsite.business.concretes;
 
-import com.matmuh.matmuhsite.core.exceptions.BusinessRuleException;
-import com.matmuh.matmuhsite.entities.Program;
 import com.matmuh.matmuhsite.business.abstracts.ElectiveGroupService;
 import com.matmuh.matmuhsite.business.constants.ElectiveGroupMessages;
 import com.matmuh.matmuhsite.business.constants.LectureMessages;
@@ -51,12 +49,12 @@ public class ElectiveGroupManager implements ElectiveGroupService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageDto<ElectiveGroupDto> getElectiveGroups(Integer term, Semester semester, DegreeLevel degreeLevel, Program program,
+    public PageDto<ElectiveGroupDto> getElectiveGroups(Integer term, Semester semester, DegreeLevel degreeLevel,
                                                        String search, Pageable pageable) {
         log.debug("Retrieving elective groups term={} semester={} degreeLevel={} search={} page={}",
                 term, semester, degreeLevel, search, pageable.getPageNumber());
 
-        var page = electiveGroupDao.search(term, semester, degreeLevel, program, normalize(search), pageable);
+        var page = electiveGroupDao.search(term, semester, degreeLevel, normalize(search), pageable);
 
         return PageDto.of(page, this::toDto);
     }
@@ -70,22 +68,15 @@ public class ElectiveGroupManager implements ElectiveGroupService {
 
     @Override
     @Transactional(readOnly = true)
-    public ElectiveGroupDto getElectiveGroupByCode(String code, Program program) {
-        log.debug("Retrieving elective group with code: {} program: {}", code, program);
+    public ElectiveGroupDto getElectiveGroupByCode(String code) {
+        log.debug("Retrieving elective group with code: {}", code);
 
-        var matches = electiveGroupDao.findAllByCodeIgnoreCase(code).stream()
-                .filter(group -> program == null || group.getPrograms().contains(program))
-                .toList();
-
-        if (matches.isEmpty()) {
+        var group = electiveGroupDao.findByCodeIgnoreCase(code).orElseThrow(() -> {
             log.error("Elective group with code {} not found.", code);
-            throw new ResourceNotFoundException(ElectiveGroupMessages.ELECTIVE_GROUP_NOT_FOUND);
-        }
-        if (matches.size() > 1) {
-            throw new BusinessRuleException(ElectiveGroupMessages.CODE_AMBIGUOUS);
-        }
+            return new ResourceNotFoundException(ElectiveGroupMessages.ELECTIVE_GROUP_NOT_FOUND);
+        });
 
-        return toDto(matches.get(0));
+        return toDto(group);
     }
 
     @Override
@@ -113,6 +104,11 @@ public class ElectiveGroupManager implements ElectiveGroupService {
     public ElectiveGroupDto createElectiveGroup(CreateElectiveGroupRequestDto requestDto) {
         log.info("Creating elective group with code: {}", requestDto.getCode());
 
+        if (electiveGroupDao.existsByCodeIgnoreCase(requestDto.getCode())) {
+            log.error("Elective group creation failed: code {} already exists.", requestDto.getCode());
+            throw new ResourceAlreadyExistsException(ElectiveGroupMessages.CODE_EXISTS);
+        }
+
         var group = electiveGroupMapper.toEntity(requestDto);
         group.setOptions(resolveLectures(requestDto.getOptionLectureIds()));
         markAsElective(group.getOptions());
@@ -120,8 +116,6 @@ public class ElectiveGroupManager implements ElectiveGroupService {
         if (group.getDegreeLevels() == null || group.getDegreeLevels().isEmpty()) {
             group.setDegreeLevels(deriveDegreeLevels(group.getOptions()));
         }
-        refreshDerivedPrograms(group);
-        requireCodeFree(group.getCode(), group.getPrograms(), null);
 
         if (group.getSelectionCount() < 1) {
             group.setSelectionCount(1);
@@ -148,14 +142,18 @@ public class ElectiveGroupManager implements ElectiveGroupService {
 
         var group = require(id);
 
+        if (requestDto.getCode() != null && !requestDto.getCode().equalsIgnoreCase(group.getCode())
+                && electiveGroupDao.existsByCodeIgnoreCase(requestDto.getCode())) {
+            log.error("Elective group update failed: code {} already exists.", requestDto.getCode());
+            throw new ResourceAlreadyExistsException(ElectiveGroupMessages.CODE_EXISTS);
+        }
+
         electiveGroupMapper.updateFromDto(requestDto, group);
 
         if (requestDto.getOptionLectureIds() != null) {
             group.setOptions(resolveLectures(requestDto.getOptionLectureIds()));
             markAsElective(group.getOptions());
         }
-        refreshDerivedPrograms(group);
-        requireCodeFree(group.getCode(), group.getPrograms(), group.getId());
 
         var saved = electiveGroupDao.save(group);
         log.info("Elective group updated with ID: {}", saved.getId());
@@ -178,7 +176,6 @@ public class ElectiveGroupManager implements ElectiveGroupService {
 
         markAsElective(List.of(lecture));
         refreshDerivedDegreeLevels(group);
-        refreshDerivedPrograms(group);
         var saved = electiveGroupDao.save(group);
         log.info("Lecture {} added to elective group {}", lectureId, id);
 
@@ -254,32 +251,6 @@ public class ElectiveGroupManager implements ElectiveGroupService {
     private void refreshDerivedDegreeLevels(ElectiveGroup group) {
         if (group.getDegreeLevels() == null || group.getDegreeLevels().isEmpty()) {
             group.setDegreeLevels(deriveDegreeLevels(group.getOptions()));
-        }
-    }
-
-    private void refreshDerivedPrograms(ElectiveGroup group) {
-        if (group.getPrograms() == null || group.getPrograms().isEmpty()) {
-            var programs = new LinkedHashSet<Program>();
-            for (var lecture : group.getOptions()) {
-                programs.addAll(lecture.getPrograms());
-            }
-            group.setPrograms(programs);
-        }
-    }
-
-    // Tezsiz yüksek lisansın SEC0001-SEC0010 slotları tezli/doktoradaki SEC0001-SEC0007 ile aynı kodu
-    // taşıyor ama başka dönem ve başka havuz demek (Bologna, 25 Eylül). Kod bu yüzden yalnız ortak
-    // programı olan gruplar arasında tekil; programı boş olan grup her programla çakışır sayılır.
-    private void requireCodeFree(String code, Set<Program> programs, UUID self) {
-        for (var other : electiveGroupDao.findAllByCodeIgnoreCase(code)) {
-            if (other.getId().equals(self)) {
-                continue;
-            }
-            if (programs.isEmpty() || other.getPrograms().isEmpty()
-                    || other.getPrograms().stream().anyMatch(programs::contains)) {
-                log.error("Elective group code {} already used in an overlapping program.", code);
-                throw new ResourceAlreadyExistsException(ElectiveGroupMessages.CODE_EXISTS);
-            }
         }
     }
 

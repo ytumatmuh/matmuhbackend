@@ -1,6 +1,5 @@
 package com.matmuh.matmuhsite.business.concretes;
 
-import com.matmuh.matmuhsite.entities.Program;
 import com.matmuh.matmuhsite.business.abstracts.CalendarService;
 import com.matmuh.matmuhsite.business.constants.EnrollmentMessages;
 import com.matmuh.matmuhsite.core.dtos.calendar.response.CalendarOccurrenceDto;
@@ -28,7 +27,6 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -129,8 +127,7 @@ public class CalendarManager implements CalendarService {
 
     @Override
     @Transactional(readOnly = true)
-    public WeeklyScheduleDto getWeeklySchedule(String academicYear, Semester semester, Integer term, UUID staffId,
-                                               Program program) {
+    public WeeklyScheduleDto getWeeklySchedule(String academicYear, Semester semester, Integer term, UUID staffId) {
         var resolved = resolveTerm(academicYear, semester);
 
         logger.debug("Retrieving weekly schedule for {} {} term={} staffId={}",
@@ -141,7 +138,6 @@ public class CalendarManager implements CalendarService {
         var slots = scheduleSlotDao.findByTerm(resolved.getAcademicYear(), resolved.getSemester()).stream()
                 .filter(slot -> term == null || term.equals(slot.getLectureOffering().getLecture().getTerm()))
                 .filter(slot -> staffId == null || matchesStaff(slot, staffId))
-                .filter(slot -> program == null || slot.getLectureOffering().getLecture().getPrograms().contains(program))
                 .sorted(Comparator.comparing(ScheduleSlot::getDayOfWeek)
                         .thenComparing(ScheduleSlot::getStartTime)
                         .thenComparing(slot -> slot.getLectureOffering().getLecture().getCode(),
@@ -205,7 +201,6 @@ public class CalendarManager implements CalendarService {
                 lecture == null ? null : lecture.getTerm(),
                 offering.getLanguage(),
                 offering.getStaff() == null ? null : offering.getStaff().getId(),
-                InstructorNames.of(offering),
-                lecture == null ? Set.of() : Set.copyOf(lecture.getPrograms()));
+                InstructorNames.of(offering));
     }
 }

@@ -1,6 +1,5 @@
 package com.matmuh.matmuhsite.business.constants;
 
-import com.matmuh.matmuhsite.entities.Program;
 import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionSchema;
 import com.matmuh.matmuhsite.core.dtos.cms.response.ChoiceSource;
 import com.matmuh.matmuhsite.core.dtos.cms.response.FieldDefinition;
@@ -24,14 +23,10 @@ public final class ElectiveGroupCollectionSchema {
     public static final String FIELD_TERM = "term";
     public static final String FIELD_SEMESTER = "semester";
     public static final String FIELD_DEGREE_LEVELS = "degreeLevels";
-    public static final String FIELD_PROGRAMS = "programs";
     public static final String FIELD_OPTION_LECTURE_IDS = "optionLectureIds";
 
     private static final String[] DEGREE_LEVEL_OPTIONS =
             Arrays.stream(DegreeLevel.values()).map(Enum::name).toArray(String[]::new);
-
-    private static final String[] PROGRAM_OPTIONS =
-            Arrays.stream(Program.values()).map(Enum::name).toArray(String[]::new);
 
     private static final List<FieldDefinition> OPTION_FIELDS = List.of(
             FieldDefinition.of("code", FieldType.SHORT_TEXT, "Ders kodu"),
@@ -59,10 +54,6 @@ public final class ElectiveGroupCollectionSchema {
                     .withSource(ChoiceSource.ofValues(DEGREE_LEVEL_OPTIONS))
                     .asFilterable()
                     .withHelp("Boş bırakılırsa seçenek derslerin düzeylerinden alınır."),
-            FieldDefinition.of(FIELD_PROGRAMS, FieldType.STRING_ARRAY, "Program")
-                    .withSource(ChoiceSource.ofValues(PROGRAM_OPTIONS))
-                    .asFilterable()
-                    .withHelp("Slotun ait olduğu programlar. Aynı slot kodu farklı programlarda ayrı slot olabilir; tezsiz yüksek lisansın slotları ayrı kaydedilir. Boş bırakılırsa seçenek derslerin programlarından alınır."),
             FieldDefinition.of("weeklyHours", FieldType.NUMBER, "Haftalık saat"),
             FieldDefinition.of("localCredit", FieldType.NUMBER, "Yerel kredi"),
             FieldDefinition.of("ects", FieldType.NUMBER, "AKTS"),

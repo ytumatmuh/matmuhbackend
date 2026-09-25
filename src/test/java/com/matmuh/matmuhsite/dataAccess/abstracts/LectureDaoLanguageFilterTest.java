@@ -22,34 +22,34 @@ class LectureDaoLanguageFilterTest {
 
     @Test
     void requestedLanguagesTurnTheFilterOn() {
-        dao.search(null, null, null, null, null, null, List.of(InstructionLanguage.ENGLISH), null, Pageable.unpaged());
+        dao.search(null, null, null, null, null, List.of(InstructionLanguage.ENGLISH), null, Pageable.unpaged());
 
-        verify(dao).searchMatching(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
+        verify(dao).searchMatching(isNull(), isNull(), isNull(), isNull(), isNull(),
                 eq(true), eq(EnumSet.of(InstructionLanguage.ENGLISH)), isNull(), any());
     }
 
     @Test
     void severalLanguagesAreBoundAsOneAnyOfList() {
-        dao.search(null, null, null, null, null, null,
+        dao.search(null, null, null, null, null,
                 List.of(InstructionLanguage.ENGLISH, InstructionLanguage.TURKISH), null, Pageable.unpaged());
 
-        verify(dao).searchMatching(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
+        verify(dao).searchMatching(isNull(), isNull(), isNull(), isNull(), isNull(),
                 eq(true), eq(EnumSet.allOf(InstructionLanguage.class)), isNull(), any());
     }
 
     @Test
     void noLanguagesTurnTheFilterOff() {
-        dao.search(null, null, null, null, null, null, null, null, Pageable.unpaged());
+        dao.search(null, null, null, null, null, null, null, Pageable.unpaged());
 
-        verify(dao).searchMatching(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
+        verify(dao).searchMatching(isNull(), isNull(), isNull(), isNull(), isNull(),
                 eq(false), eq(EnumSet.allOf(InstructionLanguage.class)), isNull(), any());
     }
 
     @Test
     void anEmptyListMeansNoFilter() {
-        dao.search(null, null, null, null, null, null, List.of(), null, Pageable.unpaged());
+        dao.search(null, null, null, null, null, List.of(), null, Pageable.unpaged());
 
-        verify(dao).searchMatching(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
+        verify(dao).searchMatching(isNull(), isNull(), isNull(), isNull(), isNull(),
                 eq(false), eq(EnumSet.allOf(InstructionLanguage.class)), isNull(), any());
     }
 }

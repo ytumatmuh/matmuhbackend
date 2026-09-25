@@ -1,6 +1,5 @@
 package com.matmuh.matmuhsite.business.concretes;
 
-import com.matmuh.matmuhsite.entities.Program;
 import com.matmuh.matmuhsite.business.abstracts.CmsCollectionProvider;
 import com.matmuh.matmuhsite.business.abstracts.ElectiveGroupService;
 import com.matmuh.matmuhsite.business.constants.CmsMessages;
@@ -52,7 +51,6 @@ public class ElectiveGroupCollectionProvider implements CmsCollectionProvider {
                 filterTerm(filters),
                 filterSemester(filters),
                 filterDegreeLevel(filters),
-                filterProgram(filters),
                 filterSearch(filters),
                 OffsetPageable.of(offset, limit, DEFAULT_SORT));
 
@@ -167,24 +165,6 @@ public class ElectiveGroupCollectionProvider implements CmsCollectionProvider {
         } catch (IllegalArgumentException e) {
             throw new CmsValidationException("Field '" + ElectiveGroupCollectionSchema.FIELD_SEMESTER
                     + "': invalid value '" + node.asString() + "'.");
-        }
-    }
-
-    private Program filterProgram(ObjectNode filters) {
-        var node = filters == null ? null : filters.get(ElectiveGroupCollectionSchema.FIELD_PROGRAMS);
-        if (node == null || node.isNull()) {
-            return null;
-        }
-
-        var text = node.isArray() ? (node.isEmpty() ? null : node.get(0).asString()) : node.asString();
-        if (text == null || text.isBlank()) {
-            return null;
-        }
-
-        try {
-            return Program.valueOf(text.trim().toUpperCase(Locale.ROOT));
-        } catch (IllegalArgumentException e) {
-            throw new CmsValidationException(ElectiveGroupMessages.PROGRAM_INVALID);
         }
     }
 

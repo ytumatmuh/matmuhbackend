@@ -1,7 +1,5 @@
 package com.matmuh.matmuhsite.core.dtos.calendar.response;
 
-import java.util.Set;
-import com.matmuh.matmuhsite.entities.Program;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.matmuh.matmuhsite.entities.InstructionLanguage;
 
@@ -25,7 +23,6 @@ public record WeeklySlotDto(
         Integer term,
         InstructionLanguage language,
         UUID staffId,
-        String staffName,
-        Set<Program> programs
+        String staffName
 ) {
 }

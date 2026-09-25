@@ -1,6 +1,5 @@
 package com.matmuh.matmuhsite.dataAccess.abstracts;
 
-import com.matmuh.matmuhsite.entities.Program;
 import com.matmuh.matmuhsite.entities.DegreeLevel;
 import com.matmuh.matmuhsite.entities.ElectiveGroup;
 import com.matmuh.matmuhsite.entities.Semester;
@@ -30,7 +29,9 @@ public interface ElectiveGroupDao extends JpaRepository<ElectiveGroup, UUID> {
     Optional<ElectiveGroup> findBySlug(String slug);
 
     @EntityGraph(attributePaths = "options")
-    List<ElectiveGroup> findAllByCodeIgnoreCase(String code);
+    Optional<ElectiveGroup> findByCodeIgnoreCase(String code);
+
+    boolean existsByCodeIgnoreCase(String code);
 
     boolean existsBySlug(String slug);
 
@@ -40,7 +41,6 @@ public interface ElectiveGroupDao extends JpaRepository<ElectiveGroup, UUID> {
             WHERE (:term IS NULL OR g.term = :term)
               AND (:semester IS NULL OR g.semester = :semester)
               AND (:degreeLevel IS NULL OR :degreeLevel MEMBER OF g.degreeLevels)
-              AND (:program IS NULL OR :program MEMBER OF g.programs)
               AND (CAST(:search AS String) IS NULL
                    OR LOWER(g.name) LIKE LOWER(CONCAT('%', CAST(:search AS String), '%'))
                    OR LOWER(g.code) LIKE LOWER(CONCAT('%', CAST(:search AS String), '%')))
@@ -48,16 +48,15 @@ public interface ElectiveGroupDao extends JpaRepository<ElectiveGroup, UUID> {
     Page<UUID> searchIds(@Param("term") Integer term,
                          @Param("semester") Semester semester,
                          @Param("degreeLevel") DegreeLevel degreeLevel,
-                         @Param("program") Program program,
                          @Param("search") String search,
                          Pageable pageable);
 
     @EntityGraph(attributePaths = "options")
     List<ElectiveGroup> findByIdIn(Collection<UUID> ids);
 
-    default Page<ElectiveGroup> search(Integer term, Semester semester, DegreeLevel degreeLevel, Program program,
+    default Page<ElectiveGroup> search(Integer term, Semester semester, DegreeLevel degreeLevel,
                                        String search, Pageable pageable) {
-        var ids = searchIds(term, semester, degreeLevel, program, search, pageable);
+        var ids = searchIds(term, semester, degreeLevel, search, pageable);
         if (ids.isEmpty()) {
             return Page.empty(pageable);
         }

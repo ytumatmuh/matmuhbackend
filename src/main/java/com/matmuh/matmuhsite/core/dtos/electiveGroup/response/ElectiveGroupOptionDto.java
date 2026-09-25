@@ -1,6 +1,5 @@
 package com.matmuh.matmuhsite.core.dtos.electiveGroup.response;
 
-import com.matmuh.matmuhsite.entities.Program;
 import java.math.BigDecimal;
 
 import com.matmuh.matmuhsite.entities.DegreeLevel;
@@ -39,6 +38,4 @@ public class ElectiveGroupOptionDto {
     private BigDecimal ects;
 
     private Set<DegreeLevel> degreeLevels = new LinkedHashSet<>();
-
-    private Set<Program> programs = new LinkedHashSet<>();
 }

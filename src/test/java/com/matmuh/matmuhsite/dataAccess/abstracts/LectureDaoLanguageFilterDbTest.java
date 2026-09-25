@@ -102,7 +102,7 @@ class LectureDaoLanguageFilterDbTest {
     }
 
     private Page<Lecture> search(Collection<InstructionLanguage> languages) {
-        return lectureDao.search(null, null, null, null, null, null, languages, MARK,
+        return lectureDao.search(null, null, null, null, null, languages, MARK,
                 PageRequest.of(0, 50, Sort.by("code")));
     }
 

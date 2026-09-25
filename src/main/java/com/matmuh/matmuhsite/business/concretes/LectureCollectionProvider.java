@@ -1,6 +1,5 @@
 package com.matmuh.matmuhsite.business.concretes;
 
-import com.matmuh.matmuhsite.entities.Program;
 import com.matmuh.matmuhsite.business.abstracts.CmsCollectionProvider;
 import com.matmuh.matmuhsite.business.abstracts.LectureService;
 import com.matmuh.matmuhsite.business.constants.CmsMessages;
@@ -66,7 +65,6 @@ public class LectureCollectionProvider implements CmsCollectionProvider {
                 filterTerm(filters),
                 filterSemester(filters),
                 filterDegreeLevel(filters),
-                filterProgram(filters),
                 filterEnum(filters, LectureCollectionSchema.FIELD_TYPE, LectureType.class,
                         LectureMessages.LECTURE_TYPE_INVALID),
                 filterEnum(filters, LectureCollectionSchema.FIELD_CATEGORY, LectureCategory.class,
@@ -248,24 +246,6 @@ public class LectureCollectionProvider implements CmsCollectionProvider {
             }
         }
         return languages.isEmpty() ? null : languages;
-    }
-
-    private Program filterProgram(ObjectNode filters) {
-        var node = filters == null ? null : filters.get(LectureCollectionSchema.FIELD_PROGRAMS);
-        if (node == null || node.isNull()) {
-            return null;
-        }
-
-        var text = node.isArray() ? (node.isEmpty() ? null : node.get(0).asString()) : node.asString();
-        if (text == null || text.isBlank()) {
-            return null;
-        }
-
-        try {
-            return Program.valueOf(text.trim().toUpperCase(Locale.ROOT));
-        } catch (IllegalArgumentException e) {
-            throw new CmsValidationException(LectureMessages.PROGRAM_INVALID);
-        }
     }
 
     private DegreeLevel filterDegreeLevel(ObjectNode filters) {

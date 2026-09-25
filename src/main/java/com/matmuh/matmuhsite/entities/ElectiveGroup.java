@@ -65,14 +65,6 @@ public class ElectiveGroup extends BaseEntity {
     @Builder.Default
     private Set<DegreeLevel> degreeLevels = new LinkedHashSet<>();
 
-    @ElementCollection(targetClass = Program.class, fetch = FetchType.EAGER)
-    @CollectionTable(name = "elective_group_programs", joinColumns = @JoinColumn(name = "elective_group_id"))
-    @Column(name = "program", nullable = false, length = 30)
-    @Enumerated(EnumType.STRING)
-    @BatchSize(size = 50)
-    @Builder.Default
-    private Set<Program> programs = new LinkedHashSet<>();
-
     @Column(name = "weekly_hours")
     private Integer weeklyHours;
 

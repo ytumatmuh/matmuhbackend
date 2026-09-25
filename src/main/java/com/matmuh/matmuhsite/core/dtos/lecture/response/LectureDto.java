@@ -1,6 +1,5 @@
 package com.matmuh.matmuhsite.core.dtos.lecture.response;
 
-import com.matmuh.matmuhsite.entities.Program;
 import java.math.BigDecimal;
 
 import com.matmuh.matmuhsite.core.dtos.staff.response.StaffDto;
@@ -71,8 +70,6 @@ public class LectureDto {
     private Integer labHours;
 
     private Set<DegreeLevel> degreeLevels = new LinkedHashSet<>();
-
-    private Set<Program> programs = new LinkedHashSet<>();
 
     private Integer weeklyHours;
 

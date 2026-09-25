@@ -1,6 +1,5 @@
 package com.matmuh.matmuhsite.business.constants;
 
-import com.matmuh.matmuhsite.entities.Program;
 import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionSchema;
 import com.matmuh.matmuhsite.core.dtos.cms.response.ChoiceSource;
 import com.matmuh.matmuhsite.core.dtos.cms.response.FieldDefinition;
@@ -26,7 +25,6 @@ public final class LectureCollectionSchema {
     public static final String FIELD_SEMESTER = "semester";
     public static final String FIELD_CODE = "code";
     public static final String FIELD_DEGREE_LEVELS = "degreeLevels";
-    public static final String FIELD_PROGRAMS = "programs";
     public static final String FIELD_LANGUAGES = "languages";
     public static final String FIELD_TYPE = "type";
     public static final String FIELD_CATEGORY = "category";
@@ -45,9 +43,6 @@ public final class LectureCollectionSchema {
 
     private static final String[] DEGREE_LEVEL_OPTIONS =
             Arrays.stream(DegreeLevel.values()).map(Enum::name).toArray(String[]::new);
-
-    private static final String[] PROGRAM_OPTIONS =
-            Arrays.stream(Program.values()).map(Enum::name).toArray(String[]::new);
 
     private static final String[] LANGUAGE_OPTIONS =
             Arrays.stream(InstructionLanguage.values()).map(Enum::name).toArray(String[]::new);
@@ -83,10 +78,6 @@ public final class LectureCollectionSchema {
                     .withSource(ChoiceSource.ofValues(DEGREE_LEVEL_OPTIONS))
                     .asFilterable()
                     .withHelp("Bir ders birden fazla programda okutulabilir; lisansüstü seçmeli havuzu hem yüksek lisansta hem doktorada geçerlidir. Boş bırakılırsa ders kodundan türetilir."),
-            FieldDefinition.of(FIELD_PROGRAMS, FieldType.STRING_ARRAY, "Program")
-                    .withSource(ChoiceSource.ofValues(PROGRAM_OPTIONS))
-                    .asFilterable()
-                    .withHelp("Dersin okutulduğu programlar. Lisansüstü seçmeli havuzu tezli yüksek lisansta ve doktorada ortaktır; tezsiz yüksek lisansın kendi havuzu vardır. Boş bırakılırsa öğrenim düzeyinden alınır, yüksek lisans tezli sayılır."),
             FieldDefinition.select(FIELD_TYPE, "Ders türü", ChoiceSource.ofValues(TYPE_OPTIONS))
                     .asFilterable()
                     .withHelp("Müfredatta zorunlu ve seçmeli bloklarını ayırmak için kullanılır. Bir ders seçmeli bir slota eklendiğinde boşsa otomatik Seçmeli olur."),

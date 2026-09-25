@@ -1,6 +1,5 @@
 package com.matmuh.matmuhsite.core.dtos.lecture.request;
 
-import com.matmuh.matmuhsite.entities.Program;
 import java.math.BigDecimal;
 
 import com.matmuh.matmuhsite.business.constants.LectureMessages;
@@ -80,8 +79,6 @@ public class UpdateLectureRequestDto {
     private Integer labHours;
 
     private Set<DegreeLevel> degreeLevels;
-
-    private Set<Program> programs;
 
     @Min(value = 0, message = LectureMessages.LECTURE_HOURS_MIN)
     private Integer weeklyHours;

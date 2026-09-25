@@ -1,6 +1,5 @@
 package com.matmuh.matmuhsite.business.abstracts;
 
-import com.matmuh.matmuhsite.entities.Program;
 import com.matmuh.matmuhsite.core.dtos.common.PageDto;
 import com.matmuh.matmuhsite.core.dtos.electiveGroup.request.CreateElectiveGroupRequestDto;
 import com.matmuh.matmuhsite.core.dtos.electiveGroup.request.UpdateElectiveGroupRequestDto;
@@ -16,14 +15,14 @@ import java.util.UUID;
 
 public interface ElectiveGroupService {
 
-    PageDto<ElectiveGroupDto> getElectiveGroups(Integer term, Semester semester, DegreeLevel degreeLevel, Program program,
+    PageDto<ElectiveGroupDto> getElectiveGroups(Integer term, Semester semester, DegreeLevel degreeLevel,
                                                 String search, Pageable pageable);
 
     ElectiveGroupDto getElectiveGroupById(UUID id);
 
     ElectiveGroupDto toDto(ElectiveGroup group);
 
-    ElectiveGroupDto getElectiveGroupByCode(String code, Program program);
+    ElectiveGroupDto getElectiveGroupByCode(String code);
 
     List<ElectiveGroupOptionDto> getOptions(UUID id);
 

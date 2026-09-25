@@ -1,6 +1,5 @@
 package com.matmuh.matmuhsite.webAPI.controllers;
 
-import com.matmuh.matmuhsite.entities.Program;
 import com.matmuh.matmuhsite.business.abstracts.ElectiveGroupService;
 import com.matmuh.matmuhsite.business.constants.ElectiveGroupMessages;
 import com.matmuh.matmuhsite.core.dtos.common.PageDto;
@@ -48,16 +47,15 @@ public class ElectiveGroupController {
 
     @Operation(summary = "Seçmeli gruplarını listele",
             description = "Müfredattaki seçmeli slotlarını döner (ör. MES2-3G 'Mesleki Seçmeli 2'). Her grup, o slotun yerine alınabilecek dersleri options listesinde taşır. "
-                    + "Filtreler: term, semester, degreeLevel, program (UNDERGRADUATE, MASTERS_THESIS, MASTERS_NON_THESIS, DOCTORATE), search (ad, kod). Sıralanabilir alanlar: code, name, term, ects, createdAt.")
+                    + "Filtreler: term, semester, degreeLevel, search (ad, kod). Sıralanabilir alanlar: code, name, term, ects, createdAt.")
     @GetMapping
     public ResponseEntity<DataResult<PageDto<ElectiveGroupDto>>> getElectiveGroups(
             @RequestParam(required = false) Integer term,
             @RequestParam(required = false) Semester semester,
             @RequestParam(required = false) DegreeLevel degreeLevel,
-            @RequestParam(required = false) Program program,
             @RequestParam(required = false) String search,
             @ParameterObject @PageableDefault(size = 20, sort = "code", direction = Sort.Direction.ASC) Pageable pageable) {
-        var groups = electiveGroupService.getElectiveGroups(term, semester, degreeLevel, program, search,
+        var groups = electiveGroupService.getElectiveGroups(term, semester, degreeLevel, search,
                 PageableSanitizer.sanitize(pageable, SORTABLE, "code"));
         return ResponseEntity.ok(new SuccessDataResult<>(groups,
                 messageResolver.resolve(ElectiveGroupMessages.ELECTIVE_GROUP_LIST_FETCHED_SUCCESSFULLY), HttpStatus.OK));
@@ -72,11 +70,10 @@ public class ElectiveGroupController {
     }
 
     @Operation(summary = "Seçmeli grubu getir (kod ile)",
-            description = "Bologna slot kodu ile tek grup döner (ör. MES2-3G). Aynı kod birden çok programda ayrı grupsa (SEC0001 tezli ve tezsiz yüksek lisansta) program verilmelidir, yoksa 400.")
+            description = "Bologna slot kodu ile tek grup döner (ör. MES2-3G).")
     @GetMapping("/by-code/{code}")
-    public ResponseEntity<DataResult<ElectiveGroupDto>> getElectiveGroupByCode(@PathVariable String code,
-                                                                              @RequestParam(required = false) Program program) {
-        var group = electiveGroupService.getElectiveGroupByCode(code, program);
+    public ResponseEntity<DataResult<ElectiveGroupDto>> getElectiveGroupByCode(@PathVariable String code) {
+        var group = electiveGroupService.getElectiveGroupByCode(code);
         return ResponseEntity.ok(new SuccessDataResult<>(group,
                 messageResolver.resolve(ElectiveGroupMessages.ELECTIVE_GROUP_FETCHED_SUCCESSFULLY), HttpStatus.OK));
     }

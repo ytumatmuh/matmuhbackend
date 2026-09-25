@@ -75,14 +75,6 @@ public class Lecture extends BaseEntity{
     @Builder.Default
     private Set<DegreeLevel> degreeLevels = new LinkedHashSet<>();
 
-    @ElementCollection(targetClass = Program.class, fetch = FetchType.EAGER)
-    @CollectionTable(name = "lecture_programs", joinColumns = @JoinColumn(name = "lecture_id"))
-    @Column(name = "program", nullable = false, length = 30)
-    @Enumerated(EnumType.STRING)
-    @BatchSize(size = 50)
-    @Builder.Default
-    private Set<Program> programs = new LinkedHashSet<>();
-
     // Ders düzeyinde küme: iki dilde verilen dersler var. Dönem kaydının dili (LectureOffering.language)
     // ayrı bir kavram, o grubun o dönem hangi dilde açıldığını söyler.
     @ElementCollection(fetch = FetchType.LAZY)
