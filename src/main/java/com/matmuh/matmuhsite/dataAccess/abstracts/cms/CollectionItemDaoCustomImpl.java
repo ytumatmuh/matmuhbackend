@@ -120,7 +120,10 @@ public class CollectionItemDaoCustomImpl implements CollectionItemDaoCustom {
         for (int i = 0; i < sorts.size(); i++) {
             var sort = sorts.get(i);
             var direction = sort.descending() ? "DESC" : "ASC";
-            if (sort.isDataField()) {
+            if (sort.isDataField() && sort.missingAsFalse()) {
+                var path = "jsonb_extract_path(data, :sortField" + i + ")";
+                terms.add("COALESCE(NULLIF(" + path + ", CAST('null' AS jsonb)), CAST('false' AS jsonb)) " + direction);
+            } else if (sort.isDataField()) {
                 var path = "jsonb_extract_path(data, :sortField" + i + ")";
                 terms.add(path + " IS NULL");
                 terms.add(path + " " + direction);

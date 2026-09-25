@@ -2,6 +2,7 @@ package com.matmuh.matmuhsite.core.helpers;
 
 import com.matmuh.matmuhsite.core.dtos.cms.response.CollectionSchema;
 import com.matmuh.matmuhsite.core.dtos.cms.response.FieldDefinition;
+import com.matmuh.matmuhsite.entities.cms.FieldType;
 import com.matmuh.matmuhsite.core.exceptions.CmsValidationException;
 
 import java.util.ArrayList;
@@ -14,9 +15,15 @@ import java.util.Locale;
 
 public final class CollectionSortParser {
 
-    public record CollectionSort(String column, String dataField, boolean descending) {
+    // missingAsFalse: Bool alanı hiç yazılmamış kayıt false sayılır; yoksa arayüzden kaydedilip false yazılan
+    // kayıt, alanı hiç olmayanların önüne geçer (Egehan, 25 Eylül: featured:desc'te tek kayıt listenin başındaydı).
+    public record CollectionSort(String column, String dataField, boolean descending, boolean missingAsFalse) {
 
         public static final CollectionSort DEFAULT = new CollectionSort("slug", null, false);
+
+        public CollectionSort(String column, String dataField, boolean descending) {
+            this(column, dataField, descending, false);
+        }
 
         public boolean isDataField() {
             return dataField != null;
@@ -104,7 +111,7 @@ public final class CollectionSortParser {
                     "Field '" + field.name() + "' is not sortable. Available: " + available(schema) + ".");
         }
 
-        return new CollectionSort(null, field.name(), descending);
+        return new CollectionSort(null, field.name(), descending, field.type() == FieldType.BOOL);
     }
 
     private static String available(CollectionSchema schema) {
